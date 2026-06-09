@@ -2,21 +2,31 @@
 
 Cross-repo conventions for `WatsonWBlair`'s lab repos.
 
-## Working with the lab (Claude Code setup)
+## New to the lab? Start here
 
-Two repos bootstrap a lab Claude Code environment:
+**[`BOOTSTRAP.md`](BOOTSTRAP.md)** is the full new-member runbook — workspace layout, the core repos to
+clone, wiring lab-rules into Cowork, the two `CLAUDE.md` templates, and the lab plugins. Cross-platform
+(Windows reference setup + macOS / Linux equivalents). Follow it end-to-end for a working environment.
 
-1. **Conventions** (this repo) — clone and junction it so Cowork sees the lab rules (see [How repos consume it](#how-repos-consume-it) below).
-2. **Tooling** — the lab's Claude Code plugins live in [`lab-claude-plugins`](https://github.com/WatsonWBlair/lab-claude-plugins). Add the marketplace and install what you need:
-
-   ```
-   /plugin marketplace add WatsonWBlair/lab-claude-plugins
-   /plugin install pr-review-loop@lab-claude-plugins
-   ```
+The rest of this README is reference for how the conventions in this repo are consumed.
 
 ## What's here
 
-- `.claude/rules/` — markdown files defining lab-wide conventions. Consumed by Cowork locally (via a junction at `Development\.claude\rules\`) and by the PR-review GitHub Action at review time.
+- `.claude/rules/` — markdown files defining lab-wide conventions. Consumed by Cowork locally (via a junction/symlink at `<DEV_ROOT>\.claude\rules\`) and by the PR-review GitHub Action at review time.
+- `templates/` — starter `CLAUDE.md` files for new members:
+  - `global-CLAUDE.template.md` — personal-global persona + lab operating philosophy (→ `~/.claude/CLAUDE.md`)
+  - `dev-root-CLAUDE.template.md` — genericized lab orientation (→ `<DEV_ROOT>/.claude/CLAUDE.md`)
+- `BOOTSTRAP.md` — the setup runbook that ties it together.
+- `WORKING-WITH-CLAUDE.md` — established lab methods and best practices for working with Claude (read during onboarding).
+
+## Lab plugins
+
+The lab's Claude Code plugins live in [`lab-claude-plugins`](https://github.com/WatsonWBlair/lab-claude-plugins):
+
+```
+/plugin marketplace add WatsonWBlair/lab-claude-plugins
+/plugin install pr-review-loop@lab-claude-plugins
+```
 
 ## How repos consume it
 
