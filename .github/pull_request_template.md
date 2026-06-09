@@ -17,6 +17,7 @@ Keep the PR scoped to a single concern — split if it spans multiple phases.
 - [ ] `docs` — documentation only
 - [ ] `test` — test additions or fixes
 - [ ] `chore` — maintenance, dependency updates
+- [ ] `merge` — merge conflict resolution
 - [ ] `report` — generated analysis or results
 
 ## Changes
@@ -35,15 +36,16 @@ Keep the PR scoped to a single concern — split if it spans multiple phases.
      For docs-only PRs: note that links resolve and content is accurate. -->
 
 ```
+# e.g. `invoke check` → all green. Docs-only: links resolve, content accurate.
 ```
 
 ## Checklist
 
 - [ ] Scoped to a single concern (split if it spans multiple phases)
-- [ ] Commit messages follow the lab convention (`<type>[(scope)]: <subject>`, lowercase, imperative)
+- [ ] Commit messages follow the lab convention (`<type>[(<scope>)]: <subject>`, lowercase, imperative)
 - [ ] Docs updated where required (CLAUDE.md / STANDARDS.md / `.claude/rules/` / READMEs — see `.claude/rules/01-workflow.md`)
 - [ ] No raw gated-dataset content, secrets, or binaries committed (see `.claude/rules/02-data-protection.md`)
-- [ ] Derived artifacts (if any) passed the PII review checklist in `02-data-protection.md`
+- [ ] Derived artifacts (if any) passed the PII review checklist in `.claude/rules/02-data-protection.md`
 
 ## Related
 
