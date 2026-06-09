@@ -21,7 +21,7 @@ consistently:
 | **Git** | Clone repos, run the workflow | `git --version` |
 | **GitHub CLI (`gh`)** | PR workflow, private-repo auth | `gh auth status` |
 | **Python 3 + a virtual-env tool** | `LSCA` is Python + PyTorch | `python --version` |
-| **GitHub access to private lab repos** | `LSCA`, `Global_Pathways` may be private | ask the lab manager to add you |
+| **GitHub access to private lab repos** | `LSCA`, `Global_Pathways` may be private | request access from the lab manager, Watson Blair (<watsonwblair@gmail.com>) |
 
 > The lab's primary reference setup is **Windows 11 + PowerShell**. Each step below gives the
 > macOS / Linux equivalent. Where they differ it's almost always **junction (Windows) vs symlink (Unix)**
@@ -58,7 +58,8 @@ git clone https://github.com/WatsonWBlair/lab-rules.git
 git clone https://github.com/WatsonWBlair/lab-claude-plugins.git
 ```
 
-If `LSCA` or `Global_Pathways` 404s, you don't have access yet — ask the lab manager.
+If `LSCA` or `Global_Pathways` 404s, you don't have access yet — request it from the lab manager, Watson
+Blair (<watsonwblair@gmail.com>), with your GitHub username.
 
 ---
 
