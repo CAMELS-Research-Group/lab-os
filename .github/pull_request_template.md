@@ -17,6 +17,7 @@ Keep the PR scoped to a single concern — split if it spans multiple phases.
 - [ ] `docs` — documentation only
 - [ ] `test` — test additions or fixes
 - [ ] `chore` — maintenance, dependency updates
+- [ ] `ci` — CI/CD config, GitHub Actions workflows, release/deploy automation
 - [ ] `merge` — merge conflict resolution
 - [ ] `report` — generated analysis or results
 
