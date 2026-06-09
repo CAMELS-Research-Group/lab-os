@@ -30,13 +30,17 @@ The lab's Claude Code plugins live in [`lab-claude-plugins`](https://github.com/
 
 ## How repos consume it
 
-**Locally (Cowork)**: clone this repo to `C:\Users\watso\Development\lab-rules\`. Create a Windows junction so Cowork sees it at the Development root:
+**Locally (Cowork)**: clone this repo into your lab workspace (`<DEV_ROOT>`) and link its rules so Cowork sees them at the workspace root. BOOTSTRAP.md §3 is the full walkthrough; the short form:
 
 ```powershell
-cmd /c mklink /J "C:\Users\watso\Development\.claude\rules" "C:\Users\watso\Development\lab-rules\.claude\rules"
+# Windows (PowerShell) — junction, no admin required
+cmd /c mklink /J "<DEV_ROOT>\.claude\rules" "<DEV_ROOT>\lab-rules\.claude\rules"
 ```
 
-No admin required.
+```bash
+# macOS / Linux — symlink
+ln -s <DEV_ROOT>/lab-rules/.claude/rules <DEV_ROOT>/.claude/rules
+```
 
 **In CI (PR reviewer)**: each lab repo's `.github/workflows/pr-review.yml` checks this repo out alongside the PR repo:
 

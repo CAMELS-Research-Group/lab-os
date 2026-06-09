@@ -1,8 +1,9 @@
 # Bootstrap: setting up the CAMELS lab on your machine
 
 This runbook takes a new lab member from nothing to a working CAMELS Claude Code / Cowork environment.
-It covers the **shared layer** every member needs — workspace layout, the core repos, lab conventions,
-the lab plugins, and the two `CLAUDE.md` templates that wire it all together.
+("Cowork" is the lab's name for a Claude Code working session — same tool, our shorthand.) It covers the
+**shared layer** every member needs — workspace layout, the core repos, lab conventions, the lab plugins,
+and the two `CLAUDE.md` templates that wire it all together.
 
 Estimated time: ~20 minutes plus repo clone / Python environment time.
 
@@ -10,6 +11,11 @@ Throughout, `<DEV_ROOT>` is the single directory you clone all lab repos into. P
 consistently:
 - **Windows (reference setup):** `C:\Users\<you>\Development`
 - **macOS / Linux:** `~/Development`
+
+The shell blocks below write `<DEV_ROOT>` literally. To make them copy-pasteable, set it as a variable
+once in your shell and substitute mentally (or use `$DEV_ROOT` in the POSIX blocks):
+- **Windows (PowerShell):** `$DEV_ROOT = "$HOME\Development"`
+- **macOS / Linux:** `export DEV_ROOT=~/Development`
 
 ---
 
@@ -134,6 +140,12 @@ From inside a Claude Code session:
 
 Run `/reload-plugins` to apply, then `/plugin` to confirm it's listed.
 
+> **Also install `superpowers`.** The methods in [`WORKING-WITH-CLAUDE.md`](WORKING-WITH-CLAUDE.md) and §8
+> below lean on the `superpowers` plugin's process skills (brainstorming, writing-plans,
+> subagent-driven-development, verification-before-completion, …). It's a **separate** plugin, not part of
+> the `lab-claude-plugins` marketplace — install it the same way (`/plugin marketplace add` its source,
+> then `/plugin install`). If you don't have the marketplace source, ask the lab manager.
+
 ---
 
 ## 6. Set up the active repos
@@ -160,6 +172,10 @@ pip install -r requirements.txt   # or follow LSCA/README.md if it differs
 | `/plugin` | Lists `pr-review-loop@lab-claude-plugins` |
 | Ask Claude "what are the lab's commit-message rules?" | Answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject) |
 | Your global `CLAUDE.md` | About Me block reflects **you**, not the template placeholders |
+
+**If a check fails:** rules not loading → re-check the junction/symlink in §3 (does `<DEV_ROOT>/.claude/rules`
+resolve to the `lab-rules` copy?). Plugin not listed → re-run §5 (`/plugin marketplace add` then
+`/plugin install`, then `/reload-plugins`). Template placeholders still showing → finish §4a's edit.
 
 ---
 

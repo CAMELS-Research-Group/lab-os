@@ -81,6 +81,10 @@ The single most important lesson: **an agent's self-report is not evidence.**
 - **For a requested review, the review *is* the deliverable.** Synthesize and post it; don't ask
   separately for permission to post the thing you were asked to produce. (Unsolicited posts under your name
   still need the approval gate — see the rules.)
+- **Every PR uses the repo's PR template.** Fill all sections of `.github/pull_request_template.md`, tick
+  only the checklist items that apply, and keep each PR scoped to a single concern. This is a hard rule in
+  `.claude/rules/01-workflow.md`, not a suggestion — the template encodes the commit-type, doc-update, and
+  data-protection gates so they surface at review time.
 
 ## 6. Autonomous / overnight loops
 
