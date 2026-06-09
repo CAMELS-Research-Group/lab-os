@@ -36,7 +36,7 @@ Keep the PR scoped to a single concern — split if it spans multiple phases.
      For docs-only PRs: note that links resolve and content is accurate. -->
 
 ```
-# e.g. `invoke check` → all green. Docs-only: links resolve, content accurate.
+# Docs-only: links resolve, content accurate. Code repos: paste the gate command + result.
 ```
 
 ## Checklist
