@@ -14,6 +14,7 @@ Format: `<type>[(<scope>)]: <subject>`
 | `docs` | Documentation only |
 | `test` | Test additions or fixes |
 | `chore` | Maintenance, dependency updates |
+| `ci` | CI/CD config, GitHub Actions workflows, release/deploy automation |
 | `merge` | Merge conflict resolution |
 | `report` | Generated analysis or results |
 
