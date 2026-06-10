@@ -86,7 +86,9 @@ A project-log entry is written when one of these occurs:
    project's direction or architecture.
 2. An **irreversible or external event** — release cut, migration applied, secret rotated,
    org/repo change, data published.
-3. A **direction change / re-scope** — pivot, pause, reactivation, supersession of a spec or plan.
+3. A **direction change / re-scope** — pivot, pause, reactivation, supersession of a spec or
+   plan. (Pausing or retiring a whole project additionally gets a status banner at the top of
+   the repo README: "Status: paused YYYY-MM-DD — see lab log.")
 
 Everything else routes elsewhere:
 
@@ -282,35 +284,25 @@ entry honest?* — stays with the pr-review agent, which already loads
 `lab-rules/.claude/rules/*.md` (including the new `03-logging-and-docs.md`) into its review
 prompt.
 
-## 10. Project lifecycle bookends (initialization + retirement)
+## 10. ENG-tier document standards (PRD, design, plan)
 
-A coverage review (Watson's note, 2026-06-10) found the standard governed *ongoing* cadence but
-said nothing about a project's first or last day. Additions:
+The work-bundle artifacts (§5) and the PRD are document types this standard governs; each gets
+a definition so templates and reviews have something concrete to check against.
 
-**New-repo initialization** — a `REPO-SETUP.md` checklist in lab-rules. (`BOOTSTRAP.md` covers
-*member* setup; this covers *repo* setup — linked from BOOTSTRAP, not merged into it.)
-
-1. `project_log.md` from `templates/project_log.template.md`.
-2. `CLAUDE.md` seeded from `templates/repo-CLAUDE.template.md` — starts inside its 8 KB budget.
-3. `docs/work/` scaffold (+ `completed/`, `abandoned/`).
-4. Lab PR template copied; caller YAMLs added for the three adherence Actions + pr-review.
-5. `TROUBLESHOOTING.md` stub (grep-only tier).
-6. Repo-specific rules, if any, numbered `10+` per D12.
-
-**Compliant-from-birth templates** — work-bundle skeletons
-(`templates/work-bundle/design.template.md` + `plan.template.md`, the latter carrying the
-`## Execution Log` section) and a PRD skeleton (`templates/PRD.template.md`) mirroring the lab
-PRD elements (Problem · Success criteria · Scope · Constraints · Plan · Open questions).
-
-**Pause / retirement** — pausing or retiring a project is a §4.2 direction change: a lab-log
-entry plus a status banner at the top of the repo README ("Status: paused YYYY-MM-DD — see lab
-log"). FCM_Analysis is the live precedent (paused today with no standard way of saying so).
-
-**Reviewed and deliberately not added:** lab-wide GitHub issue/label conventions (the routing
-table leans on issues, but each repo's scheme differs — logged in §13 as a gap rather than
-scope-crept here); release/changelog conventions (repo-specific, e.g. Global_Pathways'
-CHANGELOG-sourced release notes); member onboarding (already owned by BOOTSTRAP.md /
-ONBOARDING-PROJECT.md).
+- **PRD** — living doc at a stable path; project altitude; updated by amendment. Required
+  elements: Problem · Success criteria (measurable) · Scope (in / explicitly out) ·
+  Constraints · Plan (phased) · Open questions. A PRD does **not** embed its own decision log —
+  `project_log.md` owns decisions, one project-altitude surface per repo (this is why
+  mission-control's PRD Part IV becomes a pointer, §12).
+- **Design doc** (`design.md` in a work bundle) — the spec for one slice: the problem, the
+  decisions made with rationale and rejected alternatives, and known gaps stated honestly.
+  Status line at the top (draft / reviewed / superseded-by).
+- **Plan** (`plan.md` in a work bundle) — code-free per the existing lab rule: per task,
+  Files / Depends on / Spec link / Acceptance / Verification / Commit; no literal code; the
+  only code blocks are short shell commands in Verification lines. Carries the
+  `## Execution Log` section (§4.1). Canonical exemplar: the Global_Pathways IAS backend plan.
+- **Templates make compliance copyable** — each governed doc type has a skeleton in
+  `templates/` (§11) that satisfies its own rules as created.
 
 ## 11. Deliverables map
 
@@ -319,11 +311,10 @@ ONBOARDING-PROJECT.md).
 | `.claude/rules/01-workflow.md` | Extend: merge bar (§8.2) incl. pre-merge log cleanup |
 | `.claude/rules/03-logging-and-docs.md` | Create: entry triggers + routing table, altitudes, entry format, supersession, budgets, tier routing, single-source rule, **rules numbering convention (lab `0x`, repo `10+`, D12)**. Target ≤ 5 KB (its own budget) |
 | `PR-LIFECYCLE.md` | Create: lifecycle narrative consolidating the four sources named in §1; bypass pattern; overflow/archive mechanics; rationale |
-| `REPO-SETUP.md` | Create: §10 new-repo checklist + pause/retirement convention |
 | `TROUBLESHOOTING.md` (lab-rules) | Create: grep-only; seeded with known cross-platform gotchas (line endings / `autocrlf`, junction vs symlink, path separators, PowerShell vs POSIX quoting) — setup steps stay in BOOTSTRAP.md, this holds the failure modes |
 | `templates/project_log.template.md` | Create: §4.5 skeleton (normative — `log-lint` parses this structure) |
-| `templates/repo-CLAUDE.template.md` | Create: per-repo CLAUDE.md seed, structured to its 8 KB budget (§10) |
-| `templates/work-bundle/` + `templates/PRD.template.md` | Create: design/plan skeletons (plan carries `## Execution Log`) + PRD skeleton (§10) |
+| `templates/repo-CLAUDE.template.md` | Create: per-repo CLAUDE.md seed, structured to its 8 KB budget (§7.2) |
+| `templates/work-bundle/` + `templates/PRD.template.md` | Create: design/plan skeletons (plan carries `## Execution Log`) + PRD skeleton, per the §10 document standards |
 | `.github/workflows/log-lint.yml` + script | Create (§9) |
 | `.github/workflows/docs-budget.yml` + script | Create (§9) |
 | `.github/workflows/merge-bar-check.yml` + script | Create (§9) |
@@ -361,7 +352,11 @@ ONBOARDING-PROJECT.md).
   remains with the pr-review agent. Accepted residual risk.
 - **TROUBLESHOOTING.md is unbudgeted by design** (grep-only tier, §7.1); watch whether it needs
   its own overflow convention in practice.
-- **Lab-wide issue/label conventions are unstandardized** (§10): the §4.2 routing table leans on
+- **Lab-wide issue/label conventions are unstandardized**: the §4.2 routing table leans on
   GitHub issues as a primary home, but each repo's label/milestone scheme differs
   (mission-control's milestone + `area:` axes are the most developed). Phase-2+ candidate;
   mission-control's scheme is the likely seed.
+- **Repo initialization / retirement runbook spun out**: a new-repo setup checklist
+  (`REPO-SETUP.md`) was drafted into this spec and cut as off-topic — it's lab operations, not
+  a logging/documentation standard. Worth its own small effort; the templates (§11) are its
+  building blocks, and the pause/retirement banner convention survives in §4.2.
