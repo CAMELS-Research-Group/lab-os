@@ -1,0 +1,53 @@
+# Reusable docs-budget adherence action (spec §9).
+#
+# Checks the caller repo's always-loaded AI doc surfaces against the §7.2
+# context budgets: CLAUDE.md / .claude/CLAUDE.md 8,192 B; each
+# .claude/rules/*.md 5,120 B; project_log.md 15,360 B.
+# Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.
+# Default is warn-only (the §7.2 warn-only-until-first-green posture):
+# the job never fails, it only emits ::warning annotations.
+#
+# Caller example (any lab repo):
+#
+#   jobs:
+#     docs-budget:
+#       uses: WatsonWBlair/lab-rules/.github/workflows/docs-budget.yml@main
+#       with:
+#         enforce: false   # flip to true after this repo's first green run
+
+name: docs-budget
+
+on:
+  workflow_call:
+    inputs:
+      enforce:
+        description: >-
+          Fail the job when any surface exceeds 1.5x its budget.
+          Leave false (warn-only) until the repo first passes green.
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  docs-budget:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out caller repo
+        uses: actions/checkout@v4
+
+      - name: Check out lab-rules (script source)
+        uses: actions/checkout@v4
+        with:
+          repository: WatsonWBlair/lab-rules
+          path: .lab-rules
+
+      - name: Run docs-budget
+        env:
+          ENFORCE: ${{ inputs.enforce }}
+        run: |
+          ARGS=""
+          if [ "$ENFORCE" = "true" ]; then ARGS="--enforce"; fi
+          # lab-rules' own PRs must run the PR's script (main's copy is absent/stale there); gate on repo name, not file-exists, so downstream repos can't shadow the canonical script
+          SCRIPT=".lab-rules/scripts/docs_budget.py"
+          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-rules" ]; then SCRIPT="scripts/docs_budget.py"; fi
+          python3 "$SCRIPT" --root . $ARGS
