@@ -431,3 +431,5 @@ Both return hits.
 ## Execution Log
 
 *(Deviations from this plan, implementation-altitude calls, and gate evidence land here as tasks execute — one line each: `YYYY-MM-DD HH:MM · task N · what/why`.)*
+
+- 2026-06-10 16:16 · task 1 · gate: `(Get-Item .claude/rules/03-logging-and-docs.md).Length` = 5,116 ≤ 5,120, unpiped; all §4.2 routing rows + §7.2 budget rows confirmed; spec review needed 2 rounds (5 rules lost to compression, restored)
