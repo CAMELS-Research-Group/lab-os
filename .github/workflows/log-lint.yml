@@ -1,0 +1,125 @@
+# Reusable log-lint adherence action (spec §9, §4.3-4.6).
+#
+# Mechanically lints PR changes to project_log.md (and its archive) against
+# the lab logging standard (.claude/rules/03-logging-and-docs.md) using
+# scripts/log_lint.py from lab-rules.
+#
+# Behavior:
+# - pull_request callers only; any other caller event no-ops green.
+# - No log changes in the PR diff (three-dot vs the target branch) -> the job
+#   succeeds without linting.
+# - Baseline = the PR target branch's CURRENT HEAD version of the log, not
+#   the merge-base (spec §9: three-dot baselines misread the mandated
+#   rebase/conflict-resolution flow as foreign additions). File absent at the
+#   base ref (repo adopting the standard) -> empty baseline; every entry is
+#   treated as new and format checks still apply.
+# - Override: a PR carrying the `log-lint:override` label skips lint
+#   enforcement (migrations, merged-entry corrections), BUT the PR body must
+#   contain a line starting `log-lint:override:` followed by a non-empty
+#   reason, e.g.:
+#       log-lint:override: wholesale migration of the legacy log to the template
+#   Label present without such a line -> the job FAILS, even when no log file
+#   changed (the label always demands a stated reason).
+#
+# Caller example (any lab repo):
+#
+#   on:
+#     pull_request:
+#   jobs:
+#     log-lint:
+#       uses: WatsonWBlair/lab-rules/.github/workflows/log-lint.yml@main
+
+name: log-lint
+
+on:
+  workflow_call:
+    inputs:
+      log-path:
+        description: Path to the project log in the caller repo
+        type: string
+        required: false
+        default: project_log.md
+      archive-path:
+        description: Path to the log archive in the caller repo
+        type: string
+        required: false
+        default: project_log_archive.md
+
+permissions:
+  contents: read
+
+jobs:
+  log-lint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out lab-rules (script source)
+        uses: actions/checkout@v4
+        with:
+          repository: WatsonWBlair/lab-rules
+          path: .lab-rules
+
+      - name: Require an override reason when the label is set
+        id: override
+        if: contains(github.event.pull_request.labels.*.name, 'log-lint:override')
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # Convention (also documented in scripts/log_lint.py --help): the PR
+          # body must contain a line starting "log-lint:override:" followed by
+          # a non-empty reason.
+          if printf '%s\n' "$PR_BODY" | grep -qE '^log-lint:override:[[:space:]]*[^[:space:]]'; then
+            echo "skip-lint=true" >> "$GITHUB_OUTPUT"
+            echo "log-lint:override label honored; lint enforcement skipped."
+          else
+            echo "::error::PR carries the log-lint:override label but the body states no reason. Add a line: 'log-lint:override: <reason>'."
+            exit 1
+          fi
+
+      - name: Detect log changes
+        id: detect
+        if: steps.override.outputs.skip-lint != 'true'
+        env:
+          LOG_PATH: ${{ inputs.log-path }}
+          ARCHIVE_PATH: ${{ inputs.archive-path }}
+        run: |
+          git fetch --no-tags --quiet origin "$GITHUB_BASE_REF"
+          # Deliberate asymmetry: change detection uses three-dot (merge-base: "did this PR touch the log?")
+          # while the lint baseline below uses two-dot target-branch HEAD (spec §9) — do not "fix" one to match the other.
+          changed="$(git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" -- "$LOG_PATH" "$ARCHIVE_PATH")"
+          if [ -z "$changed" ]; then
+            echo "skip-lint=true" >> "$GITHUB_OUTPUT"
+            echo "No changes to $LOG_PATH or $ARCHIVE_PATH; nothing to lint."
+          else
+            echo "skip-lint=false" >> "$GITHUB_OUTPUT"
+            printf 'Log files changed:\n%s\n' "$changed"
+          fi
+
+      - name: Lint the log against the target-branch baseline
+        if: steps.override.outputs.skip-lint != 'true' && steps.detect.outputs.skip-lint == 'false'
+        env:
+          LOG_PATH: ${{ inputs.log-path }}
+          ARCHIVE_PATH: ${{ inputs.archive-path }}
+        run: |
+          baseline="$(mktemp)"
+          # Baseline = target-branch HEAD (spec §9). Absent at the base ref
+          # (new adoption) -> the temp file stays empty and the linter treats
+          # every entry as new.
+          if git cat-file -e "origin/${GITHUB_BASE_REF}:${LOG_PATH}" 2>/dev/null; then
+            git show "origin/${GITHUB_BASE_REF}:${LOG_PATH}" > "$baseline"
+          fi
+          # On lab-rules' own PRs, lint with the PR's copy of the script (the .lab-rules checkout
+          # is main, which is absent/stale while the script itself is under review); gate on the
+          # repo name, not file existence, so a downstream repo's same-named script can't shadow
+          # the canonical one.
+          SCRIPT=".lab-rules/scripts/log_lint.py"
+          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-rules" ]; then SCRIPT="scripts/log_lint.py"; fi
+          python3 "$SCRIPT" \
+            --changed "$LOG_PATH" \
+            --baseline "$baseline" \
+            --archive "$ARCHIVE_PATH"

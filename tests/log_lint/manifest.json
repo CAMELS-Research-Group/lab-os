@@ -1,0 +1,126 @@
+{
+  "_readme": [
+    "Fixture manifest for scripts/log_lint.py --self-test (the single entry point CI and humans share).",
+    "Each case: name; changed (required); baseline/archive (null = file not provided, i.e. new-adoption / no archive);",
+    "expect = the exact MULTISET of violation names the linter must report (list duplicates once per occurrence;",
+    "empty = the case must pass).",
+    "Paths are relative to tests/log_lint/. Most cases share _shared/baseline.md as the target-branch HEAD baseline.",
+    "EOL-variant cases (CRLF archive, CRLF changed log, missing baseline path) are generated programmatically",
+    "inside --self-test: this repo has no .gitattributes, so committed CRLF bytes would not survive git EOL",
+    "handling across clones; runtime generation keeps the modulo-EOL behavior tested deterministically."
+  ],
+  "cases": [
+    {
+      "name": "pass_new_entries_head",
+      "baseline": "_shared/baseline.md",
+      "changed": "pass_new_entries_head/changed.md",
+      "archive": null,
+      "expect": []
+    },
+    {
+      "name": "pass_index_only_change",
+      "baseline": "_shared/baseline.md",
+      "changed": "pass_index_only_change/changed.md",
+      "archive": null,
+      "expect": []
+    },
+    {
+      "name": "pass_archive_move",
+      "baseline": "_shared/baseline.md",
+      "changed": "pass_archive_move/changed.md",
+      "archive": "pass_archive_move/archive.md",
+      "expect": []
+    },
+    {
+      "name": "pass_new_file",
+      "baseline": null,
+      "changed": "pass_new_file/changed.md",
+      "archive": null,
+      "expect": []
+    },
+    {
+      "name": "fail_malformed_header",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_malformed_header/changed.md",
+      "archive": null,
+      "expect": ["malformed-entry-header", "malformed-entry-header"]
+    },
+    {
+      "name": "fail_entry_over_budget",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_entry_over_budget/changed.md",
+      "archive": null,
+      "expect": ["entry-over-budget"]
+    },
+    {
+      "name": "fail_inserted_mid_history",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_inserted_mid_history/changed.md",
+      "archive": null,
+      "expect": ["entry-inserted-mid-history"]
+    },
+    {
+      "name": "fail_modified_entry",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_modified_entry/changed.md",
+      "archive": null,
+      "expect": ["preexisting-entry-modified"]
+    },
+    {
+      "name": "fail_removed_not_archived",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_removed_not_archived/changed.md",
+      "archive": null,
+      "expect": ["entry-removed-not-archived"]
+    },
+    {
+      "name": "fail_archive_content_differs",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_archive_content_differs/changed.md",
+      "archive": "fail_archive_content_differs/archive.md",
+      "expect": ["entry-removed-not-archived"]
+    },
+    {
+      "name": "fail_index_key_unmatched",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_index_key_unmatched/changed.md",
+      "archive": null,
+      "expect": ["index-key-unmatched"]
+    },
+    {
+      "name": "fail_new_block_out_of_order",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_new_block_out_of_order/changed.md",
+      "archive": null,
+      "expect": ["new-entries-out-of-order"]
+    },
+    {
+      "name": "fail_duplicate_header",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_duplicate_header/changed.md",
+      "archive": null,
+      "expect": ["duplicate-entry-header"]
+    },
+    {
+      "name": "fail_malformed_index_line",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_malformed_index_line/changed.md",
+      "archive": null,
+      "expect": ["index-line-malformed"]
+    },
+    {
+      "name": "fail_missing_entries_heading",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_missing_entries_heading/changed.md",
+      "archive": null,
+      "expect": ["malformed-structure"]
+    },
+    {
+      "name": "fail_separator_missing",
+      "baseline": "_shared/baseline.md",
+      "changed": "fail_separator_missing/changed.md",
+      "archive": null,
+      "expect": ["entry-separator-missing"]
+    }
+  ]
+}
