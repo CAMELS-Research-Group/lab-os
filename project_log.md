@@ -33,6 +33,8 @@ routes overflow detail to PR bodies and specs. See spec §1.
 
 ## 2026-06-09 00:00 — Add Mission-Control Sandbox onboarding project
 
+*(Pre-standard entry, preserved verbatim in the 2026-06-10 migration — not an example of the current entry format.)*
+
 Added `ONBOARDING-PROJECT.md`: a two-week, throwaway build that onboards new lab members to the lab's
 spec-driven, sub-agent-driven workflow by having them build a small mission-control-style work surface
 in their own disposable repo.
