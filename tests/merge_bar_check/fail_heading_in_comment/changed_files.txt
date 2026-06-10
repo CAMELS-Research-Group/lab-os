@@ -1,0 +1,2 @@
+src/manifest.py
+tests/test_manifest.py
