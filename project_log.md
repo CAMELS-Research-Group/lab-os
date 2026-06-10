@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #PR-TBD
+- 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
 
@@ -27,7 +27,7 @@ read (no retrieval contract); and stale `Status:` markers forced follow-up edits
 merged entries. The standard fixes retrieval (index-first, then hot window, then grep),
 removes anything in a merged entry that can go stale (currency lives in the index), and
 routes overflow detail to PR bodies and specs. See spec §1.
-**Refs:** #PR-TBD, docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md
+**Refs:** #6, docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md
 
 ---
 
