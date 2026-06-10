@@ -187,7 +187,10 @@ def parse_entries(
         if line.startswith("## "):
             m = ENTRY_HEADER_RE.match(line)
             if m and _valid_ts(m.group(1)):
-                boundaries.append((i, m.group(1), m.group(2)))
+                # Strip stray whitespace around the subject so a trailing space
+                # in a header can't desync the index<->entry key match (the
+                # index-line subject below is stripped identically).
+                boundaries.append((i, m.group(1), m.group(2).strip()))
             else:
                 boundaries.append((i, None, None))
                 if strict:
@@ -233,7 +236,7 @@ def parse_index(
         if not m or not _valid_ts(m.group(1)):
             violations.append((label, "index-line-malformed", line))
             continue
-        keys.append(f"{m.group(1)} {EM_DASH} {m.group(2)}")
+        keys.append(f"{m.group(1)} {EM_DASH} {m.group(2).strip()}")
     return keys
 
 
