@@ -1,0 +1,3 @@
+scripts/merge_bar_check.py
+tests/merge_bar_check/pass_full_compliance/body.md
+.github/workflows/merge-bar-check.yml

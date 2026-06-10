@@ -13,9 +13,22 @@ The rest of this README is reference for how the conventions in this repo are co
 ## What's here
 
 - `.claude/rules/` — markdown files defining lab-wide conventions. Consumed by Cowork locally (via a junction/symlink at `<DEV_ROOT>\.claude\rules\`) and by the PR-review GitHub Action at review time.
-- `templates/` — starter `CLAUDE.md` files for new members:
-  - `global-CLAUDE.template.md` — personal-global persona + lab operating philosophy (→ `~/.claude/CLAUDE.md`)
-  - `dev-root-CLAUDE.template.md` — genericized lab orientation (→ `<DEV_ROOT>/.claude/CLAUDE.md`)
+  - [`01-workflow.md`](.claude/rules/01-workflow.md) — commit format, PR workflow, merge bar, doc-update triggers
+  - [`02-data-protection.md`](.claude/rules/02-data-protection.md) — gated-dataset, PII, and binary/secret protection
+  - [`03-logging-and-docs.md`](.claude/rules/03-logging-and-docs.md) — project-log standard (altitudes, entry triggers, format, budgets, tiers)
+- [`PR-LIFECYCLE.md`](PR-LIFECYCLE.md) — end-to-end PR lifecycle: merge bar, solo-maintainer bypass, pre-merge log cleanup.
+- [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — lab-level expensive findings and gotchas, indexed by symptom.
+- `templates/` — starter files for new repos and members:
+  - [`global-CLAUDE.template.md`](templates/global-CLAUDE.template.md) — personal-global persona + lab operating philosophy (→ `~/.claude/CLAUDE.md`)
+  - [`dev-root-CLAUDE.template.md`](templates/dev-root-CLAUDE.template.md) — genericized lab orientation (→ `<DEV_ROOT>/.claude/CLAUDE.md`)
+  - [`repo-CLAUDE.template.md`](templates/repo-CLAUDE.template.md) — per-repo CLAUDE.md seed (rules pointer, gate command, gated datasets)
+  - [`project_log.template.md`](templates/project_log.template.md) — normative project-log structure (parsed by `log-lint`)
+  - [`PRD.template.md`](templates/PRD.template.md) — PRD scaffold (Problem · Success criteria · Scope · Constraints · Plan · Open questions)
+  - [`templates/work-bundle/`](templates/work-bundle/) — design + plan templates for initiative-level work bundles
+- `.github/workflows/` — adherence Actions (consume via a thin caller; see [`standards.yml`](.github/workflows/standards.yml) as the copyable example):
+  - [`log-lint.yml`](.github/workflows/log-lint.yml) — validates project-log structure and entry format
+  - [`docs-budget.yml`](.github/workflows/docs-budget.yml) — warns when CLAUDE.md or rules files exceed byte budgets
+  - [`merge-bar-check.yml`](.github/workflows/merge-bar-check.yml) — checklist completeness and log-cleanup gate
 - `BOOTSTRAP.md` — the setup runbook that ties it together.
 - `WORKING-WITH-CLAUDE.md` — established lab methods and best practices for working with Claude (read during onboarding).
 
@@ -55,9 +68,11 @@ ln -s <DEV_ROOT>/lab-rules/.claude/rules <DEV_ROOT>/.claude/rules
 
 The reviewer then concatenates `lab-rules/.claude/rules/*.md` + `pr-repo/.claude/rules/*.md` into its prompt context.
 
+**Adherence Actions**: repos also consume the three enforcement workflows by adding a thin caller that references them from this repo. [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
+
 ## Override semantics
 
-Per-repo rules extend or override lab rules. Specific wins over general. A per-repo `02-data-protection.md` listing the repo's specific gated datasets supplements the lab-wide PII checklist; a per-repo rule contradicting a lab rule applies only in that repo.
+Per-repo rules extend or override lab rules. Specific wins over general. Per-repo rules number from `10+` (lab-rules owns `0x-*`): a per-repo `10-data-protection.md` listing the repo's specific gated datasets supplements the lab-wide PII checklist; a per-repo rule contradicting a lab rule applies only in that repo.
 
 ## Scope discipline
 

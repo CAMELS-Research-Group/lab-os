@@ -1,0 +1,68 @@
+# lab-rules self-caller — invokes all three reusable CI workflows against
+# lab-rules itself on every pull request.
+#
+# This file also serves as the copy-paste template for phase-2 callers in
+# other lab repos (see the "Downstream repo example" comment block below).
+#
+# Reusable workflows handle all checkouts (caller repo + lab-rules script
+# source) internally; this caller does NOT need any explicit checkout steps.
+
+name: standards
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  log-lint:
+    uses: ./.github/workflows/log-lint.yml
+    # No `with:` needed — defaults (project_log.md / project_log_archive.md)
+    # are correct for lab-rules.
+
+  docs-budget:
+    uses: ./.github/workflows/docs-budget.yml
+    with:
+      # enforce: false — warn-only posture per §7.2; flip to true after the
+      # first green run on this repo.
+      enforce: false
+
+  merge-bar-check:
+    uses: ./.github/workflows/merge-bar-check.yml
+    # No `with:` needed — default exclude-globs ("*.md,docs/**,.github/**")
+    # are correct for lab-rules.
+
+# ---------------------------------------------------------------------------
+# Downstream repo example
+# ---------------------------------------------------------------------------
+# Copy this block as .github/workflows/standards.yml in any other lab repo.
+# The reusable workflows check out both the caller repo and lab-rules
+# internally; you do NOT add an explicit checkout step in the caller.
+#
+# name: standards
+#
+# on:
+#   pull_request:
+#
+# permissions:
+#   contents: read
+#
+# jobs:
+#   log-lint:
+#     uses: WatsonWBlair/lab-rules/.github/workflows/log-lint.yml@main
+#     # with:
+#     #   log-path: project_log.md        # default; override if your repo differs
+#     #   archive-path: project_log_archive.md
+#
+#   docs-budget:
+#     uses: WatsonWBlair/lab-rules/.github/workflows/docs-budget.yml@main
+#     with:
+#       # enforce: false — warn-only until this repo's first green run (§7.2)
+#       enforce: false
+#
+#   merge-bar-check:
+#     uses: WatsonWBlair/lab-rules/.github/workflows/merge-bar-check.yml@main
+#     # with:
+#     #   exclude-globs: "*.md,docs/**,.github/**"  # default; override if needed
+# ---------------------------------------------------------------------------

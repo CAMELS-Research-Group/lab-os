@@ -1,0 +1,96 @@
+# merge-bar-check — reusable workflow (spec: docs/superpowers/specs/
+# 2026-06-10-logging-and-docs-standard-design.md §9).
+#
+# Verifies, on every PR of the calling repo:
+#   1. The PR body contains every required `## <heading>` from the calling
+#      repo's .github/pull_request_template.md (script falls back to the
+#      built-in lab section list if the caller has no template).
+#   2. On code-path PRs, exactly one of the two log checkboxes is ticked:
+#        - [ ] Log entries finalized (verified against final diff, index updated)
+#        - [ ] No loggable events in this PR
+#      A PR is "code-path" when at least one changed file matches none of the
+#      exclude globs. Docs-only PRs skip the checkbox rule (sections still
+#      enforced).
+#
+# Caller (must run on the pull_request event — the PR body and base/head SHAs
+# come from github.event.pull_request):
+#
+#   jobs:
+#     merge-bar-check:
+#       uses: WatsonWBlair/lab-rules/.github/workflows/merge-bar-check.yml@main
+#       # optionally:
+#       # with:
+#       #   exclude-globs: "*.md,docs/**,.github/**,notebooks/**"
+#
+# Dependency-free by design: the PR body is passed via env (no shell
+# interpolation of untrusted input), the changed-file list comes from
+# `git diff --name-only base...head` after a full-history checkout, and the
+# check itself is a stdlib-only Python script from the lab-rules checkout.
+
+name: merge-bar-check
+
+on:
+  workflow_call:
+    inputs:
+      exclude-globs:
+        description: >-
+          Comma-separated exclusion globs defining the code-path set: a
+          changed file matching NONE of them makes this a code-path PR.
+          Default = everything except Markdown files (any directory),
+          docs/**, and .github/**. fnmatch semantics against repo-relative
+          forward-slash paths; `*` crosses directory separators.
+        type: string
+        required: false
+        default: "*.md,docs/**,.github/**"
+
+permissions:
+  contents: read
+
+jobs:
+  merge-bar-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR repo (full history for base...head diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out lab-rules (script source)
+        uses: actions/checkout@v4
+        with:
+          repository: WatsonWBlair/lab-rules
+          ref: main
+          path: .lab-rules-checkout
+
+      - name: Write PR body to file
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: printf '%s\n' "$PR_BODY" > "$RUNNER_TEMP/pr_body.md"
+
+      - name: List changed files (merge-base diff)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" \
+            > "$RUNNER_TEMP/changed_files.txt"
+          echo "Changed files:"
+          cat "$RUNNER_TEMP/changed_files.txt"
+
+      - name: Run merge-bar-check
+        env:
+          EXCLUDE_GLOBS: ${{ inputs.exclude-globs }}
+        run: |
+          # On lab-rules' own PRs, run the PR checkout's script (main's copy is
+          # absent or stale there); gate on repo name so downstream repos can't
+          # shadow the canonical script.
+          SCRIPT=".lab-rules-checkout/scripts/merge_bar_check.py"
+          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-rules" ]; then
+            SCRIPT="scripts/merge_bar_check.py"
+          fi
+          python3 "$SCRIPT" \
+            --body-file "$RUNNER_TEMP/pr_body.md" \
+            --changed-files "$RUNNER_TEMP/changed_files.txt" \
+            --template .github/pull_request_template.md \
+            --exclude-globs "$EXCLUDE_GLOBS"

@@ -1,0 +1,3 @@
+PR-LIFECYCLE.md
+docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md
+.github/workflows/ci.yml

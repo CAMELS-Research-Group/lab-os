@@ -81,10 +81,9 @@ The single most important lesson: **an agent's self-report is not evidence.**
 - **For a requested review, the review *is* the deliverable.** Synthesize and post it; don't ask
   separately for permission to post the thing you were asked to produce. (Unsolicited posts under your name
   still need the approval gate — see the rules.)
-- **Every PR uses the repo's PR template.** Fill all sections of `.github/pull_request_template.md`, tick
-  only the checklist items that apply, and keep each PR scoped to a single concern. This is a hard rule in
-  `.claude/rules/01-workflow.md`, not a suggestion — the template encodes the commit-type, doc-update, and
-  data-protection gates so they surface at review time.
+- **PR template and bypass:** see `PR-LIFECYCLE.md` for the end-to-end lifecycle (template usage,
+  merge bar, solo-maintainer bypass). The hard rule on filling the template and scoping each PR to
+  a single concern is in `.claude/rules/01-workflow.md`.
 
 ## 6. Autonomous / overnight loops
 
@@ -123,7 +122,7 @@ plus an actionable digest** — never "wake to a finished feature you haven't ch
 ## 8. Memory and note-taking
 
 - **Continuous capture.** Log context, decisions, and open threads as they happen. Load-bearing decisions
-  get the *why*. Per-repo work → `<repo>/project_log.md`; cross-repo decisions → `<DEV_ROOT>/project_log.md`.
+  get the *why*. Log altitudes, routing, and entry format are in `.claude/rules/03-logging-and-docs.md`.
 - **Checkpoint triggers:** before switching domains, before a long chat compacts, before a context-heavy
   subagent handoff, at any decision worth re-deriving later.
 - **Long-lived facts go to auto-memory** (user / feedback / project / reference), indexed by `MEMORY.md` —
