@@ -28,6 +28,9 @@ on:
         required: false
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   docs-budget:
     runs-on: ubuntu-latest
