@@ -21,7 +21,9 @@
 
 Content tasks (Phase 3) produce prose, not code: "Acceptance" bullets there describe what a reader must be able to do or find. If an acceptance bullet is ambiguous against the spec, ask rather than guess.
 
-**Not in this plan** (per spec §5/§8): the tooling-tour page, jargon scrub, and friction fixes are written *during* the play-test window from real friction data; the play-test-launch log entry is written when Watson invites testers.
+**Not in this plan**: friction fixes and structural rework are written *during* the play-test window from real friction data; the play-test-launch log entry is written when Watson invites testers.
+
+**Execution:** subagent-driven-development (confirmed by Watson on PR #12, 2026-06-11). Tester launch is gated on Task 16 — testers read scrubbed pages.
 
 ## Phase structure
 
@@ -31,6 +33,7 @@ Content tasks (Phase 3) produce prose, not code: "Acceptance" bullets there desc
 | 2 | Site infrastructure | 1 | 4–5 |
 | 3 | Content MVP | 1–2 | 6–13 |
 | 4 | Play-test kit | 2 | 14 |
+| 5 | Stakeholder polish | 2–3 | 15–16 |
 
 PR grouping per the merge bar (single concern each): Task 2 is one PR; Tasks 4–5 one PR; Tasks 6–12 land as one content PR or a small number of page-group PRs at the executor's discretion (each page is independently reviewable); Task 13 one PR; Task 14 one PR. Tasks 1 and 3 are operational — no commits.
 
@@ -48,7 +51,8 @@ site/
     ├── onboarding-project.md     # Task 9 (absorbs orphaned ONBOARDING-PROJECT.md)
     ├── rules-explained.md        # Task 10
     ├── repo-setup.md             # Task 11
-    └── play-testing.md           # Task 12
+    ├── play-testing.md           # Task 12
+    └── tooling-tour.md           # Task 15
 .github/workflows/deploy-site.yml # Task 5
 .github/ISSUE_TEMPLATE/friction.yml # Task 14
 README.md / BOOTSTRAP.md / WORKING-WITH-CLAUDE.md  # slimmed/stubbed (Task 13)
@@ -394,6 +398,55 @@ gh api repos/WatsonWBlair/lab-os/contents/.github/ISSUE_TEMPLATE/friction.yml -q
 ```
 
 **Commit:** `chore: add play-test friction issue template`
+
+---
+
+# Phase 5 — Stakeholder polish (gates tester launch)
+
+## Task 15: Tooling tour page
+
+**Files:**
+- Create: `site/docs/tooling-tour.md`
+- Modify: `site/sidebars.ts` (append after Play-testing)
+
+**Depends on:** 4
+
+**Spec:** [§5 IA — Tooling tour](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp)
+
+**Acceptance:**
+- Covers, one section each: the three adherence Actions (what each enforces, where it runs, what a red check means for a contributor); the `templates/` directory (what each template seeds); the pr-review agent (what it does, that it posts via bot identity, where its SPEC lives); the lab-claude-plugins marketplace (install one-liner)
+- Written for both stakeholders ("what infrastructure does this lab run") and new members ("what will act on my PRs"); every section links its source of truth rather than restating mechanics
+- No section promises behavior the tooling doesn't have (overclaim scrub applies here too)
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `feat(site): tooling tour page`
+
+## Task 16: Public-tier jargon scrub (launch gate)
+
+**Context:** Editorial pass only — wording, defined-at-first-use, overclaims. Structural rework deliberately waits for play-test friction data.
+
+**Files:**
+- Modify: `site/src/pages/index.md`, `site/docs/*.md` (all pages from Tasks 6–12 and 15)
+
+**Depends on:** 6, 7, 8, 9, 10, 11, 12, 15
+
+**Spec:** [§5](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp), 04-docs public-tier standard
+
+**Acceptance:**
+- Every page passes the 04-docs public-tier bar: jargon defined at first use or removed; no internal codenames without introduction; overclaim-scrubbed; no page depends on private-doc access to make sense
+- Outsider's-eye read (per Watson's review standard): a reader with zero lab context can follow every page; anything that required insider knowledge is fixed or cut, not excused
+- No structural changes (page splits, nav reordering, new sections) — those wait for friction data
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `docs(site): public-tier jargon scrub`
 
 ---
 

@@ -76,7 +76,7 @@ Logging: irreversible/external event → entry in repo log **and** lab log.
 | The Rules, explained | new, short | human tour of 01–04, each section linking to the rule file as source of truth |
 | How to play-test | new, short | the arc, the >15-min stall rule, the retro prompt |
 | Setting up a new repo | new, thin | first-cut runbook: repo creation checklist (gitignore, repo-CLAUDE.md seed, project-log skeleton, caller YAML pointer) — the templates are its building blocks; iterated during the play-test (the sandbox project's first step exercises it) |
-| Tooling tour — CI actions, templates, pr-review agent | new | **post-MVP**, written during the play-test window |
+| Tooling tour — CI actions, templates, pr-review agent | new | in scope (Watson review 2026-06-11); written after the MVP pages, before tester launch |
 
 After migration: `BOOTSTRAP.md` and `WORKING-WITH-CLAUDE.md` at repo root become 3-line pointer
 stubs to their site pages. README slims to AI/CI-consumer reference (junction setup, caller
@@ -111,8 +111,9 @@ YAML pattern, override semantics) + prominent site link for humans.
   per the merge bar (single concern each).
 - **Day 2:** content migration (3 docs + rules-explained + how-to-play-test + repo-setup
   runbook + pointer stubs + README slim-down) · friction template.
-- **Day 2–3:** Watson invites testers; play-test runs.
-- **During play-test:** tooling tour, jargon scrub, friction fixes as `playtest` issues arrive.
+- **Day 2–3:** tooling tour + public-tier jargon scrub (the scrub gates tester launch — testers
+  read scrubbed pages); then Watson invites testers; play-test runs.
+- **During play-test:** friction fixes and structural rework as `playtest` issues arrive.
 
 Log entries: rename (event — repo + lab altitude); site-as-owning-home (standing decision);
 play-test launch (event, lab altitude).
