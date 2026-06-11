@@ -24,9 +24,9 @@ jobs:
   docs-budget:
     uses: ./.github/workflows/docs-budget.yml
     with:
-      # enforce: false — warn-only posture per §7.2; flip to true after the
-      # first green run on this repo.
-      enforce: false
+      # enforce: true — flipped 2026-06-10 after this repo's first green run,
+      # per the §7.2 warn-only-until-first-green posture.
+      enforce: true
 
   merge-bar-check:
     uses: ./.github/workflows/merge-bar-check.yml
