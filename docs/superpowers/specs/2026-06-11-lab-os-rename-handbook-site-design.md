@@ -75,6 +75,7 @@ Logging: irreversible/external event → entry in repo log **and** lab log.
 | The Onboarding Project — Mission-Control sandbox | `ONBOARDING-PROJECT.md` from `docs/onboarding-project` branch | content migrates directly into the site; the branch's README/log changes are superseded and discarded explicitly |
 | The Rules, explained | new, short | human tour of 01–04, each section linking to the rule file as source of truth |
 | How to play-test | new, short | the arc, the >15-min stall rule, the retro prompt |
+| Setting up a new repo | new, thin | first-cut runbook: repo creation checklist (gitignore, repo-CLAUDE.md seed, project-log skeleton, caller YAML pointer) — the templates are its building blocks; iterated during the play-test (the sandbox project's first step exercises it) |
 | Tooling tour — CI actions, templates, pr-review agent | new | **post-MVP**, written during the play-test window |
 
 After migration: `BOOTSTRAP.md` and `WORKING-WITH-CLAUDE.md` at repo root become 3-line pointer
@@ -94,8 +95,8 @@ YAML pattern, override semantics) + prominent site link for humans.
 
 - **Testers:** 1–3 lab members with existing Claude subscriptions and lab-repo access.
 - **Arc:** site landing → Claude-guided environment setup → methods read → sandbox-project
-  brainstorm/spec. Sandbox project itself runs in the tester's own disposable repo per
-  ONBOARDING-PROJECT.md.
+  brainstorm/spec. Sandbox project itself runs in the tester's own disposable repo, created
+  per the Setting-up-a-new-repo page.
 - **Capture:** `.github/ISSUE_TEMPLATE/friction.yml` — where I was (page/step) · what I
   expected · what happened · severity; auto-labeled `playtest`. Stall >15 min = file an issue,
   then ask Watson. End of arc: retro writeup (what confused, what was missing, what you'd cut).
@@ -108,8 +109,8 @@ YAML pattern, override semantics) + prominent site link for humans.
 
 - **Day 1:** rename (§3) · site scaffold + deploy pipeline · landing page draft. Separate PRs
   per the merge bar (single concern each).
-- **Day 2:** content migration (3 docs + rules-explained + how-to-play-test + pointer stubs +
-  README slim-down) · friction template.
+- **Day 2:** content migration (3 docs + rules-explained + how-to-play-test + repo-setup
+  runbook + pointer stubs + README slim-down) · friction template.
 - **Day 2–3:** Watson invites testers; play-test runs.
 - **During play-test:** tooling tour, jargon scrub, friction fixes as `playtest` issues arrive.
 
@@ -120,7 +121,8 @@ play-test launch (event, lab altitude).
 
 - Phase 2 rollout (caller YAMLs, log migrations, LSCA cleanup) — pinned, unchanged.
 - Custom theming/branding; site search; doc versioning.
-- REPO-SETUP runbook and issue/label standardization (spec §13 of the logging/docs design).
+- Lab-wide issue/label standardization (spec §13 of the logging/docs design); the `playtest`
+  label is a one-off, not a convention.
 - Any rewrite of the rules files themselves.
 
 ## 10. Known gaps
