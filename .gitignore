@@ -1,1 +1,6 @@
 .claude/.pr-review-loop.state.json
+
+# Docusaurus site artifacts
+site/node_modules/
+site/build/
+site/.docusaurus/
