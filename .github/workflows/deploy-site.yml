@@ -1,0 +1,83 @@
+# Handbook site build + GitHub Pages deploy (spec §4 Site architecture).
+#
+# Two jobs, one build path:
+#   - pull_request touching site/** → build job only. Docusaurus fails the
+#     build on broken internal links, so this doubles as the PR link-check gate.
+#   - push to main touching site/** → build job uploads the Pages artifact,
+#     then the deploy job publishes via the official actions/deploy-pages flow.
+#
+# Site URL: https://watsonwblair.github.io/lab-os/
+# Requires Pages enabled with source "GitHub Actions" (Settings → Pages).
+
+name: deploy-site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/deploy-site.yml"
+  pull_request:
+    paths:
+      - "site/**"
+      - ".github/workflows/deploy-site.yml"
+
+permissions:
+  contents: read
+
+# One Pages deployment at a time; never cancel an in-progress production
+# deploy (GitHub's recommended Pages pattern).
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fails on broken internal links — this is the PR-time gate.
+      - name: Build site
+        run: npm run build
+
+      # Gated to the deploy path: configure-pages errors when Pages is not
+      # yet enabled, which would fail PR builds before first enablement.
+      - name: Configure Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/build
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
