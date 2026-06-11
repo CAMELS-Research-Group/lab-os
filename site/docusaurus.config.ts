@@ -11,6 +11,7 @@ const config: Config = {
 
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
+    faster: true, // Enable rspack/SWC toolchain
   },
 
   url: 'https://watsonwblair.github.io',
