@@ -72,7 +72,9 @@ The plan format is a lab documentation standard — source of truth:
 The single most important lesson: **an agent's self-report is not evidence.**
 
 - **Beware the optimistic narrator.** An agent will report success it didn't achieve. Re-run the gate
-  yourself; don't trust the digest. (When the self-report *matches* independent evidence, that's the win
+  yourself (the gate is the repo's designated verification command, defined per-repo — source of truth:
+  [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md),
+  Merge Bar); don't trust the digest. (When the self-report *matches* independent evidence, that's the win
   condition — but you only know by checking.)
 - **Green ≠ reviewed.** A passing gate proves "tests pass," not "the guarantees those tests claim are
   actually tested." Watch for **self-referential test gaps** — when the same agent wrote both the code and
@@ -117,9 +119,9 @@ plus an actionable digest** — never "wake to a finished feature you haven't ch
   not as task-success — otherwise a stuck agent churns to the iteration cap trying to earn a success it
   can't reach.
 - **Budget / retry caps + wall-clock kill.** A Claude session **cannot** read its own subscription-quota
-  usage in-session (opaque by design). "Stop at X% of quota" is not buildable. Use `--max-iterations` plus
-  a wall-clock kill as the backstop, and cap conservatively on early runs since iterations don't map
-  cleanly to quota.
+  usage in-session (opaque by design). "Stop at X% of quota" is not buildable. Give the loop a hard
+  iteration cap (e.g. the `--max-iterations` flag on the loop harness you're using) plus a wall-clock kill
+  as the backstop, and cap conservatively on early runs since iterations don't map cleanly to quota.
 - **Test the halt path before trusting a run.** An unattended run that only ended because the agent
   finished naturally has never exercised its escape hatch — verify the halt actually works (missing
   dependencies have silently broken stop-hooks).

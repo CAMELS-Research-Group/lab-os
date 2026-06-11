@@ -122,9 +122,11 @@ Then do the following, in order, confirming each step with me:
    - macOS / Linux:
      ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
 7. Install the lab plugins: run `/plugin marketplace add WatsonWBlair/lab-claude-plugins`
-   then `/plugin install pr-review-loop@lab-claude-plugins`. (These are
-   slash commands I run in Claude Code myself — walk me through them rather
-   than running them for me.)
+   then `/plugin install pr-review-loop@lab-claude-plugins`. Also install
+   `/plugin install superpowers@claude-plugins-official` (superpowers is on
+   the official marketplace that ships with Claude Code — no marketplace add
+   needed). (These are slash commands I run in Claude Code myself — walk me
+   through them rather than running them for me.)
 8. Run a verification pass and show me the results:
    - <DEV_ROOT>/.claude/rules resolves to lab-os/.claude/rules and lists
      the rule files (01-workflow.md, 02-data-protection.md, ...)
@@ -145,7 +147,7 @@ Whichever path you took, all of these should hold:
 
 | Check | Expected |
 |---|---|
-| `/plugin` | lists `pr-review-loop@lab-claude-plugins` |
+| `/plugin` | lists `pr-review-loop@lab-claude-plugins` and `superpowers@claude-plugins-official` |
 | Junction / symlink — **Windows (PowerShell):** `Get-Item "$HOME\Development\.claude\rules" \| Select-Object LinkType, Target` | `LinkType` = Junction; `Target` = path ending in `lab-os\.claude\rules` |
 | Junction / symlink — **macOS / Linux:** `ls -l ~/Development/.claude/rules` | Arrow pointing to `lab-os/.claude/rules` |
 | Open a Cowork session at `<DEV_ROOT>` | Loads dev-root `CLAUDE.md` **and** the `lab-os` rules |
@@ -301,7 +303,7 @@ From inside a Claude Code session:
 Restart your Claude Code session to apply, then `/plugin` to confirm it's listed.
 
 > **Also install `superpowers`.** The lab's working methods (see
-> [WORKING-WITH-CLAUDE.md](https://github.com/WatsonWBlair/lab-os/blob/main/WORKING-WITH-CLAUDE.md)) lean
+> [Working with Claude](/docs/working-with-claude)) lean
 > on the `superpowers` plugin's process skills (brainstorming, writing-plans, subagent-driven-development,
 > verification-before-completion, …). Superpowers is on the official plugin marketplace that ships with
 > Claude Code — no marketplace add needed:
@@ -337,7 +339,7 @@ then restart your Claude Code session).
 
 ## Next steps
 
-- **Read [WORKING-WITH-CLAUDE.md](https://github.com/WatsonWBlair/lab-os/blob/main/WORKING-WITH-CLAUDE.md)**
+- **Read [Working with Claude](/docs/working-with-claude)**
   — the lab's established methods and best practices (code-free plans, verification discipline, review
   discipline, autonomous-loop safety, communication discipline). Most of it was earned by hitting a
   failure mode and correcting it; reading it first saves you the rediscovery.
