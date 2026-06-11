@@ -8,6 +8,9 @@
 #
 # Site URL: https://watsonwblair.github.io/lab-os/
 # Requires Pages enabled with source "GitHub Actions" (Settings → Pages).
+# First push-to-main deploy will fail until Pages is enabled; re-run failed
+# jobs after enabling. Note: the build artifact expires after 1 day — if that
+# window passes, re-run ALL jobs (not just deploy) to regenerate the artifact.
 
 name: deploy-site
 
@@ -25,11 +28,13 @@ on:
 permissions:
   contents: read
 
-# One Pages deployment at a time; never cancel an in-progress production
-# deploy (GitHub's recommended Pages pattern).
+# Production deploys (push) share a single 'pages' group and are never
+# cancelled — one deployment at a time, no interruption mid-publish.
+# PR builds get per-ref groups so they don't serialize behind deploys;
+# a newer push to the same ref supersedes the queued build.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'push' && 'pages' || format('pages-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
   build:

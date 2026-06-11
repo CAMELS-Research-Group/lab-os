@@ -23,6 +23,12 @@ const config: Config = {
 
   onBrokenLinks: 'throw',
 
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'throw',
+    },
+  },
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
