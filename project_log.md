@@ -1,7 +1,7 @@
-# lab-rules — project log
+# lab-os — project log
 
-Format: lab standard, `lab-rules/.claude/rules/03-logging.md`. Skeleton per
-`lab-rules/templates/project_log.template.md` (normative — `log-lint` parses this structure).
+Format: lab standard, `lab-os/.claude/rules/03-logging.md`. Skeleton per
+`lab-os/templates/project_log.template.md` (normative — `log-lint` parses this structure).
 The `## Standing Decisions` and `## Entries` headings are load-bearing lint anchors: exact
 text, one each, never renamed. Entry headers are the only other `##` headings allowed.
 
@@ -11,6 +11,20 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-06-11 18:55 — Rename repo lab-rules → lab-os
+
+**Decision:** Repo renamed to `lab-os` on GitHub; local remote re-pointed; dev-root rules
+junction recreated; in-repo references swept (docs, templates, test fixtures) including the
+reusable workflows' functional self-repo gates (`$GITHUB_REPOSITORY` comparisons) and
+checkout refs. Old `lab-rules` URLs redirect; phase-2 caller YAMLs will be authored against
+`lab-os`.
+**Why:** The name described one slice of what the repo holds — rules, templates, CI
+enforcement, onboarding, and the incoming handbook site (spec D1). Renaming before phase-2
+callers ship keeps the cost near zero; after rollout every repo would reference the name.
+**Refs:** #12, docs/superpowers/specs/2026-06-11-lab-os-rename-handbook-site-design.md
 
 ---
 

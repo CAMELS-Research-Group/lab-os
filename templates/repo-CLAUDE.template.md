@@ -9,7 +9,7 @@
        design rationale → design doc (ENG tier)
        how-to steps → runbook (ENG tier)
        decision history → project_log.md
-       conventions & rules → .claude/rules/ or lab-rules (already loaded)
+       conventions & rules → .claude/rules/ or lab-os (already loaded)
      Delete these guidance comments when the file is committed. -->
 
 > **Template.** Copy to `<repo>/.claude/CLAUDE.md` or `<repo>/CLAUDE.md`. Fill every `<...>`
@@ -73,4 +73,4 @@ Lab-wide conventions: `.claude/rules/01-workflow.md` (commits, PRs, merge bar),
 Repo-local rules (this repo, `10+` numbering): `.claude/rules/10-<name>.md`
 
 <!-- Add a line per repo-local rule file that exists. Remove the placeholder line if none.
-     Per D12 of the logging-and-docs standard: lab-rules owns 0x-*, per-repo rules use 10+. -->
+     Per D12 of the logging-and-docs standard: lab-os owns 0x-*, per-repo rules use 10+. -->

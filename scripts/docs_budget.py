@@ -31,7 +31,7 @@ dir, or an individual file) whose resolved location lies outside the
 resolved repo root is skipped. On Windows, junctions may not register as
 symlinks via Path.is_symlink(), so the check compares Path.resolve()
 results instead of testing link-ness (mission-control junctions its rules
-dir from lab-rules; that surface belongs to lab-rules' own budget run).
+dir from lab-os; that surface belongs to lab-os' own budget run).
 
 Stdlib only; compatible with Python 3.11+.
 """

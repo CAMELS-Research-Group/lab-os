@@ -2,7 +2,7 @@
 #
 # Mechanically lints PR changes to project_log.md (and its archive) against
 # the lab logging standard (.claude/rules/03-logging.md) using
-# scripts/log_lint.py from lab-rules.
+# scripts/log_lint.py from lab-os.
 #
 # Behavior:
 # - pull_request callers only; any other caller event no-ops green.
@@ -27,7 +27,7 @@
 #     pull_request:
 #   jobs:
 #     log-lint:
-#       uses: WatsonWBlair/lab-rules/.github/workflows/log-lint.yml@main
+#       uses: WatsonWBlair/lab-os/.github/workflows/log-lint.yml@main
 
 name: log-lint
 
@@ -58,11 +58,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check out lab-rules (script source)
+      - name: Check out lab-os (script source)
         uses: actions/checkout@v4
         with:
-          repository: WatsonWBlair/lab-rules
-          path: .lab-rules
+          repository: WatsonWBlair/lab-os
+          path: .lab-os
 
       - name: Require an override reason when the label is set
         id: override
@@ -113,12 +113,12 @@ jobs:
           if git cat-file -e "origin/${GITHUB_BASE_REF}:${LOG_PATH}" 2>/dev/null; then
             git show "origin/${GITHUB_BASE_REF}:${LOG_PATH}" > "$baseline"
           fi
-          # On lab-rules' own PRs, lint with the PR's copy of the script (the .lab-rules checkout
+          # On lab-os' own PRs, lint with the PR's copy of the script (the .lab-os checkout
           # is main, which is absent/stale while the script itself is under review); gate on the
           # repo name, not file existence, so a downstream repo's same-named script can't shadow
           # the canonical one.
-          SCRIPT=".lab-rules/scripts/log_lint.py"
-          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-rules" ]; then SCRIPT="scripts/log_lint.py"; fi
+          SCRIPT=".lab-os/scripts/log_lint.py"
+          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-os" ]; then SCRIPT="scripts/log_lint.py"; fi
           python3 "$SCRIPT" \
             --changed "$LOG_PATH" \
             --baseline "$baseline" \
