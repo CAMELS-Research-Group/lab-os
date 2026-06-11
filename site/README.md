@@ -1,41 +1,24 @@
-# Website
+# lab-os Handbook Site
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+The lab-os handbook is built with [Docusaurus 3](https://docusaurus.io/).
 
-## Installation
+## Development
 
+Install dependencies:
 ```bash
-yarn
+npm ci
 ```
 
-## Local Development
-
+Start the local dev server:
 ```bash
-yarn start
+npm run start
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-## Build
-
+Build static content:
 ```bash
-yarn build
+npm run build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+The production build enforces a link-rot gate — broken internal links cause the build to fail by design.
 
-## Deployment
-
-Using SSH:
-
-```bash
-USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+Deployment is handled by the `deploy-site.yml` GitHub Action, which pushes the built site to GitHub Pages.
