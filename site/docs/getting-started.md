@@ -9,7 +9,8 @@ description: Set up a working CAMELS lab environment — Claude-guided in one pa
 This page takes a new lab member from nothing to a working CAMELS Claude Code / Cowork environment.
 ("Cowork" is the lab's name for a Claude Code working session — same tool, our shorthand.)
 
-There are two paths to the same result:
+Either path produces the same workspace; repo-specific Python environment setup lives in
+[Manual §6](#6-set-up-the-active-repos) for both.
 
 1. **Claude-guided (recommended):** install Claude Code, paste one prompt, and Claude interviews you and
    performs the setup with you, confirming each step.
@@ -31,9 +32,25 @@ consistently:
 |---|---|---|
 | **A Claude subscription (Claude Max)** | The lab runs inference via Claude Max, not a metered API key | log in at [claude.ai](https://claude.ai) |
 | **Git** | Clone repos, run the workflow | `git --version` |
-| **GitHub CLI (`gh`)** | PR workflow, private-repo auth | `gh auth status` |
+| **GitHub CLI (`gh`)** | PR workflow, private-repo auth | `gh --version` |
 | **Python 3 + a virtual-env tool** | `LSCA` is Python + PyTorch | `python --version` |
 | **GitHub access to private lab repos** | `LSCA`, `Global_Pathways` may be private | request access from the lab manager, Watson Blair ([watsonwblair@gmail.com](mailto:watsonwblair@gmail.com)), with your GitHub username |
+
+After installing `gh`, authenticate before you do anything else:
+
+```powershell
+# Windows (PowerShell)
+gh auth login
+gh auth setup-git
+```
+
+```bash
+# macOS / Linux
+gh auth login
+gh auth setup-git
+```
+
+Confirm with `gh auth status` — it should show "Logged in to github.com".
 
 > The lab's primary reference setup is **Windows 11 + PowerShell**. Every step below gives the
 > macOS / Linux equivalent. Where they differ it's almost always **junction (Windows) vs symlink (Unix)**
@@ -83,9 +100,10 @@ Then do the following, in order, confirming each step with me:
 3. Ask me which other lab repos I have access to (the core set is LSCA,
    Global_Pathways, and lab-claude-plugins, all under
    github.com/WatsonWBlair; some are private). Clone the ones I confirm
-   into <DEV_ROOT>. If a clone 404s, I don't have access yet — tell me to
-   request it from the lab manager, Watson Blair (watsonwblair@gmail.com),
-   with my GitHub username, and move on.
+   into <DEV_ROOT>. Before cloning, confirm `gh auth status` shows me
+   logged in. If I'm authenticated and a clone still 404s, I don't have
+   access yet — tell me to request it from the lab manager, Watson Blair
+   (watsonwblair@gmail.com), with my GitHub username, and move on.
 4. Personalize <DEV_ROOT>/lab-os/templates/global-CLAUDE.template.md into
    my personal global config at ~/.claude/CLAUDE.md (Windows:
    C:\Users\<me>\.claude\CLAUDE.md). Fill the About Me block from the
@@ -97,12 +115,17 @@ Then do the following, in order, confirming each step with me:
    <DEV_ROOT>/lab-os/templates/dev-root-CLAUDE.template.md, adjusting paths
    to my machine and removing the instructional blockquote.
 6. Link the lab rules so sessions at <DEV_ROOT> load them — link, don't
-   copy, so a git pull of lab-os keeps me current:
+   copy, so a git pull of lab-os keeps me current. First create
+   <DEV_ROOT>/.claude if it doesn't exist, then:
    - Windows (PowerShell, no admin needed):
      cmd /c mklink /J "<DEV_ROOT>\.claude\rules" "<DEV_ROOT>\lab-os\.claude\rules"
    - macOS / Linux:
      ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
-7. Run a verification pass and show me the results:
+7. Install the lab plugins: run `/plugin marketplace add WatsonWBlair/lab-claude-plugins`
+   then `/plugin install pr-review-loop@lab-claude-plugins`. (These are
+   slash commands I run in Claude Code myself — walk me through them rather
+   than running them for me.)
+8. Run a verification pass and show me the results:
    - <DEV_ROOT>/.claude/rules resolves to lab-os/.claude/rules and lists
      the rule files (01-workflow.md, 02-data-protection.md, ...)
    - ~/.claude/CLAUDE.md exists with no remaining <...> placeholders
@@ -122,38 +145,40 @@ Whichever path you took, all of these should hold:
 
 | Check | Expected |
 |---|---|
-| `<DEV_ROOT>/.claude/rules` | Resolves to `lab-os/.claude/rules` and lists the rule files (`01-workflow.md`, `02-data-protection.md`, …) |
+| `/plugin` | lists `pr-review-loop@lab-claude-plugins` |
+| Junction / symlink — **Windows (PowerShell):** `Get-Item "$HOME\Development\.claude\rules" \| Select-Object LinkType, Target` | `LinkType` = Junction; `Target` = path ending in `lab-os\.claude\rules` |
+| Junction / symlink — **macOS / Linux:** `ls -l ~/Development/.claude/rules` | Arrow pointing to `lab-os/.claude/rules` |
 | Open a Cowork session at `<DEV_ROOT>` | Loads dev-root `CLAUDE.md` **and** the `lab-os` rules |
-| Open a session inside `<DEV_ROOT>/LSCA` | Additionally loads `LSCA/CLAUDE.md` |
+| Open a session inside `<DEV_ROOT>/LSCA` (if you cloned LSCA) | Additionally loads `LSCA/CLAUDE.md` |
 | Ask Claude "what are the lab's commit-message rules?" | Answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject) |
 | Your global `~/.claude/CLAUDE.md` | About Me block reflects **you** — no `<...>` template placeholders left |
 
-**If a check fails:** rules not loading → re-check the junction/symlink (does `<DEV_ROOT>/.claude/rules`
-resolve to the `lab-os` copy?). Template placeholders still showing → finish personalizing the global
-template. Session not seeing the dev-root `CLAUDE.md` → confirm it lives at `<DEV_ROOT>/.claude/CLAUDE.md`
-and the session was opened at `<DEV_ROOT>`.
+**If a check fails:** junction command fails → re-do the wiring step (Manual §3). Junction resolves fine
+but rules question is unanswered → confirm the session was opened AT `<DEV_ROOT>`. Template placeholders
+still showing → finish personalizing the global template.
 
 ## Manual path
 
-The same setup by hand. The shell blocks write `<DEV_ROOT>` literally — set it once in your shell and
-substitute:
+The same setup by hand. Set `$DEV_ROOT` once in your shell and all blocks below use it automatically:
 
-- **Windows (PowerShell):** `$DEV_ROOT = "$HOME\Development"`
-- **macOS / Linux:** `export DEV_ROOT=~/Development`
+- **Windows (PowerShell):** `$DEV_ROOT = "$HOME\Development"` (adjust if you picked a different root)
+- **macOS / Linux:** `DEV_ROOT=~/Development`
 
 ### 1. Create your lab workspace
 
 **Windows (PowerShell):**
 
 ```powershell
-New-Item -ItemType Directory -Force "$HOME\Development"
-Set-Location "$HOME\Development"
+$DEV_ROOT = "$HOME\Development"
+New-Item -ItemType Directory -Force $DEV_ROOT
+Set-Location $DEV_ROOT
 ```
 
 **macOS / Linux:**
 
 ```bash
-mkdir -p ~/Development && cd ~/Development
+DEV_ROOT=~/Development
+mkdir -p $DEV_ROOT && cd $DEV_ROOT
 ```
 
 ### 2. Clone the core repos
@@ -162,15 +187,40 @@ The core bootstrap set is the two **active** research repos plus the two **tooli
 and paused repos (`Vibe_App`, `cs627`, `FCM_Analysis`, …) are cloned on demand when a question sends you
 upstream — see the lineage section of the dev-root `CLAUDE.md`.
 
-```bash
-# from <DEV_ROOT>
-git clone https://github.com/WatsonWBlair/LSCA.git
-git clone https://github.com/WatsonWBlair/Global_Pathways.git
-git clone https://github.com/WatsonWBlair/lab-os.git
-git clone https://github.com/WatsonWBlair/lab-claude-plugins.git
+First confirm you are authenticated:
+
+```powershell
+# Windows (PowerShell)
+gh auth status
 ```
 
-If `LSCA` or `Global_Pathways` 404s, you don't have access yet — request it from the lab manager, Watson
+```bash
+# macOS / Linux
+gh auth status
+```
+
+If not logged in, run `gh auth login` and `gh auth setup-git` before continuing.
+
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/WatsonWBlair/LSCA.git "$DEV_ROOT\LSCA"
+git clone https://github.com/WatsonWBlair/Global_Pathways.git "$DEV_ROOT\Global_Pathways"
+git clone https://github.com/WatsonWBlair/lab-os.git "$DEV_ROOT\lab-os"
+git clone https://github.com/WatsonWBlair/lab-claude-plugins.git "$DEV_ROOT\lab-claude-plugins"
+```
+
+**macOS / Linux:**
+
+```bash
+git clone https://github.com/WatsonWBlair/LSCA.git $DEV_ROOT/LSCA
+git clone https://github.com/WatsonWBlair/Global_Pathways.git $DEV_ROOT/Global_Pathways
+git clone https://github.com/WatsonWBlair/lab-os.git $DEV_ROOT/lab-os
+git clone https://github.com/WatsonWBlair/lab-claude-plugins.git $DEV_ROOT/lab-claude-plugins
+```
+
+If `LSCA` or `Global_Pathways` 404s: first confirm `gh auth status` shows you are logged in. If
+authenticated and it still 404s, you don't have access yet — request it from the lab manager, Watson
 Blair ([watsonwblair@gmail.com](mailto:watsonwblair@gmail.com)), with your GitHub username.
 
 ### 3. Wire lab-os into Cowork
@@ -181,19 +231,26 @@ Lab-wide conventions live in `lab-os/.claude/rules/`. Cowork picks them up when 
 **Windows (PowerShell) — junction, no admin required:**
 
 ```powershell
-New-Item -ItemType Directory -Force "$HOME\Development\.claude"
-cmd /c mklink /J "$HOME\Development\.claude\rules" "$HOME\Development\lab-os\.claude\rules"
+New-Item -ItemType Directory -Force "$DEV_ROOT\.claude"
+cmd /c mklink /J "$DEV_ROOT\.claude\rules" "$DEV_ROOT\lab-os\.claude\rules"
 ```
 
 **macOS / Linux — symlink:**
 
 ```bash
-mkdir -p ~/Development/.claude
-ln -s ~/Development/lab-os/.claude/rules ~/Development/.claude/rules
+mkdir -p $DEV_ROOT/.claude
+ln -s $DEV_ROOT/lab-os/.claude/rules $DEV_ROOT/.claude/rules
 ```
 
-Verify the link resolves: a session opened at `<DEV_ROOT>` should load `01-workflow.md` and
-`02-data-protection.md`.
+Verify the link resolves:
+
+- **Windows (PowerShell):** `Get-Item "$DEV_ROOT\.claude\rules" | Select-Object LinkType, Target`
+  — expect `LinkType` = Junction and `Target` ending in `lab-os\.claude\rules`
+- **macOS / Linux:** `ls -l $DEV_ROOT/.claude/rules`
+  — expect an arrow pointing to `lab-os/.claude/rules`
+
+If the junction command fails, re-do this step. If the junction resolves fine but a session at
+`<DEV_ROOT>` doesn't see the rules, confirm the session was opened AT `<DEV_ROOT>` (not a subdirectory).
 
 ### 4. Install the CLAUDE.md templates
 
@@ -211,7 +268,7 @@ verbatim.
 
 ```bash
 # macOS / Linux example
-cp ~/Development/lab-os/templates/global-CLAUDE.template.md ~/.claude/CLAUDE.md
+cp $DEV_ROOT/lab-os/templates/global-CLAUDE.template.md ~/.claude/CLAUDE.md
 # then edit the About Me block
 ```
 
@@ -224,7 +281,7 @@ Copy `templates/dev-root-CLAUDE.template.md` to `<DEV_ROOT>/.claude/CLAUDE.md` a
 
 ```bash
 # macOS / Linux example
-cp ~/Development/lab-os/templates/dev-root-CLAUDE.template.md ~/Development/.claude/CLAUDE.md
+cp $DEV_ROOT/lab-os/templates/dev-root-CLAUDE.template.md $DEV_ROOT/.claude/CLAUDE.md
 ```
 
 **How the layers compose:** global (you) → dev-root (lab map) → per-repo `CLAUDE.md` (project specifics),
@@ -241,21 +298,32 @@ From inside a Claude Code session:
 /plugin install pr-review-loop@lab-claude-plugins
 ```
 
-Run `/reload-plugins` to apply, then `/plugin` to confirm it's listed.
+Restart your Claude Code session to apply, then `/plugin` to confirm it's listed.
 
 > **Also install `superpowers`.** The lab's working methods (see
 > [WORKING-WITH-CLAUDE.md](https://github.com/WatsonWBlair/lab-os/blob/main/WORKING-WITH-CLAUDE.md)) lean
 > on the `superpowers` plugin's process skills (brainstorming, writing-plans, subagent-driven-development,
-> verification-before-completion, …). It's a **separate** plugin, not part of the `lab-claude-plugins`
-> marketplace — install it the same way (`/plugin marketplace add` its source, then `/plugin install`).
-> If you don't have the marketplace source, ask the lab manager.
+> verification-before-completion, …). Superpowers is on the official plugin marketplace that ships with
+> Claude Code — no marketplace add needed:
+>
+> ```text
+> /plugin install superpowers@claude-plugins-official
+> ```
 
 ### 6. Set up the active repos
 
 Each repo's own `README.md` / `CLAUDE.md` is the authority. Minimum to get `LSCA` runnable:
 
+```powershell
+# Windows (PowerShell)
+cd "$DEV_ROOT\LSCA"
+# create and activate a virtual environment, then:
+pip install -r requirements.txt   # or follow LSCA/README.md if it differs
+```
+
 ```bash
-cd <DEV_ROOT>/LSCA
+# macOS / Linux
+cd "$DEV_ROOT/LSCA"
 # create and activate a virtual environment, then:
 pip install -r requirements.txt   # or follow LSCA/README.md if it differs
 ```
@@ -265,7 +333,7 @@ pip install -r requirements.txt   # or follow LSCA/README.md if it differs
 
 Then run the checks in [Step 3 — Verify your setup](#step-3--verify-your-setup), plus: `/plugin` lists
 `pr-review-loop@lab-claude-plugins` (if not, re-run §5 — `/plugin marketplace add`, `/plugin install`,
-`/reload-plugins`).
+then restart your Claude Code session).
 
 ## Next steps
 
