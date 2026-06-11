@@ -1,0 +1,402 @@
+# lab-os Rename + Handbook Site Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Track progress via each task's `Commit:` subject — git is authoritative.
+
+**Goal:** Rename the repo to `lab-os`, stand up a Docusaurus handbook site as the human-facing front door at `watsonwblair.github.io/lab-os`, and ship the play-test kit so 1–3 lab members can run the full onboarding arc.
+
+**Architecture:** Docusaurus 3 (classic preset, TypeScript config) lives in `site/` inside this repo; a GitHub Action builds on PRs touching `site/**` and deploys to GitHub Pages on push to main. The site becomes the owning home for human-facing docs (D3); root markdown becomes pointer stubs; `.claude/rules/` stays AI-tier and untouched. The Docusaurus build's broken-link check is the link-rot gate.
+
+**Tech Stack:** Docusaurus 3, Node 20+, GitHub Pages, GitHub Actions. Existing lab CI (`docs-budget`, `log-lint`, `merge-bar-check`) unchanged.
+
+**Spec** (read before claiming any task): [2026-06-11-lab-os-rename-handbook-site-design.md](../specs/2026-06-11-lab-os-rename-handbook-site-design.md)
+
+## How to consume a task in this plan
+
+- **Files** lists exact paths to create/modify. Stick to them.
+- **Depends on** lists task numbers that must complete first.
+- **Spec** links the design-doc section that governs the task. Read it before starting.
+- **Acceptance** is the bulleted set of behaviors/properties the result must demonstrate. The behaviors *are* the review surface; you choose wording, page structure, and exact phrasing.
+- **Verification** is the exact command(s) that must pass before opening the PR.
+- **Commit** is the conventional-commit subject for the PR title.
+
+Content tasks (Phase 3) produce prose, not code: "Acceptance" bullets there describe what a reader must be able to do or find. If an acceptance bullet is ambiguous against the spec, ask rather than guess.
+
+**Not in this plan** (per spec §5/§8): the tooling-tour page, jargon scrub, and friction fixes are written *during* the play-test window from real friction data; the play-test-launch log entry is written when Watson invites testers.
+
+## Phase structure
+
+| Phase | Theme | Day | Tasks |
+|---|---|---|---|
+| 1 | Rename | 1 | 1–3 |
+| 2 | Site infrastructure | 1 | 4–5 |
+| 3 | Content MVP | 1–2 | 6–13 |
+| 4 | Play-test kit | 2 | 14 |
+
+PR grouping per the merge bar (single concern each): Task 2 is one PR; Tasks 4–5 one PR; Tasks 6–12 land as one content PR or a small number of page-group PRs at the executor's discretion (each page is independently reviewable); Task 13 one PR; Task 14 one PR. Tasks 1 and 3 are operational — no commits.
+
+## File structure (new/changed surfaces)
+
+```
+site/
+├── package.json / package-lock.json
+├── docusaurus.config.ts          # baseUrl /lab-os/, org WatsonWBlair
+├── sidebars.ts
+├── src/pages/index.md            # landing (Task 6)
+└── docs/
+    ├── getting-started.md        # Task 7 (absorbs BOOTSTRAP.md)
+    ├── working-with-claude.md    # Task 8 (absorbs WORKING-WITH-CLAUDE.md)
+    ├── onboarding-project.md     # Task 9 (absorbs orphaned ONBOARDING-PROJECT.md)
+    ├── rules-explained.md        # Task 10
+    ├── repo-setup.md             # Task 11
+    └── play-testing.md           # Task 12
+.github/workflows/deploy-site.yml # Task 5
+.github/ISSUE_TEMPLATE/friction.yml # Task 14
+README.md / BOOTSTRAP.md / WORKING-WITH-CLAUDE.md  # slimmed/stubbed (Task 13)
+```
+
+---
+
+# Phase 1 — Rename
+
+## Task 1: Rename the repo and re-point local infrastructure
+
+**Context:** Operational, no commit. Shared-state change (repo settings) — approved via the signed-off spec; do the junction step between Cowork sessions because a stale junction silently drops rule-loading.
+
+**Files:** none (GitHub settings + local filesystem)
+
+**Depends on:** (none — first task)
+
+**Spec:** [§3 Rename mechanics, steps 1–4](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#3-rename-mechanics)
+
+**Acceptance:**
+- GitHub repo is `WatsonWBlair/lab-os`; old `lab-rules` URLs redirect
+- Local folder is `C:\Users\watso\Development\lab-os`
+- Junction `C:\Users\watso\Development\.claude\rules` resolves to `Development\lab-os\.claude\rules` and lists the four rule files
+- Local git remote points at the canonical `lab-os` URL; fetch works
+
+**Verification:**
+```powershell
+gh repo view WatsonWBlair/lab-os --json name
+Get-ChildItem C:\Users\watso\Development\.claude\rules   # four 0x-*.md files
+git -C C:\Users\watso\Development\lab-os remote -v; git -C C:\Users\watso\Development\lab-os fetch
+```
+
+**Commit:** none (operational)
+
+## Task 2: In-repo reference sweep + rename log entry
+
+**Files:**
+- Modify: `README.md`, `BOOTSTRAP.md`, `WORKING-WITH-CLAUDE.md`, `PR-LIFECYCLE.md`
+- Modify: `.claude/rules/01-workflow.md` … `04-docs.md` (only where they self-reference the repo name)
+- Modify: `templates/dev-root-CLAUDE.template.md`, `templates/global-CLAUDE.template.md`, `templates/repo-CLAUDE.template.md`, `templates/project_log.template.md` (whichever name lab-rules)
+- Modify: `project_log.md` (new event entry; events get no Standing Decisions index line)
+- Modify: `C:\Users\watso\Development\project_log.md` (lab-altitude event entry — outside this repo, no commit, honor-system rules apply)
+
+**Depends on:** 1
+
+**Spec:** [§3 steps 5 + logging](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#3-rename-mechanics)
+
+**Acceptance:**
+- No live doc in the repo refers to `lab-rules` as the current name; historical artifacts (existing specs/plans, merged log entries, archived content) stay as written
+- Junction/checkout snippets in README and BOOTSTRAP use the new paths and still work copy-pasted
+- Repo log entry records the rename as an irreversible/external event (Why: name described one slice; phase 2 makes renaming expensive later); lab log gets the cross-repo counterpart with absolute-path refs
+- `git grep -niI "lab-rules"` hits only historical artifacts (docs/superpowers/**, project_log.md pre-existing entries) — list any other hit and justify or fix
+
+**Verification:**
+```powershell
+git grep -niI "lab-rules" -- ':!docs/superpowers' ':!project_log.md'   # expect: no output
+python scripts/log_lint.py --base main; python scripts/docs_budget.py --root .
+```
+
+**Commit:** `docs: sweep lab-rules references to lab-os`
+
+## Task 3: Update live session-steering files
+
+**Context:** Operational, no commit — these files live outside the repo but steer every Cowork session; same-day per spec.
+
+**Files:**
+- Modify: `C:\Users\watso\.claude\CLAUDE.md` (lab-tooling bullet, doc-update-triggers pointer)
+- Modify: `C:\Users\watso\Development\.claude\CLAUDE.md` (lab-tooling section, repo table)
+- Modify: Claude memory files referencing lab-rules under `C:\Users\watso\.claude\projects\C--Users-watso-Development\memory\` (and the lab-rules project memory dir)
+
+**Depends on:** 1
+
+**Spec:** [§3 step 6](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#3-rename-mechanics)
+
+**Acceptance:**
+- Both CLAUDE.md files name `lab-os` with the new path; junction description matches Task 1 reality
+- Memory files mentioning the repo by name are updated; no memory recommends a dead path
+
+**Verification:**
+```powershell
+Select-String -Path C:\Users\watso\.claude\CLAUDE.md,C:\Users\watso\Development\.claude\CLAUDE.md -Pattern "lab-rules"   # expect: no output
+```
+
+**Commit:** none (files outside repo)
+
+---
+
+# Phase 2 — Site infrastructure
+
+## Task 4: Scaffold the Docusaurus site
+
+**Files:**
+- Create: `site/` via `create-docusaurus` (classic preset, TypeScript)
+- Modify: `.gitignore` (add `site/node_modules/`, `site/build/`, `site/.docusaurus/`)
+
+**Depends on:** 1 (baseUrl bakes in the new name)
+
+**Spec:** [§4 Site architecture](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#4-site-architecture)
+
+**Acceptance:**
+- `docusaurus.config.ts`: `url` `https://watsonwblair.github.io`, `baseUrl` `/lab-os/`, `organizationName` `WatsonWBlair`, `projectName` `lab-os`, `onBrokenLinks: 'throw'`
+- Blog plugin disabled; scaffold boilerplate pages/images that won't be reused are removed
+- Production build succeeds from a clean install; no scaffold-default "Docusaurus" branding remains in navbar/footer/title
+
+**Verification:**
+```powershell
+cd site; npm ci; npm run build   # exit 0, no broken-link errors
+```
+
+**Commit:** `feat(site): scaffold docusaurus handbook site`
+
+## Task 5: Build + Pages deploy workflow
+
+**Context:** Enabling GitHub Pages (Settings → Pages → GitHub Actions source) is a one-time shared-state change — covered by the signed-off spec, done by Watson or with him present.
+
+**Files:**
+- Create: `.github/workflows/deploy-site.yml`
+
+**Depends on:** 4
+
+**Spec:** [§4 Site architecture](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#4-site-architecture)
+
+**Acceptance:**
+- On `pull_request` touching `site/**`: build-only job (the link-check gate); on `push` to main touching `site/**`: build + deploy to GitHub Pages via the official `actions/deploy-pages` flow with the required permissions and a concurrency group
+- Site responds 200 at `https://watsonwblair.github.io/lab-os/` after the first main deploy
+- Workflow does not trigger on non-site changes
+
+**Verification:**
+```powershell
+gh run list --workflow deploy-site.yml --limit 3   # build green on PR, deploy green on main
+Invoke-WebRequest https://watsonwblair.github.io/lab-os/ -Method Head   # 200
+```
+
+**Commit:** `ci: build and deploy handbook site to github pages`
+
+---
+
+# Phase 3 — Content MVP
+
+## Task 6: Landing page
+
+**Files:**
+- Create: `site/src/pages/index.md` (replacing scaffold homepage)
+
+**Depends on:** 4
+
+**Spec:** [§5 IA — Landing](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp)
+
+**Acceptance:**
+- A reader with zero lab context leaves knowing: what the CAMELS Research Group is (one short paragraph, public-tier — no codenames, no overclaims per 04-docs), what lab-os is (the lab's operating system: conventions, onboarding, tooling), and what to do next
+- Single prominent "Start here" call-to-action linking to Getting Started
+- Written fresh — no text lifted from AI-tier docs
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `feat(site): landing page`
+
+## Task 7: Getting Started — Claude-guided setup
+
+**Files:**
+- Create: `site/docs/getting-started.md`
+- Source: `BOOTSTRAP.md` (content absorbed; stub happens in Task 13)
+
+**Depends on:** 4
+
+**Spec:** [§5 IA — Getting Started](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp), [D6](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#2-decisions)
+
+**Acceptance:**
+- Page spine is the guided flow: prerequisites (accounts, installs, Claude subscription) → install Claude Code → paste the bootstrap prompt → verify the result
+- The bootstrap prompt is a single copy-paste block that instructs Claude to: interview the member and personalize `templates/global-CLAUDE.template.md` into their `~/.claude/CLAUDE.md`; seed the dev-root CLAUDE.md from its template; clone the core repos; wire the rules junction (Windows + macOS/Linux variants); and run a verification pass at the end. The prompt references the templates by repo URL — it never inlines template content (single-source, §6)
+- BOOTSTRAP.md's step-by-step survives as a manual-path section for members who prefer doing it by hand; cross-platform coverage is not lost in migration
+- A "verify your setup" section gives the member concrete success checks (rules visible in a session, junction resolves, templates found)
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `feat(site): getting started with claude-guided setup`
+
+## Task 8: Working with Claude — methods page
+
+**Files:**
+- Create: `site/docs/working-with-claude.md`
+- Source: `WORKING-WITH-CLAUDE.md`
+
+**Depends on:** 4
+
+**Spec:** [§5 IA — Working with Claude](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp)
+
+**Acceptance:**
+- Content parity with the source doc modulo human-tier edits (headings, intro framing, link fixes)
+- Insider-reference scan applied (§10): no reference assumes access to private docs or unexplained lab history; anything load-bearing gets one sentence of context or a link
+- Where the doc restates rule content, it links the owning rule file ("source of truth: `01-workflow.md`")
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `feat(site): working-with-claude methods page`
+
+## Task 9: Onboarding project page (rescue from orphaned branch)
+
+**Context:** `ONBOARDING-PROJECT.md` exists only on the unmerged `docs/onboarding-project` branch; its content moves straight into the site and never lands at repo root. Branch deletion at the end is destructive — get Watson's explicit OK before deleting.
+
+**Files:**
+- Create: `site/docs/onboarding-project.md`
+- Source: `git show docs/onboarding-project:ONBOARDING-PROJECT.md`
+
+**Depends on:** 4
+
+**Spec:** [§5 IA — Onboarding Project](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp), [§8 risks](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#8-sequencing)
+
+**Acceptance:**
+- Full ONBOARDING-PROJECT.md content migrated (capability checklist, fixed workflow spine, stack-as-discovery-surface, deployment-tradeoff writeup requirement, 2-week timebox)
+- The branch's README and project_log deltas are *not* brought over (superseded by this initiative)
+- Page links the repo-setup runbook (Task 11) as the project's first step
+- After the content PR merges: orphan branch deleted with Watson's explicit confirmation
+
+**Verification:**
+```powershell
+cd site; npm run build
+git diff --stat docs/onboarding-project -- ONBOARDING-PROJECT.md   # reviewer cross-checks content parity
+```
+
+**Commit:** `feat(site): onboarding project page`
+
+## Task 10: Rules, explained
+
+**Files:**
+- Create: `site/docs/rules-explained.md`
+
+**Depends on:** 4
+
+**Spec:** [§5 IA — Rules explained](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp), [§6 single-source map](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#6-single-source-map-per-04-docs)
+
+**Acceptance:**
+- One short section per rule file (01-workflow, 02-data-protection, 03-logging, 04-docs): what it governs, why it exists, the one or two things a new member most needs to internalize
+- Every section names and links its rule file as source of truth; restates generalized, never copies rule text verbatim (robust to rule edits per 04-docs)
+- A reader can answer: "where do commit conventions live, what can I never commit, when do I write a log entry, which doc owns a fact"
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `feat(site): rules-explained tour`
+
+## Task 11: Repo-setup runbook
+
+**Files:**
+- Create: `site/docs/repo-setup.md`
+
+**Depends on:** 4
+
+**Spec:** [§5 IA — Setting up a new repo](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp)
+
+**Acceptance:**
+- First-cut checklist for creating a lab-conformant repo: create repo → `.gitignore` basics → seed `CLAUDE.md` from `templates/repo-CLAUDE.template.md` → seed `project_log.md` from `templates/project_log.template.md` → PR template → caller YAML pointer marked "phase 2 — not yet required"
+- Each step links its template/source rather than inlining content
+- Framed as the sandbox project's first step (the play-test exercises it); explicitly labeled first-cut, expected to grow from friction data
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `feat(site): repo-setup runbook`
+
+## Task 12: How to play-test
+
+**Files:**
+- Create: `site/docs/play-testing.md`
+
+**Depends on:** 4
+
+**Spec:** [§7 Play-test protocol](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#7-play-test-protocol)
+
+**Acceptance:**
+- States the arc (landing → guided setup → methods → sandbox-project brainstorm/spec) and the success bar (working environment incl. personalized global CLAUDE.md + a sandbox-project spec, unassisted)
+- The >15-minute stall rule: file a friction issue first, then ask Watson; links the friction template
+- End-of-arc retro prompt: what confused, what was missing, what you'd cut
+
+**Verification:**
+```powershell
+cd site; npm run build
+```
+
+**Commit:** `feat(site): play-test guide`
+
+## Task 13: Pointer stubs, README slim-down, nav, decision log entry
+
+**Files:**
+- Modify: `BOOTSTRAP.md`, `WORKING-WITH-CLAUDE.md` (→ ≤10-line pointer stubs to their site pages)
+- Modify: `README.md` (AI/CI-consumer reference + prominent site link; "New to the lab? → site")
+- Modify: `site/sidebars.ts` (nav order: Getting Started → Working with Claude → Onboarding Project → Rules → Repo Setup → Play-testing)
+- Modify: `project_log.md` (standing decision: site owns human-facing docs — entry + Standing Decisions index line)
+
+**Depends on:** 7, 8, 9, 10, 11, 12
+
+**Spec:** [§5 after-migration](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#5-information-architecture-mvp), [§6](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#6-single-source-map-per-04-docs)
+
+**Acceptance:**
+- Stubs state where the content went and why, link the site page, and contain no content of their own
+- README retains: junction setup, caller-YAML consumption pattern, override semantics, scope discipline; loses migrated human-facing narrative
+- Log entry records D3 as a standing decision (Why + rejected alternatives from the spec); index line added, header/date match verbatim
+- All budgets green after the slim-down
+
+**Verification:**
+```powershell
+python scripts/docs_budget.py --root .; python scripts/log_lint.py --base main
+cd site; npm run build
+```
+
+**Commit:** `docs: root docs become pointers to the handbook site`
+
+---
+
+# Phase 4 — Play-test kit
+
+## Task 14: Friction issue template + label
+
+**Files:**
+- Create: `.github/ISSUE_TEMPLATE/friction.yml`
+
+**Depends on:** (none — independent of the site)
+
+**Spec:** [§7 Play-test protocol](../specs/2026-06-11-lab-os-rename-handbook-site-design.md#7-play-test-protocol)
+
+**Acceptance:**
+- GitHub issue form with fields: where I was (page/step) · what I expected · what happened · severity (dropdown); auto-applies the `playtest` label
+- `playtest` label exists on the repo
+- Opening a new issue on GitHub shows the form rendered (malformed YAML falls back to blank issue — that's the failure signal)
+
+**Verification:**
+```powershell
+gh label list --repo WatsonWBlair/lab-os | Select-String playtest
+gh api repos/WatsonWBlair/lab-os/contents/.github/ISSUE_TEMPLATE/friction.yml -q .name   # exists on main after merge
+```
+
+**Commit:** `chore: add play-test friction issue template`
+
+---
+
+## Execution Log
+
+<!-- Plan deviations, implementation calls, gate evidence. Archives with the plan. -->
