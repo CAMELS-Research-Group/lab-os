@@ -33,8 +33,9 @@ same files the lab's repositories and automation consume.
 
 ## What's inside
 
-- **Getting started** — onboarding for new lab members
-- **Workflow** — commit, pull-request, and merge standards
-- **Data protection** — handling rules for gated datasets and derived artifacts
-- **Logging** — how decisions are recorded and kept current
-- **Documentation** — tiers, budgets, and single-source rules
+- **Getting started** — guided environment setup for new lab members
+- **Working with Claude** — the lab's methods for working with AI assistance
+- **The onboarding project** — a two-week sandbox build to practice the workflow
+- **The rules, explained** — a human tour of the lab's conventions (workflow, data protection, logging, documentation)
+- **Setting up a new repo** — checklist for starting a lab-conformant repository
+- **How to play-test** — running the onboarding arc and reporting friction
