@@ -1,11 +1,11 @@
-# lab-rules
+# lab-os
 
 Cross-repo conventions for `WatsonWBlair`'s lab repos.
 
 ## New to the lab? Start here
 
 **[`BOOTSTRAP.md`](BOOTSTRAP.md)** is the full new-member runbook — workspace layout, the core repos to
-clone, wiring lab-rules into Cowork, the two `CLAUDE.md` templates, and the lab plugins. Cross-platform
+clone, wiring lab-os into Cowork, the two `CLAUDE.md` templates, and the lab plugins. Cross-platform
 (Windows reference setup + macOS / Linux equivalents). Follow it end-to-end for a working environment.
 
 The rest of this README is reference for how the conventions in this repo are consumed.
@@ -48,12 +48,12 @@ The lab's Claude Code plugins live in [`lab-claude-plugins`](https://github.com/
 
 ```powershell
 # Windows (PowerShell) — junction, no admin required
-cmd /c mklink /J "<DEV_ROOT>\.claude\rules" "<DEV_ROOT>\lab-rules\.claude\rules"
+cmd /c mklink /J "<DEV_ROOT>\.claude\rules" "<DEV_ROOT>\lab-os\.claude\rules"
 ```
 
 ```bash
 # macOS / Linux — symlink
-ln -s <DEV_ROOT>/lab-rules/.claude/rules <DEV_ROOT>/.claude/rules
+ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
 ```
 
 **In CI (PR reviewer)**: each lab repo's `.github/workflows/pr-review.yml` checks this repo out alongside the PR repo:
@@ -63,17 +63,17 @@ ln -s <DEV_ROOT>/lab-rules/.claude/rules <DEV_ROOT>/.claude/rules
   with: { path: pr-repo }
 - uses: actions/checkout@v4
   with:
-    repository: WatsonWBlair/lab-rules
-    path: lab-rules
+    repository: WatsonWBlair/lab-os
+    path: lab-os
 ```
 
-The reviewer then concatenates `lab-rules/.claude/rules/*.md` + `pr-repo/.claude/rules/*.md` into its prompt context.
+The reviewer then concatenates `lab-os/.claude/rules/*.md` + `pr-repo/.claude/rules/*.md` into its prompt context.
 
 **Adherence Actions**: repos also consume the three enforcement workflows by adding a thin caller that references them from this repo. [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
 
 ## Override semantics
 
-Per-repo rules extend or override lab rules. Specific wins over general. Per-repo rules number from `10+` (lab-rules owns `0x-*`): a per-repo `10-data-protection.md` listing the repo's specific gated datasets supplements the lab-wide PII checklist; a per-repo rule contradicting a lab rule applies only in that repo.
+Per-repo rules extend or override lab rules. Specific wins over general. Per-repo rules number from `10+` (lab-os owns `0x-*`): a per-repo `10-data-protection.md` listing the repo's specific gated datasets supplements the lab-wide PII checklist; a per-repo rule contradicting a lab rule applies only in that repo.
 
 ## Scope discipline
 

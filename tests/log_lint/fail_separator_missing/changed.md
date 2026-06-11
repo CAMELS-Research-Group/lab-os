@@ -1,6 +1,6 @@
 # fixture-repo — project log
 
-Format: lab standard, `lab-rules/.claude/rules/03-logging.md`.
+Format: lab standard, `lab-os/.claude/rules/03-logging.md`.
 
 ## Standing Decisions
 

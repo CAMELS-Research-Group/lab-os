@@ -5,7 +5,7 @@
 
 <!-- Bundle lifecycle: created in docs/work/YYYY-MM-DD-<slug>/; archived as a unit to
      docs/work/completed/ (done) or docs/work/abandoned/ (abandoned, with reason prepended here).
-     Spec: lab-rules docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5. -->
+     Spec: lab-os docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5. -->
 
 **Date:** YYYY-MM-DD · **Repo:** <repo> · **Slice:** <slug>
 

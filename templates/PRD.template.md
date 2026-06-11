@@ -3,7 +3,7 @@
 <!-- This is a living document at a stable path. Update by amendment; never archive.
      Decisions made while executing this PRD live in project_log.md — never embedded here.
      Bundle lifecycle for individual slices: docs/work/YYYY-MM-DD-<slug>/ archived per
-     lab-rules docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5. -->
+     lab-os docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5. -->
 
 **Status:** draft <!-- draft | active | paused | complete -->
 **Date:** YYYY-MM-DD · **Repo:** <repo>

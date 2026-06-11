@@ -45,7 +45,7 @@ Two automated reviewers with distinct roles:
   [github.com/WatsonWBlair/pr-review-agent](https://github.com/WatsonWBlair/pr-review-agent)). It
   runs 2×/day and posts an external-perspective review to every open PR with a new head SHA, body
   prefixed `[automated review by lab-pr-reviewer]`. Its job is the outside-the-problem look: fresh
-  context, adversarial prompt, no inherited author framing. It loads `lab-rules/.claude/rules/*.md`
+  context, adversarial prompt, no inherited author framing. It loads `lab-os/.claude/rules/*.md`
   into its review prompt, so it is also the *semantic* enforcement arm — it checks what CI
   parsers cannot (was a decision actually logged? is a restated fact owned elsewhere?).
 - **`pr-review-loop`** — the on-demand remediation driver. A Claude Code plugin from the lab

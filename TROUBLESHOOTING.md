@@ -1,4 +1,4 @@
-# TROUBLESHOOTING.md — lab-rules
+# TROUBLESHOOTING.md — lab-os
 
 **Contract:** grep-only surface. Look up by symptom; do not read whole.
 One section per gotcha, titled as the symptom you would search for.
@@ -15,10 +15,10 @@ section below: symptom as heading, cause, resolution.
 ## Rules files not loading in Cowork session (`01-workflow.md` / `02-data-protection.md` not visible)
 
 **Cause:** The junction (Windows) or symlink (Unix) linking
-`<DEV_ROOT>/.claude/rules` → `lab-rules/.claude/rules` was not created, was created pointing at
+`<DEV_ROOT>/.claude/rules` → `lab-os/.claude/rules` was not created, was created pointing at
 the wrong target, or was deleted.
 
-**Resolution:** Re-run the link step from [`BOOTSTRAP.md` §3](BOOTSTRAP.md#3-wire-lab-rules-into-cowork).
+**Resolution:** Re-run the link step from [`BOOTSTRAP.md` §3](BOOTSTRAP.md#3-wire-lab-os-into-cowork).
 
 Verify: open a Cowork session at `<DEV_ROOT>` and ask "what are the lab's commit-message rules?" —
 it should answer from `01-workflow.md`.
@@ -52,7 +52,7 @@ directory was not created first.
 ```bash
 rm -f ~/Development/.claude/rules          # remove stale symlink
 ```
-Then re-run the link step from [`BOOTSTRAP.md` §3](BOOTSTRAP.md#3-wire-lab-rules-into-cowork).
+Then re-run the link step from [`BOOTSTRAP.md` §3](BOOTSTRAP.md#3-wire-lab-os-into-cowork).
 
 ---
 
@@ -92,7 +92,7 @@ scripts that embed paths in strings (grep patterns, Python `os.path`, config fil
 
 **Resolution:**
 - In PowerShell, use `Join-Path` rather than string concatenation for paths:
-  `Join-Path $HOME "Development\lab-rules"` rather than `"$HOME/Development/lab-rules"`.
+  `Join-Path $HOME "Development\lab-os"` rather than `"$HOME/Development/lab-os"`.
 - In Python code targeting both platforms: use `pathlib.Path` throughout; never concatenate
   separators by hand.
 - In docs and shell snippets targeting both platforms: forward slash (`/`) is safe for

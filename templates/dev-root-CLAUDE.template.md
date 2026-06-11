@@ -47,9 +47,9 @@ Only `LSCA`, `Global_Pathways`, and the tooling repos are part of the core boots
 
 ## Lab tooling
 
-- **`lab-rules`** — cross-repo conventions (this repo's source). Consumed by Cowork via the `.claude/rules/`
+- **`lab-os`** — cross-repo conventions (this repo's source). Consumed by Cowork via the `.claude/rules/`
   junction/symlink at `<DEV_ROOT>`, and by the PR-review GitHub Action at review time. Source-of-truth:
-  github.com/WatsonWBlair/lab-rules.
+  github.com/WatsonWBlair/lab-os.
 - **`lab-claude-plugins`** — lab Claude Code plugins (e.g. `pr-review-loop`). Installed via the plugin
   marketplace. Source-of-truth: github.com/WatsonWBlair/lab-claude-plugins.
 

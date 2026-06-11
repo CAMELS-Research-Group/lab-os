@@ -24,4 +24,4 @@ Budgets (bytes): per-repo `CLAUDE.md` 8 KB · `.claude/rules/*.md` 5 KB each · 
 
 ## Rules numbering
 
-lab-rules owns `0x-*`; per-repo rules use `10+`.
+lab-os owns `0x-*`; per-repo rules use `10+`.

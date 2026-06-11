@@ -60,7 +60,7 @@ upstream — see the lineage section of the dev-root `CLAUDE.md`.
 # from <DEV_ROOT>
 git clone https://github.com/WatsonWBlair/LSCA.git
 git clone https://github.com/WatsonWBlair/Global_Pathways.git
-git clone https://github.com/WatsonWBlair/lab-rules.git
+git clone https://github.com/WatsonWBlair/lab-os.git
 git clone https://github.com/WatsonWBlair/lab-claude-plugins.git
 ```
 
@@ -69,21 +69,21 @@ Blair (<watsonwblair@gmail.com>), with your GitHub username.
 
 ---
 
-## 3. Wire lab-rules into Cowork
+## 3. Wire lab-os into Cowork
 
-Lab-wide conventions live in `lab-rules/.claude/rules/`. Cowork picks them up when they appear at
-`<DEV_ROOT>/.claude/rules/`. Link — don't copy — so a `git pull` of `lab-rules` keeps you current.
+Lab-wide conventions live in `lab-os/.claude/rules/`. Cowork picks them up when they appear at
+`<DEV_ROOT>/.claude/rules/`. Link — don't copy — so a `git pull` of `lab-os` keeps you current.
 
 **Windows (PowerShell) — junction, no admin required:**
 ```powershell
 New-Item -ItemType Directory -Force "$HOME\Development\.claude"
-cmd /c mklink /J "$HOME\Development\.claude\rules" "$HOME\Development\lab-rules\.claude\rules"
+cmd /c mklink /J "$HOME\Development\.claude\rules" "$HOME\Development\lab-os\.claude\rules"
 ```
 
 **macOS / Linux — symlink:**
 ```bash
 mkdir -p ~/Development/.claude
-ln -s ~/Development/lab-rules/.claude/rules ~/Development/.claude/rules
+ln -s ~/Development/lab-os/.claude/rules ~/Development/.claude/rules
 ```
 
 Verify the link resolves: a session opened at `<DEV_ROOT>` should load `01-workflow.md` and
@@ -106,7 +106,7 @@ verbatim.
 
 ```bash
 # macOS / Linux example
-cp ~/Development/lab-rules/templates/global-CLAUDE.template.md ~/.claude/CLAUDE.md
+cp ~/Development/lab-os/templates/global-CLAUDE.template.md ~/.claude/CLAUDE.md
 # then edit the About Me block
 ```
 
@@ -119,7 +119,7 @@ Copy `templates/dev-root-CLAUDE.template.md` to `<DEV_ROOT>/.claude/CLAUDE.md` a
 
 ```bash
 # macOS / Linux example
-cp ~/Development/lab-rules/templates/dev-root-CLAUDE.template.md ~/Development/.claude/CLAUDE.md
+cp ~/Development/lab-os/templates/dev-root-CLAUDE.template.md ~/Development/.claude/CLAUDE.md
 ```
 
 **How the layers compose:** global (you) → dev-root (lab map) → per-repo `CLAUDE.md` (project specifics),
@@ -167,14 +167,14 @@ pip install -r requirements.txt   # or follow LSCA/README.md if it differs
 
 | Check | Expected |
 |---|---|
-| Open a Cowork session at `<DEV_ROOT>` | Loads dev-root `CLAUDE.md` **and** `lab-rules` `.claude/rules/*` |
+| Open a Cowork session at `<DEV_ROOT>` | Loads dev-root `CLAUDE.md` **and** `lab-os` `.claude/rules/*` |
 | Open a session inside `<DEV_ROOT>/LSCA` | Additionally loads `LSCA/CLAUDE.md` |
 | `/plugin` | Lists `pr-review-loop@lab-claude-plugins` |
 | Ask Claude "what are the lab's commit-message rules?" | Answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject) |
 | Your global `CLAUDE.md` | About Me block reflects **you**, not the template placeholders |
 
 **If a check fails:** rules not loading → re-check the junction/symlink in §3 (does `<DEV_ROOT>/.claude/rules`
-resolve to the `lab-rules` copy?). Plugin not listed → re-run §5 (`/plugin marketplace add` then
+resolve to the `lab-os` copy?). Plugin not listed → re-run §5 (`/plugin marketplace add` then
 `/plugin install`, then `/reload-plugins`). Template placeholders still showing → finish §4a's edit.
 
 ---
@@ -200,7 +200,7 @@ reading it first saves you the rediscovery.
 
 ## Keeping current
 
-- `git pull` `lab-rules` periodically — the junction/symlink means new rules apply immediately, no re-link.
+- `git pull` `lab-os` periodically — the junction/symlink means new rules apply immediately, no re-link.
 - `git pull` `lab-claude-plugins`, then `/plugin marketplace update` to pick up plugin changes.
-- When lab conventions change, the change lands in `lab-rules` first; your local link stays the
+- When lab conventions change, the change lands in `lab-os` first; your local link stays the
   source-of-truth.

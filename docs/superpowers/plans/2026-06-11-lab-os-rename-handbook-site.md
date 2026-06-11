@@ -453,3 +453,6 @@ cd site; npm run build
 ## Execution Log
 
 <!-- Plan deviations, implementation calls, gate evidence. Archives with the plan. -->
+
+- 2026-06-11 18:30 · task 1 · GitHub rename, remote re-point, and junction recreate done in-session. Local folder rename blocked: the session process itself holds the `lab-rules` handle (the plan's between-sessions caveat, hit from inside). Deferred to post-session handoff; junction temporarily targets the `lab-rules` path and gets recreated against `lab-os` together with the folder rename.
+- 2026-06-11 18:50 · task 2 (deviation) · Sweep scope exceeded the plan's file list: the three reusable workflows carry functional self-repo gates (`$GITHUB_REPOSITORY = "WatsonWBlair/lab-rules"` decides which copy of each lint script runs) plus `repository:`/`path:` checkout refs — broken by the rename, swept in a dedicated `ci:` commit. Test-fixture sweep verified: `log_lint --self-test` 20/20, `merge_bar_check --self-test` 9/9, `docs_budget --self-test` all checks passed, `docs_budget --root .` all OK.
