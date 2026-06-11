@@ -68,7 +68,7 @@
 <!-- Pointer only — do not restate what the rules files already say. -->
 
 Lab-wide conventions: `.claude/rules/01-workflow.md` (commits, PRs, merge bar),
-`02-data-protection.md`, `03-logging-and-docs.md` (log format, tiers, budgets).
+`02-data-protection.md`, `03-logging.md` (log format), `04-docs.md` (tiers, budgets).
 
 Repo-local rules (this repo, `10+` numbering): `.claude/rules/10-<name>.md`
 

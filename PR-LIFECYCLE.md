@@ -3,7 +3,7 @@
 The end-to-end story of a lab PR: branch → review → remediation → merge bar → merge. This is the
 onboarding narrative — it explains *how the pieces fit and why*. The enforceable rules live in
 [`.claude/rules/01-workflow.md`](.claude/rules/01-workflow.md) (commits, PR workflow, **Merge
-Bar**) and [`.claude/rules/03-logging-and-docs.md`](.claude/rules/03-logging-and-docs.md) (log
+Bar**) and [`.claude/rules/03-logging.md`](.claude/rules/03-logging.md) (log
 entries, budgets); this doc links them rather than restating them.
 
 It consolidates what previously lived in four places: the cron reviewer's design
@@ -63,7 +63,7 @@ outsider's eye, self-report-is-not-evidence — is
 
 Findings are resolved on the branch or explicitly routed to GitHub issues — never silently
 dropped. A finding that itself meets a log-entry trigger (load-bearing decision, irreversible
-event, direction change — [`03-logging-and-docs.md`](.claude/rules/03-logging-and-docs.md))
+event, direction change — [`03-logging.md`](.claude/rules/03-logging.md))
 *additionally* gets a project-log entry. Treat review feedback with rigor, not performative
 agreement: verify a finding is real before fixing it, and push back with evidence when it isn't.
 Each remediation push gets a fresh review pass (the cron agent re-reviews new SHAs automatically;
@@ -118,7 +118,7 @@ which does exactly one thing:
 
 The archive is a grep target, never read whole, and is exempt from the size cap. Full mechanics:
 [spec §4.6](docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md) and
-[`03-logging-and-docs.md`](.claude/rules/03-logging-and-docs.md).
+[`03-logging.md`](.claude/rules/03-logging.md).
 
 ## Why it works this way
 

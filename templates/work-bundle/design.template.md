@@ -25,7 +25,7 @@
 <!-- One subsection per load-bearing decision. Include real alternatives that were weighed and why
      each was rejected — "we considered X but chose Y because Z" is the signal a future reader
      needs to avoid re-litigating the choice. Decisions that survive this slice belong in
-     project_log.md (see routing table in .claude/rules/03-logging-and-docs.md). -->
+     project_log.md (see routing table in .claude/rules/03-logging.md). -->
 
 ### D1: <decision title>
 

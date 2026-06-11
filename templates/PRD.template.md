@@ -9,7 +9,7 @@
 **Date:** YYYY-MM-DD · **Repo:** <repo>
 
 > **Decisions live in `project_log.md`, not here.** When a decision is reached while executing
-> this PRD, log it there (see `.claude/rules/03-logging-and-docs.md` entry triggers). Link from
+> this PRD, log it there (see `.claude/rules/03-logging.md` entry triggers). Link from
 > the relevant Plan or Open Questions section if useful, but the PRD itself stays decision-free.
 
 ---

@@ -37,8 +37,8 @@ All of the following, verified at merge time:
 
 1. **Gate green, run unpiped.** The gate is the repo's designated verification command per its `CLAUDE.md` (e.g. `invoke check`); unpiped because piping (`gate | tail`) swallows the exit code and lets a red gate look green. No gate (docs-only repo)? The PR template's Verification section is the gate.
 2. PR template complete; checklist items ticked only where true
-3. Review findings resolved, or routed to issues (a finding meeting an entry trigger in `03-logging-and-docs.md` additionally gets a log entry)
-4. **Log cleanup done** (entry rules: `03-logging-and-docs.md`): this PR's loggable events have entries; entries verified against the final diff; compressed to budget; refs filled (PR#); no edits to pre-existing entries; Standing Decisions index updated — line added per new standing decision, superseded lines removed; log over cap → overflow chore PR filed
+3. Review findings resolved, or routed to issues (a finding meeting an entry trigger in `03-logging.md` additionally gets a log entry)
+4. **Log cleanup done** (entry rules: `03-logging.md`): this PR's loggable events have entries; entries verified against the final diff; compressed to budget; refs filled (PR#); no edits to pre-existing entries; Standing Decisions index updated — line added per new standing decision, superseded lines removed; log over cap → overflow chore PR filed
 5. Doc-sync triggers checked (Documentation Update Triggers below)
 6. Single concern; bundle archival rides only when the owner declares the slice done
 

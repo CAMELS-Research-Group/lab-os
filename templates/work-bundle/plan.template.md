@@ -69,7 +69,7 @@ No literal code. The only code blocks allowed are short shell commands in **Veri
 
 ## Execution Log
 
-<!-- Altitude: plan-execution (see .claude/rules/03-logging-and-docs.md §altitudes).
+<!-- Altitude: plan-execution (see .claude/rules/03-logging.md §altitudes).
      What belongs here: deviations from the plan, implementation-altitude calls, gate evidence
      (the verification output that proved a task done).
      What does NOT belong here: load-bearing decisions (→ project_log.md), status updates

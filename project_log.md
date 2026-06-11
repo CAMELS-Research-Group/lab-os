@@ -1,15 +1,33 @@
 # lab-rules — project log
 
-Format: lab standard, `lab-rules/.claude/rules/03-logging-and-docs.md`. Skeleton per
+Format: lab standard, `lab-rules/.claude/rules/03-logging.md`. Skeleton per
 `lab-rules/templates/project_log.template.md` (normative — `log-lint` parses this structure).
 The `## Standing Decisions` and `## Entries` headings are load-bearing lint anchors: exact
 text, one each, never renamed. Entry headers are the only other `##` headings allowed.
 
 ## Standing Decisions
 
+- 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #PR-TBD
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md
+
+**Decision:** `.claude/rules/03-logging-and-docs.md` is split into `03-logging.md`
+(altitudes, entry triggers/routing, entry format, immutability, file structure and
+overflow) and `04-docs.md` (single-source, tiers and byte budgets, ENG document
+standards, rules numbering). Numbered names retained per the rules-numbering
+convention; live cross-references updated, historical artifacts left as written.
+**Why:** The combined file sat at its own byte budget with `docs-budget` enforcement
+now live — any rule edit first required an offsetting trim. Two single-responsibility
+files restore headroom on both halves and give the standard room to grow.
+**Alternatives:** Unnumbered `logging.md`/`docs.md` — rejected, contradicts the
+rules-numbering convention shipped the same day; compression-only — rejected, the
+margin stays structurally tight as rules accrete.
+**Refs:** #PR-TBD, https://github.com/WatsonWBlair/lab-rules/issues/7
 
 ---
 

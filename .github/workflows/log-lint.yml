@@ -1,7 +1,7 @@
 # Reusable log-lint adherence action (spec §9, §4.3-4.6).
 #
 # Mechanically lints PR changes to project_log.md (and its archive) against
-# the lab logging standard (.claude/rules/03-logging-and-docs.md) using
+# the lab logging standard (.claude/rules/03-logging.md) using
 # scripts/log_lint.py from lab-rules.
 #
 # Behavior:

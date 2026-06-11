@@ -4,7 +4,7 @@ Applies to every commit, PR, and generated output across all lab repos.
 
 ## Gated Datasets
 
-Each repo declares its own gated-dataset table in its local `.claude/rules/10-data-protection.md` (per-repo prefixes, gate type, what's safe to commit; per-repo rules number from `10+` — see `03-logging-and-docs.md`, Rules numbering). Universal rules across any gated data:
+Each repo declares its own gated-dataset table in its local `.claude/rules/10-data-protection.md` (per-repo prefixes, gate type, what's safe to commit; per-repo rules number from `10+` — see `04-docs.md`, Rules numbering). Universal rules across any gated data:
 
 - Never commit raw samples, transcripts, or participant metadata
 - Use only dataset prefixes and stem names in reports

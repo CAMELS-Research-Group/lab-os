@@ -122,7 +122,7 @@ plus an actionable digest** — never "wake to a finished feature you haven't ch
 ## 8. Memory and note-taking
 
 - **Continuous capture.** Log context, decisions, and open threads as they happen. Load-bearing decisions
-  get the *why*. Log altitudes, routing, and entry format are in `.claude/rules/03-logging-and-docs.md`.
+  get the *why*. Log altitudes, routing, and entry format are in `.claude/rules/03-logging.md`.
 - **Checkpoint triggers:** before switching domains, before a long chat compacts, before a context-heavy
   subagent handoff, at any decision worth re-deriving later.
 - **Long-lived facts go to auto-memory** (user / feedback / project / reference), indexed by `MEMORY.md` —

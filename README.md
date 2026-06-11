@@ -15,7 +15,8 @@ The rest of this README is reference for how the conventions in this repo are co
 - `.claude/rules/` — markdown files defining lab-wide conventions. Consumed by Cowork locally (via a junction/symlink at `<DEV_ROOT>\.claude\rules\`) and by the PR-review GitHub Action at review time.
   - [`01-workflow.md`](.claude/rules/01-workflow.md) — commit format, PR workflow, merge bar, doc-update triggers
   - [`02-data-protection.md`](.claude/rules/02-data-protection.md) — gated-dataset, PII, and binary/secret protection
-  - [`03-logging-and-docs.md`](.claude/rules/03-logging-and-docs.md) — project-log standard (altitudes, entry triggers, format, budgets, tiers)
+  - [`03-logging.md`](.claude/rules/03-logging.md) — project-log standard (altitudes, entry triggers, format, immutability, overflow)
+  - [`04-docs.md`](.claude/rules/04-docs.md) — documentation standard (single-source, tiers, byte budgets, ENG doc standards, rules numbering)
 - [`PR-LIFECYCLE.md`](PR-LIFECYCLE.md) — end-to-end PR lifecycle: merge bar, solo-maintainer bypass, pre-merge log cleanup.
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — lab-level expensive findings and gotchas, indexed by symptom.
 - `templates/` — starter files for new repos and members:
