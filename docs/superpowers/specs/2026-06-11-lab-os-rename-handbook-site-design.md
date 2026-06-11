@@ -1,6 +1,6 @@
 # lab-os: rename, handbook site, play-test launch — design
 
-Status: draft — pending Watson's review.
+Status: reviewed — approved by Watson 2026-06-11 (PR #12; scoping amendments from review folded in).
 
 ## 1. Problem
 
