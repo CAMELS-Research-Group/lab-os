@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #PR-TBD
+- 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
@@ -27,7 +27,7 @@ files restore headroom on both halves and give the standard room to grow.
 **Alternatives:** Unnumbered `logging.md`/`docs.md` — rejected, contradicts the
 rules-numbering convention shipped the same day; compression-only — rejected, the
 margin stays structurally tight as rules accrete.
-**Refs:** #PR-TBD, https://github.com/WatsonWBlair/lab-rules/issues/7
+**Refs:** #9, https://github.com/WatsonWBlair/lab-rules/issues/7
 
 ---
 
