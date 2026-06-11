@@ -18,6 +18,8 @@ Format: `<type>[(<scope>)]: <subject>`
 | `merge` | Merge conflict resolution |
 | `report` | Generated analysis or results |
 
+- Tie-break: changes to files under `.github/` are `ci`, even dependency bumps
+  (e.g. `actions/checkout` v4→v5); dependency/maintenance work elsewhere is `chore`
 - Lowercase subject, no trailing period
 - Active voice, present tense ("add" not "added")
 - Under 72 characters
