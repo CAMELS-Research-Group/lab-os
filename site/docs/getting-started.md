@@ -39,6 +39,17 @@ gh auth setup-git
 
 Confirm with `gh auth status` — it should show "Logged in to github.com".
 
+<details>
+<summary>New to this? What `gh auth` actually does</summary>
+
+GitHub needs to know who you are before it lets you download (clone) the lab's private code.
+`gh auth login` opens a browser window where you sign in to GitHub once; after that, the `gh` tool
+remembers you. `gh auth setup-git` tells Git — the separate tool that actually downloads code — to
+reuse that same sign-in instead of asking for a password every time. Once `gh auth status` says
+"Logged in", both tools can reach the private lab repos on your behalf.
+
+</details>
+
 > The lab's reference setup is **Windows 11 + PowerShell**; every step gives the macOS / Linux
 > equivalent. Differences are almost always junction-vs-symlink and path separators.
 
@@ -158,6 +169,11 @@ blocks below use it:
 
 ### 1. Create your lab workspace
 
+Create the `<DEV_ROOT>` directory and move into it.
+
+<details>
+<summary>Commands — Windows and macOS/Linux</summary>
+
 **Windows (PowerShell):**
 
 ```powershell
@@ -173,11 +189,16 @@ DEV_ROOT=~/Development
 mkdir -p $DEV_ROOT && cd $DEV_ROOT
 ```
 
+</details>
+
 ### 2. Clone the core repos
 
 The core set is the two active research repos plus the two tooling repos; foundational and paused
 repos clone on demand (see the lineage section of the dev-root `CLAUDE.md`). Confirm `gh auth status`
 shows you logged in first.
+
+<details>
+<summary>Commands — Windows and macOS/Linux</summary>
 
 **Windows (PowerShell):**
 
@@ -197,6 +218,8 @@ git clone https://github.com/WatsonWBlair/lab-os.git $DEV_ROOT/lab-os
 git clone https://github.com/WatsonWBlair/lab-claude-plugins.git $DEV_ROOT/lab-claude-plugins
 ```
 
+</details>
+
 If a clone 404s while `gh auth status` shows you logged in, you don't have access yet — request it
 from the lab manager, Watson Blair ([watsonwblair@gmail.com](mailto:watsonwblair@gmail.com)), with
 your GitHub username.
@@ -205,6 +228,9 @@ your GitHub username.
 
 Cowork picks up the lab rules when they appear at `<DEV_ROOT>/.claude/rules/`. Link — don't copy —
 so a `git pull` of `lab-os` keeps you current.
+
+<details>
+<summary>Commands and link check — Windows and macOS/Linux</summary>
 
 **Windows (PowerShell) — junction, no admin required:**
 
@@ -225,10 +251,36 @@ Junction, target ending `lab-os\.claude\rules`); **macOS / Linux** `ls -l $DEV_R
 (expect an arrow to `lab-os/.claude/rules`). If the link resolves but a session doesn't see the
 rules, confirm the session was opened AT `<DEV_ROOT>`, not a subdirectory.
 
+</details>
+
+<details>
+<summary>New to this? What the junction/symlink does</summary>
+
+A junction (Windows) or symlink (macOS/Linux) is a folder that is really just a signpost pointing
+at another folder. Here, `<DEV_ROOT>/.claude/rules` doesn't hold its own copy of the lab rules —
+it points at the copy inside the `lab-os` repo on your machine. When the lab updates its rules and
+you run `git pull` in `lab-os`, the signpost automatically shows the new version, with nothing to
+re-copy. That's why the instructions say "link, don't copy."
+
+</details>
+
 ### 4. Install the CLAUDE.md templates
 
 Two layers, two files, both from
 [templates/](https://github.com/WatsonWBlair/lab-os/tree/main/templates).
+
+<details>
+<summary>New to this? The three CLAUDE.md layers</summary>
+
+`CLAUDE.md` files are instruction notes that Claude reads automatically at the start of every
+session. The lab uses three, stacked from general to specific: your **global** file (who you are
+and how you like to work — applies everywhere), the **dev-root** file (a map of the lab's projects —
+applies when you work in your lab workspace), and a **per-repo** file (details of one project —
+applies inside that project). Claude reads every layer that applies to where you opened the
+session, and when two disagree, the most specific one wins. This step installs the first two; each
+repo ships its own third.
+
+</details>
 
 #### 4a. Personal-global (your persona, applies in every session, every project)
 
@@ -236,11 +288,16 @@ Copy `templates/global-CLAUDE.template.md` to `~/.claude/CLAUDE.md` (Windows:
 `C:\Users\<you>\.claude\CLAUDE.md`). Fill the `<...>` placeholders in **About Me**; keep everything
 below it close to verbatim.
 
+<details>
+<summary>Commands — macOS/Linux example</summary>
+
 ```bash
 # macOS / Linux example
 cp $DEV_ROOT/lab-os/templates/global-CLAUDE.template.md ~/.claude/CLAUDE.md
 # then edit the About Me block
 ```
+
+</details>
 
 > Already have a personal `~/.claude/CLAUDE.md`? **Merge**, don't overwrite — keep your About Me,
 > fold in the Ethics → Memory sections.
@@ -249,17 +306,26 @@ cp $DEV_ROOT/lab-os/templates/global-CLAUDE.template.md ~/.claude/CLAUDE.md
 
 Copy `templates/dev-root-CLAUDE.template.md` to `<DEV_ROOT>/.claude/CLAUDE.md` and adjust paths.
 
+<details>
+<summary>Commands — macOS/Linux example</summary>
+
 ```bash
 # macOS / Linux example
 cp $DEV_ROOT/lab-os/templates/dev-root-CLAUDE.template.md $DEV_ROOT/.claude/CLAUDE.md
 ```
+
+</details>
 
 The layers compose global (you) → dev-root (lab map) → per-repo `CLAUDE.md`, most-specific wins —
 override semantics: [lab-os README](https://github.com/WatsonWBlair/lab-os#readme).
 
 ### 5. Install the lab plugins
 
-From inside a Claude Code session:
+From inside a Claude Code session, add the lab marketplace and install the plugins; restart your
+session to apply, then `/plugin` to confirm both are listed.
+
+<details>
+<summary>The slash commands, and where each plugin comes from</summary>
 
 ```text
 /plugin marketplace add WatsonWBlair/lab-claude-plugins
@@ -268,12 +334,17 @@ From inside a Claude Code session:
 ```
 
 `superpowers` is on the official marketplace that ships with Claude Code (no marketplace add) and
-backs the lab's working methods — see [Working with Claude](/docs/working-with-claude). Restart
-your session to apply, then `/plugin` to confirm both are listed.
+backs the lab's working methods — see [Working with Claude](/docs/working-with-claude).
+
+</details>
 
 ### 6. Set up the active repos
 
-Each repo's own `README.md` / `CLAUDE.md` is the authority. Minimum to get `LSCA` runnable:
+Each repo's own `README.md` / `CLAUDE.md` is the authority. Minimum to get `LSCA` runnable: create
+and activate a virtual environment, then install its requirements.
+
+<details>
+<summary>Commands — Windows and macOS/Linux</summary>
 
 ```powershell
 # Windows (PowerShell)
@@ -288,6 +359,20 @@ cd "$DEV_ROOT/LSCA"
 # create and activate a virtual environment, then:
 pip install -r requirements.txt   # or follow LSCA/README.md if it differs
 ```
+
+</details>
+
+<details>
+<summary>New to this? Virtual environments in one paragraph</summary>
+
+A virtual environment is a private folder of Python packages that belongs to one project. Without
+one, every Python project on your machine shares a single pile of installed packages, and two
+projects that need different versions of the same package break each other. Creating one
+(`python -m venv .venv`) and activating it tells your terminal "use this project's pile for now."
+Make one per project, activate it whenever you work there, and `pip install` will only affect that
+project.
+
+</details>
 
 `Global_Pathways` is in spec phase — read its `CLAUDE.md` before touching code. Then run the
 checks in [Step 3 — Verify your setup](#step-3--verify-your-setup).

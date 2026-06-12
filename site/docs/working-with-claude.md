@@ -44,11 +44,17 @@ from owning their tests; contract-and-behavior plans survive re-runs. This **ove
 
 - **The plan is the human→agent handoff artifact.** Decomposition into code-free tasks is *daytime*
   work — don't hand an agent a design spec and expect it to also decompose.
+
+<details>
+<summary>The rest of the subagent contract — context boundaries and backlog mechanics</summary>
+
 - **Subagents discard context and return only their report.** Design tasks so the brief is
   sufficient and the returned report is the thing you actually need.
 - **A backlog scaffolds the fan-out:** a task table with stable IDs, an agent-suitability
   classification, a dependency DAG, and **git-authoritative completion** — a task is done when the
   commit exists, not when an agent says so.
+
+</details>
 
 ## 4. Verification discipline
 
@@ -91,6 +97,10 @@ never "wake to a finished feature you haven't checked."
 - **Halt contract.** Explicit escape hatch: halt and report, don't press on. Phrase the completion
   signal as *digest-written* (true at done OR documented halt), not task-success — otherwise a
   stuck agent churns to the iteration cap.
+
+<details>
+<summary>The full loop contract — budget caps, halt-path testing, forbidden ops, authorization</summary>
+
 - **Budget caps + wall-clock kill.** A session **cannot** read its own subscription-quota usage —
   "stop at X% of quota" is not buildable. Use a hard iteration cap plus a wall-clock kill, and cap
   conservatively on early runs.
@@ -100,6 +110,8 @@ never "wake to a finished feature you haven't checked."
   inside a loop — halt-and-report instead. Start branches from the correct base.
 - **Human-gated authorization is correct, not a nuisance.** Launching a loop trips Claude Code's
   safety checks by design; the agent must not retry or route around the denial.
+
+</details>
 
 ## 7. Communication discipline
 
