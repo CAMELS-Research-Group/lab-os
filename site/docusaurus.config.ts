@@ -4,6 +4,12 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
+// "Edit this page" targets this branch on GitHub. Production builds use main;
+// override for pre-merge review builds, e.g.:
+//   $env:LAB_OS_EDIT_BRANCH = 'feat/site-content'; npm run build
+const editBranch = process.env.LAB_OS_EDIT_BRANCH ?? 'main';
+const editUrl = `https://github.com/WatsonWBlair/lab-os/edit/${editBranch}/site/`;
+
 const config: Config = {
   title: 'lab-os',
   tagline: 'CAMELS Research Group — lab handbook',
@@ -41,11 +47,11 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           // "Edit this page" → GitHub's web editor; saving commits via the normal PR flow
-          editUrl: 'https://github.com/WatsonWBlair/lab-os/edit/main/site/',
+          editUrl,
         },
         blog: false,
         pages: {
-          editUrl: 'https://github.com/WatsonWBlair/lab-os/edit/main/site/',
+          editUrl,
         },
         theme: {
           customCss: './src/css/custom.css',
