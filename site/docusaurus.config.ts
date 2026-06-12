@@ -19,7 +19,7 @@ const vscodeFile = (relFromSiteDir: string) =>
 
 const config: Config = {
   title: 'lab-os',
-  tagline: 'CAMELS Research Group — lab handbook',
+  tagline: 'spec-driven development with an agentic workspace — the handbook',
   favicon: 'img/favicon.ico',
 
   future: {
@@ -103,7 +103,7 @@ const config: Config = {
           href: 'https://github.com/WatsonWBlair/lab-os',
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} CAMELS Research Group`,
+      copyright: `Copyright © ${new Date().getFullYear()} lab-os`,
     },
     prism: {
       theme: prismThemes.github,

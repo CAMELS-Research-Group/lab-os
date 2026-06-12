@@ -1,0 +1,180 @@
+---
+sidebar_position: 1
+title: Getting Started
+description: Set up your agentic workspace — Claude Code, persistent context files, linked rules, and plugins — guided by Claude itself in one paste.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Getting Started
+
+This exercise onboards you to Claude agentic development cycles. You'll set up an agentic
+workspace — Claude Code, persistent context files (`CLAUDE.md` layers), a link that loads the
+lab-os rules into every session, and two process plugins. The setup itself is Claude-guided: you
+paste one prompt, Claude interviews you and performs the steps — your first agentic collaboration.
+
+`<DEV_ROOT>` is the single directory your workspace lives in. Pick one and use it consistently —
+**Windows:** `C:\Users\<you>\Development` · **macOS / Linux:** `~/Development`.
+
+## Prerequisites
+
+| Need | Why | Check |
+|---|---|---|
+| **Claude subscription (Pro or Max)** | Agentic sessions are token-hungry; a subscription beats a metered API key | log in at [claude.ai](https://claude.ai) |
+| **Git** | Clone repos, run the workflow | `git --version` |
+| **GitHub CLI (`gh`)** | The PR workflow you'll practice in the sandbox project | `gh --version` |
+
+After installing `gh`, authenticate (same commands on every platform):
+
+```bash
+gh auth login
+gh auth setup-git
+```
+
+Confirm with `gh auth status` — it should show "Logged in to github.com".
+
+<details>
+<summary>New to this? What `gh auth` actually does</summary>
+
+GitHub needs to know who you are before it lets you push code or open pull requests.
+`gh auth login` opens a browser window where you sign in to GitHub once; after that, the `gh` tool
+remembers you. `gh auth setup-git` tells Git — the separate tool that actually moves code — to
+reuse that same sign-in instead of asking for a password every time. Once `gh auth status` says
+"Logged in", both tools work on your behalf.
+
+</details>
+
+## Step 1 — Install Claude Code
+
+Follow [docs.claude.com/en/docs/claude-code/setup](https://docs.claude.com/en/docs/claude-code/setup),
+confirm with `claude --version`, then run `claude` once and log in with your Claude account.
+
+## Step 2 — Paste the bootstrap prompt
+
+Start a session with `claude` in your home directory and paste the entire block below. Claude
+interviews you first, then performs the setup, confirming before every step that creates,
+overwrites, or links files. The templates in
+[lab-os/templates/](https://github.com/WatsonWBlair/lab-os/tree/main/templates) stay the source of
+truth — the prompt has Claude clone the repo and read them from there.
+
+```text
+I'm setting up an agentic development workspace following the lab-os
+handbook. Walk me through setup interactively. Rules for the whole session:
+
+- Interview me BEFORE writing anything: my name, career stage / background,
+  what I'll be working on, my stack and primary shell, my working style, my
+  OS (Windows / macOS / Linux), my time zone, and where I want my workspace
+  directory (<DEV_ROOT> — default C:\Users\<me>\Development on Windows,
+  ~/Development on macOS/Linux).
+- Confirm with me before any step that creates, overwrites, or links files.
+  If a target file already exists (especially ~/.claude/CLAUDE.md), show me
+  a merge plan and get my OK — never silently overwrite.
+- The lab-os templates are the source of truth. Read them from the cloned
+  repo and follow their embedded instructions; do not improvise their
+  content from memory.
+
+Then do the following, in order, confirming each step with me:
+
+1. Create my workspace directory <DEV_ROOT> if it doesn't exist.
+2. Clone https://github.com/WatsonWBlair/lab-os.git into <DEV_ROOT> — the
+   setup templates and the rules live there.
+3. Personalize <DEV_ROOT>/lab-os/templates/global-CLAUDE.template.md into
+   my personal global config at ~/.claude/CLAUDE.md (Windows:
+   C:\Users\<me>\.claude\CLAUDE.md). Fill the About Me block from the
+   interview; adapt the sections below About Me to my context; remove the
+   template's instructional blockquote. If I already have a global
+   CLAUDE.md, merge instead of overwriting — keep my About Me, fold in the
+   adapted sections.
+4. Seed <DEV_ROOT>/.claude/CLAUDE.md from
+   <DEV_ROOT>/lab-os/templates/dev-root-CLAUDE.template.md, adjusting paths
+   to my machine and removing the instructional blockquote.
+5. Link the rules so sessions at <DEV_ROOT> load them — link, don't copy,
+   so a git pull of lab-os keeps me current. First create
+   <DEV_ROOT>/.claude if it doesn't exist, then:
+   - Windows (PowerShell, no admin needed):
+     cmd /c mklink /J "<DEV_ROOT>\.claude\rules" "<DEV_ROOT>\lab-os\.claude\rules"
+   - macOS / Linux:
+     ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
+6. Install the plugins: run `/plugin marketplace add WatsonWBlair/lab-claude-plugins`
+   then `/plugin install pr-review-loop@lab-claude-plugins`. Also install
+   `/plugin install superpowers@claude-plugins-official` (superpowers is on
+   the official marketplace that ships with Claude Code — no marketplace add
+   needed). (These are slash commands I run in Claude Code myself — walk me
+   through them rather than running them for me.)
+7. Run a verification pass and show me the results:
+   - <DEV_ROOT>/.claude/rules resolves to lab-os/.claude/rules and lists
+     the rule files (01-workflow.md, 02-data-protection.md, ...)
+   - ~/.claude/CLAUDE.md exists with no remaining <...> placeholders
+   - <DEV_ROOT>/.claude/CLAUDE.md exists
+   - the plugins are listed by /plugin
+   Then tell me to start a fresh session at <DEV_ROOT> and ask it "what are
+   the lab's commit-message rules?" — the answer should come from
+   01-workflow.md.
+
+If anything fails, stop and explain before moving on. When everything
+passes, summarize what was set up and where.
+```
+
+<details>
+<summary>New to this? What the junction/symlink does</summary>
+
+A junction (Windows) or symlink (macOS/Linux) is a folder that is really just a signpost pointing
+at another folder. Here, `<DEV_ROOT>/.claude/rules` doesn't hold its own copy of the rules —
+it points at the copy inside the `lab-os` repo on your machine. When the rules update and
+you run `git pull` in `lab-os`, the signpost automatically shows the new version, with nothing to
+re-copy. That's why the prompt says "link, don't copy."
+
+</details>
+
+<details>
+<summary>New to this? The three CLAUDE.md layers</summary>
+
+`CLAUDE.md` files are instruction notes that Claude reads automatically at the start of every
+session. The setup uses three, stacked from general to specific: your **global** file (who you are
+and how you like to work — applies everywhere), the **dev-root** file (a map of your workspace —
+applies when you work in `<DEV_ROOT>`), and a **per-repo** file (details of one project — applies
+inside that project). Claude reads every layer that applies to where you opened the session, and
+when two disagree, the most specific one wins. The bootstrap prompt installs the first two; each
+repo ships its own third.
+
+</details>
+
+## Verify your setup
+
+<Tabs groupId="os">
+<TabItem value="windows" label="Windows (PowerShell)">
+
+| Check | Expected |
+|---|---|
+| `Get-Item "$HOME\Development\.claude\rules" \| Select-Object LinkType, Target` | `LinkType` = Junction; `Target` ends in `lab-os\.claude\rules` |
+
+</TabItem>
+<TabItem value="mac-linux" label="macOS / Linux">
+
+| Check | Expected |
+|---|---|
+| `ls -l ~/Development/.claude/rules` | Arrow pointing to `lab-os/.claude/rules` |
+
+</TabItem>
+</Tabs>
+
+Then, on any OS:
+
+| Check | Expected |
+|---|---|
+| `/plugin` | lists `pr-review-loop@lab-claude-plugins` and `superpowers@claude-plugins-official` |
+| Fresh session at `<DEV_ROOT>`: ask "what are the lab's commit-message rules?" | Answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject) |
+| Your global `~/.claude/CLAUDE.md` | About Me reflects **you** — no `<...>` placeholders left |
+
+**If a check fails:** junction/symlink check fails → re-run the prompt's link step (step 5), or use
+the manual commands in the [lab-os README](https://github.com/WatsonWBlair/lab-os#how-repos-consume-it).
+Rules question goes unanswered → confirm the session was opened AT `<DEV_ROOT>`, not a subdirectory.
+Placeholders still showing → finish personalizing the global file.
+
+## Next steps
+
+- **[Working with Claude](/docs/working-with-claude)** — the established methods; most were
+  earned by hitting a failure mode, and reading them first saves the rediscovery.
+- **[Onboarding Project](/docs/onboarding-project)** — a two-week throwaway sandbox build where
+  you practice the full spec-driven workflow on low-stakes code.
