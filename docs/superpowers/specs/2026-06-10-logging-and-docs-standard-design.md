@@ -101,6 +101,8 @@ Everything else routes elsewhere:
 | Session narrative / what-I-did | PR body |
 | Long-lived facts about people/preferences | Auto-memory |
 
+*Amended 2026-06-12: a plan-execution log closes with the PR that ships it — post-merge evidence (deploy green, runtime checks, branch cleanup) routes to a comment on that PR, never a trailing entry held for a future PR. The merge of a plan's final PR can't be recorded by that PR; without a closure rule, closeout facts hitch onto whatever unrelated PR comes next.*
+
 ### 4.3 Entry format
 
 ```markdown

@@ -12,6 +12,8 @@ All lab repos. Rationale: `PR-LIFECYCLE.md`. Doc tiers, budgets, single-source: 
 
 Test: matters after the plan ships? → project. Only how the plan ran? → plan-execution. Cross-repo? → lab.
 
+Closure: a plan-execution log closes with the PR that ships it — post-merge evidence (deploy green, runtime checks, branch cleanup) goes to a comment on that PR, never a trailing entry held for a future PR; anything bigger routes per Entry triggers.
+
 Lab caveat: no git/CI; honor-system — immutability begins once a newer entry exists; Refs = absolute paths/URLs, not PR#; archive when adding over cap.
 
 ## Entry triggers
