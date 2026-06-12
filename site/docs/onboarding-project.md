@@ -61,7 +61,7 @@ How these compose into pages/modules is yours to design. That design *is* the di
 ### Axis 2 — Workflow spine (the *how*: fixed, non-negotiable)
 
 Every surface you build passes through the full loop. If the timebox squeezes, you trim **checklist
-items (Axis 1)** — never spine steps.
+items (Axis 1, optional ones first)** — never spine steps.
 
 1. **Brainstorm** — use the `superpowers:brainstorming` skill to shape the surface before you design it.
 2. **Spec** — write a short design doc. What it does, how it's used, what it depends on.
