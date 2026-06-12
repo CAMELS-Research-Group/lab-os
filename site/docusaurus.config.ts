@@ -40,8 +40,13 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
+          // "Edit this page" → GitHub's web editor; saving commits via the normal PR flow
+          editUrl: 'https://github.com/WatsonWBlair/lab-os/edit/main/site/',
         },
         blog: false,
+        pages: {
+          editUrl: 'https://github.com/WatsonWBlair/lab-os/edit/main/site/',
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
