@@ -45,7 +45,8 @@ never learns what stalled you, and the next person hits the same wall.
 
 ## End of arc: the retro
 
-When you finish the arc, write a short retro and send it to Watson. Three prompts:
+When you finish the arc, write a short retro and send it to Watson directly (email or Discord DM —
+not a friction issue; those track individual snags). Three prompts:
 
 - **What confused you** — even if you eventually figured it out
 - **What was missing** — things you needed that no page covered
@@ -57,7 +58,7 @@ The play-test passes for you when you reach both of these **without Watson unblo
 
 - A **working environment**, including a personalized `~/.claude/CLAUDE.md` produced through the
   guided setup flow
-- A **brainstormed sandbox-project spec** in your disposable repo
+- A **brainstormed sandbox-project spec, committed** in your disposable repo
 
 And one process criterion: **every stall produced an issue.** Needing help isn't failure — needing
 help without a friction issue on record is.
