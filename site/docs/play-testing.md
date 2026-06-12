@@ -20,7 +20,8 @@ Walk these in order, as if you were a brand-new lab member:
 3. **Methods read** — read [Working with Claude](/docs/working-with-claude).
 4. **Sandbox-project brainstorm & spec** — start the [Onboarding Project](/docs/onboarding-project):
    create your own disposable repo per [Setting Up a New Repo](/docs/repo-setup), then brainstorm
-   and spec your first surface. The play-test arc ends at the committed spec — the full two-week
+   and spec your first surface (one screen or module of your sandbox app). The play-test arc ends
+   at the committed spec — the full two-week
    build is the onboarding project itself, not this protocol.
 
 ## Capturing friction
@@ -45,7 +46,7 @@ never learns what stalled you, and the next person hits the same wall.
 
 ## End of arc: the retro
 
-When you finish the arc, write a short retro and send it to Watson directly (email or Discord DM —
+When you finish the arc, write a short retro (retrospective) and send it to Watson directly (email or Discord DM —
 not a friction issue; those track individual snags). Three prompts:
 
 - **What confused you** — even if you eventually figured it out

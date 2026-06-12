@@ -8,8 +8,9 @@ description: A human tour of the four lab-wide rule files — what each governs,
 
 lab-os ships four lab-wide rule files under
 [`.claude/rules/`](https://github.com/WatsonWBlair/lab-os/tree/main/.claude/rules). Every Claude session
-loads them through the link you wired in [Getting Started](/docs/getting-started), the PR-review tooling
-reads the same files at review time, and parts are enforced in CI (`log-lint`, `docs-budget`,
+loads them through the link you wired in [Getting Started](/docs/getting-started), the pull-request
+(PR) review tooling reads the same files at review time, and parts are enforced in CI — continuous
+integration, the checks run automatically on every PR (`log-lint`, `docs-budget`,
 `merge-bar-check` — toured in [Tooling Tour](/docs/tooling-tour)).
 
 This page is orientation, not reference — each section links the rule file as the **source of truth**;
@@ -20,16 +21,19 @@ when the two disagree, the rule file wins.
 Source of truth:
 [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md)
 
-Governs how work moves: commit conventions, the PR workflow, the merge bar, and doc-update triggers.
+Governs how work moves: commit conventions, the PR workflow, the merge bar (the checklist a change
+must clear before merging), and doc-update triggers.
 It exists so history stays readable and "done" means the same thing everywhere — verified, reviewed,
 logged, documented.
 
 Internalize two things:
 
-- **Commit conventions live here.** Conventional-commit prefixes, short lowercase present-tense
-  subject. Unsure which prefix? Check the file's table and tie-break notes, don't guess.
-- **The merge bar is a checklist, not a vibe.** Run the repo's verification gate yourself (un-piped,
-  so a failure can't hide behind a pipe); docs out of sync with the code = not done.
+- **Commit conventions live here.** Every commit message starts with a type prefix (`feat:`,
+  `fix:`, …) plus a short lowercase present-tense subject. Unsure which prefix? Check the file's
+  table and tie-break notes, don't guess.
+- **The merge bar is a checklist, not a vibe.** Run the repo's verification gate (its designated
+  check command) yourself, directly rather than piped through another command so a failure can't
+  hide; docs out of sync with the code = not done.
 
 ## 02 — Data Protection
 
@@ -45,7 +49,7 @@ Internalize two things:
 - **Raw gated data never gets committed** — recordings, text, anything identifying the people in
   them, in any repo, ever. Which datasets count as gated is defined per-repo.
 - **Derived artifacts aren't automatically safe.** Plots, embeddings, and summaries go through the
-  rule file's PII-review checklist before commit. When uncertain, aggregate further or leave the
+  rule file's review checklist for personally identifying information (PII) before commit. When uncertain, aggregate further or leave the
   artifact out.
 
 ## 03 — Logging
@@ -72,8 +76,8 @@ Source of truth:
 
 Governs the documentation system itself: one owning document per fact, docs tiered by reader
 (agent / engineering / public) with size budgets on the always-loaded tier, and defined shapes for
-PRDs, design docs, and plans. Duplicated facts drift apart silently, and agent-loaded docs cost
-context every session.
+PRDs (product requirements documents), design docs, and plans. Duplicated facts drift apart
+silently, and docs the AI loads every session consume its limited working context.
 
 Internalize two things:
 

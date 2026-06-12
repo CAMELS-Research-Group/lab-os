@@ -12,7 +12,7 @@ disposable repo, through the full lab workflow.
 
 **The repo is meant to be thrown away.** The deliverable that matters is what you *learn*: we don't
 yet know the best design patterns for an agent-driven work-surface app, and we'd rather discover
-them on throwaway code than on the real `mission-control`. Build fast, build loose, capture what
+them on throwaway code than on the lab's real `mission-control` app. Build fast, build loose, capture what
 worked. Don't aim for production — aim for *learning velocity*.
 
 Read [Working with Claude](/docs/working-with-claude) first — it's the methods this project makes
@@ -27,13 +27,13 @@ own right.
 
 ### Axis 1 — Capability checklist (the *what*: open, design it yourself)
 
-Build surfaces that together cover this checklist. *(optional)* items are trimmable if the timebox
-squeezes.
+Build surfaces — this project's word for the screens or modules of your app — that together cover
+this checklist. *(optional)* items are trimmable if the timebox squeezes.
 
 | # | Requirement | Notes |
 |---|---|---|
 | 1 | **2 data integrations**, spanning ≥2 distinct shapes | e.g. external REST API, local file / SQLite, webhook or polled stream — not two of the same shape |
-| 2 | **At least one integration is authenticated** | SSO / OAuth / bearer / API key — one of your two, forcing real secret handling |
+| 2 | **At least one integration is authenticated** | a real sign-in (SSO / OAuth) or an API key — one of your two, forcing real secret handling |
 | 3 | **1 CRUD surface** | create / read / update / delete over something you own |
 | 4 | **1 data-visualization surface** | charts, derived-metrics table, timeline — turn data into a view |
 | 5 | *(optional)* **1 background / async-job or agent-driven surface** | ties into the lab's overnight-agent work — see [autonomous loops](/docs/working-with-claude#6-autonomous--overnight-loops) |
@@ -50,8 +50,8 @@ first** — never spine steps.
 2. **Spec** — a short design doc: what it does, how it's used, what it depends on.
 3. **Code-free implementation plan** — per the
    [lab plan format](/docs/working-with-claude#2-code-free-implementation-plans). No literal code.
-4. **Sub-agent-driven build** — implement by dispatching agents, not hand-coding everything in one
-   context. Practice delegating.
+4. **Sub-agent-driven build** — implement by delegating to subagents (helper AI agents), not
+   hand-coding everything in one session. Practice delegating.
 5. **Review** — `superpowers:requesting-code-review` (dispatches a reviewer and queues a
    `pr-review-loop` cycle) or `pr-review-loop` directly. (The lab's automated PR reviewer covers
    lab repos only, not your sandbox.)
@@ -76,7 +76,7 @@ stack as a documented experiment.
 - [ ] A spec + code-free plan committed **before** the code, per surface
 - [ ] The **deployment-tradeoff writeup**
 - [ ] A `project_log.md` tracking decisions as you go
-- [ ] **Patterns & findings retro** — your proof of completion
+- [ ] **Patterns & findings retro** (retrospective writeup) — your proof of completion
 
 ### The retro (this is what completion means)
 
@@ -100,12 +100,12 @@ Lab rules apply even on throwaway code — practicing them here is part of the p
   [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md)
 - **Data protection** —
   [`02-data-protection.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/02-data-protection.md).
-  **No gated datasets** (IEMOCAP, CANDOR, MOSEI) anywhere — synthetic, openly-licensed, or your own
+  **No gated (license-restricted) datasets** (IEMOCAP, CANDOR, MOSEI) anywhere — synthetic, openly-licensed, or your own
   throwaway data only.
 - **Secrets** — tokens/keys in a gitignored `.env`, never committed; secret-scan before push
   (e.g. `gitleaks detect`)
 - **File hygiene** — 5 MB/file limit; no checkpoints or binary artifacts
-- **Spend** — stay in free tiers; run inference through your Claude Max subscription; flag anything
+- **Spend** — stay in free tiers; run AI usage through your Claude subscription; flag anything
   over $10 before incurring it
 
 ---

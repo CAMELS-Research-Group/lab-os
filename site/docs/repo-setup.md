@@ -1,7 +1,7 @@
 ---
 sidebar_position: 5
 title: Setting Up a New Repo
-description: First-cut runbook for creating a lab-conformant repository — gitignore, CLAUDE.md seed, project-log skeleton, PR template, and the phase-2 CI pointer.
+description: First-cut runbook for creating a repository that follows lab conventions — gitignore, CLAUDE.md seed, project-log skeleton, PR template, and the phase-2 CI pointer.
 ---
 
 # Setting Up a New Repo
@@ -25,7 +25,8 @@ for real work) and clone it into your `<DEV_ROOT>` alongside the other lab repos
 
 ### 2. Add `.gitignore` basics
 
-No lab template yet — start from a standard gitignore for your stack (GitHub's repo-creation flow
+No lab template yet — start from a standard `.gitignore` — the file listing what git must never
+commit — for your stack (GitHub's repo-creation flow
 offers one, or pull from [github/gitignore](https://github.com/github/gitignore)), then make sure
 it covers the lab's protection rules
 ([`02-data-protection.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/02-data-protection.md)):
@@ -39,13 +40,13 @@ it covers the lab's protection rules
 Copy
 [`templates/repo-CLAUDE.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/repo-CLAUDE.template.md)
 to the repo root (or `.claude/CLAUDE.md`) and fill the placeholders. Follow the template's embedded
-author guidance — dense AI-tier writing, 8 KB budget, no restating lab rules that already load.
+author guidance — dense writing aimed at an AI reader, 8 KB size budget, no restating lab rules that already load.
 
 ### 4. Seed `project_log.md`
 
 Copy
 [`templates/project_log.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/project_log.template.md)
-to the repo root. Its structure is normative (`log-lint` parses it) — keep the `## Standing Decisions`
+to the repo root. Its structure is load-bearing (the `log-lint` automated check parses it) — keep the `## Standing Decisions`
 and `## Entries` headings exactly as shipped. Entry format and triggers:
 [`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md).
 
@@ -59,8 +60,8 @@ fills it — see
 
 ### 6. Caller YAML pointer — *phase 2, not yet required*
 
-Eventually each repo will carry a small caller workflow YAML that consumes lab-os's reusable
-CI adherence workflows (log-lint, docs-budget, merge-bar-check). That rollout hasn't happened —
+Eventually each repo will carry a small workflow file that runs lab-os's shared CI checks
+(automated pull-request checks: log-lint, docs-budget, merge-bar-check). That rollout hasn't happened —
 skip this step for now; it's listed so the checklist doesn't silently grow later.
 
 ## Done when
@@ -68,7 +69,7 @@ skip this step for now; it's listed so the checklist doesn't silently grow later
 - Repo exists and is cloned under `<DEV_ROOT>`
 - `.gitignore` covers secrets and binary/model artifacts
 - `CLAUDE.md` seeded, no `<...>` placeholders left
-- `project_log.md` seeded with the normative skeleton intact
+- `project_log.md` seeded with the required skeleton intact
 - `.github/pull_request_template.md` in place
 
 Then make your first commit following the conventions in

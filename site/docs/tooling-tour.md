@@ -14,7 +14,7 @@ when this page and the source disagree, the source wins.
 
 ## The three CI adherence checks
 
-CI (continuous integration — the checks GitHub runs automatically on every pull request) is how
+CI (continuous integration — the checks GitHub runs automatically on every pull request, or PR) is how
 this repository enforces its own standards. The three checks are defined once in lab-os as
 *reusable workflows* — GitHub Actions' way of letting many repositories share one check — in
 [`.github/workflows/`](https://github.com/WatsonWBlair/lab-os/tree/main/.github/workflows). lab-os
@@ -31,7 +31,7 @@ Source of truth:
 [`log-lint.yml`](https://github.com/WatsonWBlair/lab-os/blob/main/.github/workflows/log-lint.yml)
 (behavior is spelled out in its header comment).
 
-Lints PR changes to `project_log.md` (and its archive) against the
+Checks PR changes to `project_log.md` (and its archive) against the
 [logging standard](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md):
 entry format, ordering, immutability of merged entries, archive integrity, per-entry size.
 
@@ -60,7 +60,7 @@ Checks byte budgets on the always-loaded files agents read every session — `CL
 agent can usefully start with. Budgets and tiers:
 [`04-docs.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/04-docs.md).
 
-**A red check means** a doc surface is more than 1.5× over budget — and only in repos that have
+**A red check means** one of those files is more than 1.5× over its budget — and only in repos that have
 opted into enforcement. The default posture is warn-only: the job annotates overages but never
 fails, until a repo flips `enforce: true` after its first green run. lab-os itself enforces.
 
@@ -71,7 +71,8 @@ Source of truth:
 
 Verifies the PR description against the repo's PR template: every required section heading must be
 present, and on PRs that change code exactly one of the two log checkboxes ("log entries finalized" /
-"no loggable events") must be ticked. This check automates part of the full merge bar, defined in
+"no loggable events") must be ticked. This check automates part of the full merge bar — the
+checklist a change must clear before merging — defined in
 [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md)
 and discussed in [Rules, Explained](/docs/rules-explained).
 
@@ -96,7 +97,7 @@ guidance:
   — the project-log skeleton (log-lint parses this exact structure, so its load-bearing headings
   are never renamed — see [Setting Up a New Repo](/docs/repo-setup)).
 - [`PRD.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/PRD.template.md)
-  — the living PRD shape: Problem, success criteria, scope, constraints, plan, open questions.
+  — the living PRD (product requirements document) shape: Problem, success criteria, scope, constraints, plan, open questions.
 - [`work-bundle/`](https://github.com/WatsonWBlair/lab-os/tree/main/templates/work-bundle)
   — paired design + plan templates for a single unit of work, kept together and filed away as
   one package when that work ships.
@@ -107,7 +108,7 @@ An automated reviewer that gives open PRs on lab repos an external-perspective c
 posts its findings as review comments. It posts via a bot identity (a GitHub App), not as a human
 account, and sends run notifications to a Discord channel. It reads the same
 [lab rules](https://github.com/WatsonWBlair/lab-os/tree/main/.claude/rules) this repo publishes,
-so its review standard and the humans' review standard stay one standard.
+so the automated reviewer and human reviewers work from the same written standard.
 
 Scope worth being precise about: it **reviews and comments — it does not approve or merge**.
 A human still owns every merge decision.
