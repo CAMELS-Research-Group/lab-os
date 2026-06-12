@@ -7,7 +7,7 @@ description: Protocol card for play-testing the handbook — the arc to walk, th
 # How to Play-Test
 
 This site is being play-tested before it counts as done. If you're one of the 1–3 testers — a lab
-member with an existing Claude subscription and lab-repo access — this card is your protocol.
+member with an existing Claude subscription — this card is your protocol.
 You're not just following the handbook; you're stress-testing it. **Friction is the data we want.**
 
 ## The arc

@@ -42,8 +42,7 @@ assuming the answer is new.
 | `Conversational_Agent` | Voice agent (Whisper + Ollama + Bark) | Reference / related |
 | `FCM_Analysis` | Fuzzy C-Means vs GMM comparative analysis | Back burner — paused |
 
-Only `LSCA`, `Global_Pathways`, and the tooling repos are part of the core bootstrap clone set (see
-`lab-os/site/docs/getting-started.mdx`, or the handbook's Getting Started page). Foundational and paused repos are cloned on demand when a question sends you upstream.
+Core bootstrap clone set: `LSCA`, `Global_Pathways`, and the tooling repos listed under Lab tooling below. Foundational and paused repos are cloned on demand when a question sends you upstream.
 
 ## Lab tooling
 
