@@ -10,7 +10,7 @@ lab-os ships four lab-wide rule files under
 [`.claude/rules/`](https://github.com/WatsonWBlair/lab-os/tree/main/.claude/rules). Every Claude session
 loads them through the link you wired in [Getting Started](/docs/getting-started), the PR-review tooling
 reads the same files at review time, and parts are enforced in CI (`log-lint`, `docs-budget`,
-`merge-bar-check`).
+`merge-bar-check` — toured in [Tooling Tour](/docs/tooling-tour)).
 
 This page is orientation, not reference — each section links the rule file as the **source of truth**;
 when the two disagree, the rule file wins.

@@ -11,6 +11,7 @@ const sidebars: SidebarsConfig = {
     'rules-explained',
     'repo-setup',
     'play-testing',
+    'tooling-tour',
   ],
 };
 
