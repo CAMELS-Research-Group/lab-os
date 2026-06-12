@@ -11,8 +11,7 @@ lab-os ships four lab-wide rule files under
 loads them automatically through the junction/symlink you wired in
 [Getting Started](/docs/getting-started), and the PR-review tooling reads the same files at review time —
 so one `git pull` of lab-os updates the rules everywhere at once. Parts of the rules are also enforced in
-CI by three adherence actions — `log-lint`, `docs-budget`, and `merge-bar-check` (a tooling tour covers
-them separately).
+CI by three adherence actions — `log-lint`, `docs-budget`, and `merge-bar-check` — covered separately.
 
 This page is orientation, not reference. Each section restates a rule in general terms and links the rule
 file itself as the **source of truth** — when the two disagree, the rule file wins.
@@ -49,7 +48,8 @@ and damage the lab's credibility permanently, and git history makes such commits
 Internalize two things:
 
 - **Raw gated data never gets committed** — not the recordings, not the text, not anything identifying
-  the people in them, in any repo, ever. Each repo declares its own gated datasets in its local rules.
+  the people in them, in any repo, ever. Which datasets count as gated is defined per-repo, in that
+  repo's own rules file.
 - **Derived artifacts aren't automatically safe.** Plots, embeddings, and summary outputs go through an
   explicit PII review (the rule file has the checklist) before commit. The default when uncertain is to
   aggregate further or leave the artifact out.
