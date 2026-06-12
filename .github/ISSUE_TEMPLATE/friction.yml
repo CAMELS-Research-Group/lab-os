@@ -1,0 +1,36 @@
+name: Friction report
+description: Play-test snag — where you were, what you expected, what happened, how bad.
+title: "friction: "
+labels: ["playtest"]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Where I was
+      description: Page and step.
+      placeholder: "Getting Started, step 3 (guided setup)"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What I expected
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Cosmetic — noticed it, didn't slow me down
+        - Slowed me down — worked around it on my own
+        - Stalled — stuck 15+ minutes or needed help
+        - Fully blocked — could not continue
+    validations:
+      required: true
