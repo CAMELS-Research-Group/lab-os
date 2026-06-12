@@ -18,7 +18,8 @@ CI (continuous integration — the checks GitHub runs automatically on every pul
 this repository enforces its own standards. The three checks are defined once in lab-os as
 *reusable workflows* — GitHub Actions' way of letting many repositories share one check — in
 [`.github/workflows/`](https://github.com/WatsonWBlair/lab-os/tree/main/.github/workflows). lab-os
-runs them on its own pull requests through a small caller file,
+runs them on its own pull requests through a small *caller* file — a workflow whose only job is to
+invoke the shared ones —
 [`standards.yml`](https://github.com/WatsonWBlair/lab-os/blob/main/.github/workflows/standards.yml);
 any other repo can adopt all three by copying that one file — see
 [Setting Up a New Repo](/docs/repo-setup) (the

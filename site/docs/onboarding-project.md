@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: Onboarding Project
-description: A two-week, throwaway sandbox build — a mission-control-style work surface — that gets new lab members fluent in the spec-driven, sub-agent-driven lab workflow and conventions.
+description: A two-week sandbox project — you build a small dashboard-style app in a disposable repo to practice the lab's full workflow and conventions.
 ---
 
 # Onboarding Project — Mission-Control Sandbox

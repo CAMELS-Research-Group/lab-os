@@ -85,7 +85,7 @@ The single most important lesson: **an agent's self-report is not evidence.**
 - **For a requested review, the review *is* the deliverable** — post it; don't ask permission to
   deliver what was asked. Unsolicited posts under your name still need the approval gate in the
   [global `CLAUDE.md` template](https://github.com/WatsonWBlair/lab-os/blob/main/templates/global-CLAUDE.template.md).
-- **PR template, merge bar, solo-maintainer bypass:**
+- **PR template, merge bar, and the documented exception for repos with a single maintainer:**
   [`PR-LIFECYCLE.md`](https://github.com/WatsonWBlair/lab-os/blob/main/PR-LIFECYCLE.md) for the
   lifecycle; hard rules in
   [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md).
@@ -129,7 +129,7 @@ actionable digest (summary report)** — never "wake to a finished feature you h
 - **Continuous capture.** Log decisions and open threads as they happen; load-bearing decisions get
   the *why*. Which log an entry belongs in, what earns one, the format — source of truth:
   [`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md).
-- **Checkpoint** before switching domains, before a long chat compacts, before a context-heavy
-  subagent handoff.
+- **Checkpoint** before switching domains, before a long chat is summarized to free up room
+  (Claude Code calls this *compacting*), before a context-heavy subagent handoff.
 - **Long-lived facts go to auto-memory** — Claude Code's persistent memory directory. When you
   discover a durable working preference, capture it there so it survives the session.

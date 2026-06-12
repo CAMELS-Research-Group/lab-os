@@ -40,9 +40,10 @@ Internalize two things:
 Source of truth:
 [`02-data-protection.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/02-data-protection.md)
 
-Governs what may never enter a repo: raw gated-dataset content, anything that could re-identify a
-participant, large binaries, secrets. The lab works with license-gated human-subject data — one
-careless commit can violate a data-use agreement, and git history makes it effectively permanent.
+The lab works with gated (license-restricted) human-subject datasets. This rule governs what may
+never enter a repo: raw content from those datasets, anything that could re-identify a participant,
+large binaries, secrets — one careless commit can violate a data-use agreement, and git history
+makes it effectively permanent.
 
 Internalize two things:
 
