@@ -17,7 +17,7 @@ capture what worked.
 
 Read [Working with Claude](/docs/working-with-claude) first if you haven't — it's the methods this
 project makes you practice. Then your first step is creating the disposable repo itself: follow the
-"Setting up a new repo" runbook. {/* TODO(task 13): link /docs/repo-setup */}
+[Setting up a new repo](/docs/repo-setup) runbook.
 
 ---
 

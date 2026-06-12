@@ -7,10 +7,25 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-06-11 19:45 — Site owns human-facing docs · #TBD
 - 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-06-11 19:45 — Site owns human-facing docs
+
+**Decision:** The handbook site (`site/`, deployed to watsonwblair.github.io/lab-os) is the
+owning home for human-facing docs. Root `BOOTSTRAP.md` and `WORKING-WITH-CLAUDE.md` become
+pointer stubs to their site pages; `.claude/rules/` stay AI-tier repo files.
+**Why:** Spec D3: one human-facing surface, written for its readers, with build-time link
+checking — instead of agent-dense repo markdown doing double duty for stakeholders.
+**Alternatives:** Site wraps the repo markdown unchanged — rejected, a brochure over a
+codebase; site renders the repo markdown as-is — rejected, agent-dense prose shown to
+stakeholders.
+**Refs:** #TBD, docs/superpowers/specs/2026-06-11-lab-os-rename-handbook-site-design.md
 
 ---
 
