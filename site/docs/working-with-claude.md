@@ -97,7 +97,7 @@ never "wake to a finished feature you haven't checked."
 - **Test the halt path before trusting a run** — a run that ended naturally never exercised its
   escape hatch (missing dependencies have silently broken stop-hooks).
 - **Forbid hard-to-reverse ops in the mandate.** No rebase / amend / force-push / history rewrites
-  inside a loop — halt-and-report instead.
+  inside a loop — halt-and-report instead. Start branches from the correct base.
 - **Human-gated authorization is correct, not a nuisance.** Launching a loop trips Claude Code's
   safety checks by design; the agent must not retry or route around the denial.
 

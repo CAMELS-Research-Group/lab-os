@@ -11,7 +11,7 @@ for a Claude Code working session). Two paths, same result:
 
 1. **Claude-guided (recommended):** install Claude Code, paste one prompt; Claude interviews you and
    performs the setup, confirming each step.
-2. **[Manual path](#manual-path):** the same steps by hand.
+2. **[Manual path](#appendix-manual-path):** the same steps by hand, in the appendix below.
 
 Either way you end with: a lab workspace with the core repos cloned, your personal
 `~/.claude/CLAUDE.md` (your persona, loads in every session), a dev-root `CLAUDE.md` (the lab map),
@@ -138,9 +138,22 @@ Whichever path you took, all of these should hold:
 question goes unanswered → confirm the session was opened AT `<DEV_ROOT>`, not a subdirectory.
 Placeholders still showing → finish personalizing the global template.
 
-## Manual path
+## Next steps
 
-The same setup by hand. Set `$DEV_ROOT` once and all blocks below use it:
+- **[Working with Claude](/docs/working-with-claude)** — the lab's established methods; most were
+  earned by hitting a failure mode, and reading them first saves the rediscovery.
+- **[Onboarding Project](/docs/onboarding-project)** — a two-week throwaway sandbox build that has
+  you practice the full lab workflow on low-stakes code.
+
+## Keeping current
+
+- `git pull` `lab-os` periodically — the link means new rules apply immediately.
+- `git pull` `lab-claude-plugins`, then `/plugin marketplace update` for plugin changes.
+
+## Appendix: manual path
+
+The same setup by hand, for members who prefer doing it step by step. Set `$DEV_ROOT` once and all
+blocks below use it:
 **Windows (PowerShell):** `$DEV_ROOT = "$HOME\Development"` · **macOS / Linux:** `DEV_ROOT=~/Development`.
 
 ### 1. Create your lab workspace
@@ -279,14 +292,3 @@ pip install -r requirements.txt   # or follow LSCA/README.md if it differs
 `Global_Pathways` is in spec phase — read its `CLAUDE.md` before touching code. Then run the
 checks in [Step 3 — Verify your setup](#step-3--verify-your-setup).
 
-## Next steps
-
-- **[Working with Claude](/docs/working-with-claude)** — the lab's established methods; most were
-  earned by hitting a failure mode, and reading them first saves the rediscovery.
-- **[Onboarding Project](/docs/onboarding-project)** — a two-week throwaway sandbox build that has
-  you practice the full lab workflow on low-stakes code.
-
-## Keeping current
-
-- `git pull` `lab-os` periodically — the link means new rules apply immediately.
-- `git pull` `lab-claude-plugins`, then `/plugin marketplace update` for plugin changes.

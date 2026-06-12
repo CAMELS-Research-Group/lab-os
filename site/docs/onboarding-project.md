@@ -52,8 +52,9 @@ first** — never spine steps.
    [lab plan format](/docs/working-with-claude#2-code-free-implementation-plans). No literal code.
 4. **Sub-agent-driven build** — implement by dispatching agents, not hand-coding everything in one
    context. Practice delegating.
-5. **Review** — `superpowers:requesting-code-review` or `pr-review-loop` directly. (The lab's
-   automated PR reviewer covers lab repos only, not your sandbox.)
+5. **Review** — `superpowers:requesting-code-review` (dispatches a reviewer and queues a
+   `pr-review-loop` cycle) or `pr-review-loop` directly. (The lab's automated PR reviewer covers
+   lab repos only, not your sandbox.)
 6. **Log** — `project_log.md` entries per
    [`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md).
 
