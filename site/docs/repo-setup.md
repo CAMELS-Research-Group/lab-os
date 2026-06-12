@@ -60,7 +60,7 @@ fills it — see
 ### 6. Caller YAML pointer — *phase 2, not yet required*
 
 Eventually each repo will carry a small caller workflow YAML that consumes lab-os's reusable
-CI adherence workflows (planned: log-lint, docs-budget, secret-scanning). That rollout hasn't happened —
+CI adherence workflows (log-lint, docs-budget, merge-bar-check). That rollout hasn't happened —
 skip this step for now; it's listed so the checklist doesn't silently grow later.
 
 ## Done when

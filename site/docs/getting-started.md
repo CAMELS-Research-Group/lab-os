@@ -343,12 +343,10 @@ then restart your Claude Code session).
   — the lab's established methods and best practices (code-free plans, verification discipline, review
   discipline, autonomous-loop safety, communication discipline). Most of it was earned by hitting a
   failure mode and correcting it; reading it first saves you the rediscovery.
-- **Practice Subagent-Driven Development** (plan → dispatch independent tasks to subagents → review)
-  before driving real research work. The lab uses `mission-control` (a local-first FastAPI + React
-  dashboard) as the practice ground: it has tests and a CI gate, so the review loop is real without
-  research stakes. This is an **individual** practice project — set up your own copy (or your own
-  equivalent app); it is not part of the shared bootstrap clone set. Pair it with the
-  `superpowers:subagent-driven-development` and `superpowers:writing-plans` skills.
+- **Start the [Onboarding Project](/docs/onboarding-project)** — a two-week, throwaway sandbox build
+  in your own disposable repo that has you practice the full lab workflow (brainstorm → spec →
+  code-free plan → subagent-driven build → review → log) on low-stakes code. It is the structured
+  practice vehicle for everything the methods page describes; you choose your own stack.
 
 ## Keeping current
 
