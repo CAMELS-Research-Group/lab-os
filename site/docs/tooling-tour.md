@@ -14,11 +14,14 @@ when this page and the source disagree, the source wins.
 
 ## The three CI adherence checks
 
-Three reusable GitHub Actions workflows live in
+CI (continuous integration — the checks GitHub runs automatically on every pull request) is how
+this repository enforces its own standards. The three checks are defined once in lab-os as
+*reusable workflows* — GitHub Actions' way of letting many repositories share one check — in
 [`.github/workflows/`](https://github.com/WatsonWBlair/lab-os/tree/main/.github/workflows). lab-os
-runs all three on every one of its own pull requests via the caller workflow
+runs them on its own pull requests through a small caller file,
 [`standards.yml`](https://github.com/WatsonWBlair/lab-os/blob/main/.github/workflows/standards.yml);
-any other repo can adopt them by copying that same file as a thin caller (the
+any other repo can adopt all three by copying that one file — see
+[Setting Up a New Repo](/docs/repo-setup) (the
 [README](https://github.com/WatsonWBlair/lab-os/blob/main/README.md) documents adoption under
 "How repos consume it").
 
@@ -52,8 +55,9 @@ override reason) and push; it isn't a flaky check.
 Source of truth:
 [`docs-budget.yml`](https://github.com/WatsonWBlair/lab-os/blob/main/.github/workflows/docs-budget.yml).
 
-Checks byte budgets on the always-loaded AI doc surfaces — `CLAUDE.md`, each `.claude/rules/*.md`
-file, and `project_log.md` — so agent context doesn't silently bloat. Budgets and tiers:
+Checks byte budgets on the always-loaded files agents read every session — `CLAUDE.md`, each
+`.claude/rules/*.md` file, and `project_log.md` — so those files don't quietly grow past what an
+agent can usefully start with. Budgets and tiers:
 [`04-docs.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/04-docs.md).
 
 **A red check means** a doc surface is more than 1.5× over budget — and only in repos that have
@@ -66,9 +70,10 @@ Source of truth:
 [`merge-bar-check.yml`](https://github.com/WatsonWBlair/lab-os/blob/main/.github/workflows/merge-bar-check.yml).
 
 Verifies the PR description against the repo's PR template: every required section heading must be
-present, and on code-path PRs exactly one of the two log checkboxes ("log entries finalized" /
-"no loggable events") must be ticked. The full merge bar it mechanizes part of:
-[`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md).
+present, and on PRs that change code exactly one of the two log checkboxes ("log entries finalized" /
+"no loggable events") must be ticked. This check automates part of the full merge bar, defined in
+[`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md)
+and discussed in [Rules, Explained](/docs/rules-explained).
 
 **A red check means** your PR body is incomplete — a missing template section, or the log
 checkboxes unticked (or both ticked) on a PR that changes code. Edit the PR description; no code
@@ -85,14 +90,16 @@ guidance:
 - [`dev-root-CLAUDE.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/dev-root-CLAUDE.template.md)
   — workspace-root orientation: which repos exist and how they relate.
 - [`repo-CLAUDE.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/repo-CLAUDE.template.md)
-  — per-repo `CLAUDE.md` seed, written to the budget-capped AI tier.
+  — per-repo `CLAUDE.md` seed, kept short to a byte budget (see
+  [Rules, Explained](/docs/rules-explained) — 04, Docs).
 - [`project_log.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/project_log.template.md)
-  — the project-log skeleton. **Normative**: log-lint parses this exact structure, so its
-  load-bearing headings are never renamed.
+  — the project-log skeleton (log-lint parses this exact structure, so its load-bearing headings
+  are never renamed — see [Setting Up a New Repo](/docs/repo-setup)).
 - [`PRD.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/PRD.template.md)
   — the living PRD shape: Problem, success criteria, scope, constraints, plan, open questions.
 - [`work-bundle/`](https://github.com/WatsonWBlair/lab-os/tree/main/templates/work-bundle)
-  — paired design + plan templates for a single work slice, archived together as a bundle.
+  — paired design + plan templates for a single unit of work, kept together and filed away as
+  one package when that work ships.
 
 ## The PR-review agent
 
