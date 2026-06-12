@@ -7,7 +7,7 @@ description: A two-week, throwaway sandbox build — a mission-control-style wor
 # Onboarding Project — Mission-Control Sandbox
 
 A two-week, throwaway build that gets you fluent in how the lab actually works: spec-driven
-development, agentic and sub-agent-driven workflows, and the lab-rules conventions. You build a
+development, agentic and sub-agent-driven workflows, and the lab's conventions. You build a
 small "mission-control" style work surface — the kind of dashboard we use to run the lab — in your
 own disposable repo.
 
@@ -53,26 +53,28 @@ them if the timebox allows.
 | 2 | **At least one integration is authenticated** | SSO / OAuth / bearer token / API key. This is one of your two integrations, not a third — it forces real secret handling. |
 | 3 | **1 CRUD surface** | Create / read / update / delete over something you own. |
 | 4 | **1 data-visualization surface** | Charts, a table with derived metrics, a timeline — turn data into a view. |
-| 5 | *(optional)* **1 background / async-job or agent-driven surface** | A job queue, a scheduled task, or a surface an agent drives. Ties into the lab's overnight-agent work (see the autonomous-loops section of [Working with Claude](/docs/working-with-claude)). |
+| 5 | *(optional)* **1 background / async-job or agent-driven surface** | A job queue, a scheduled task, or a surface an agent drives. Ties into the lab's overnight-agent work (see the [autonomous-loops section](/docs/working-with-claude#6-autonomous--overnight-loops) of [Working with Claude](/docs/working-with-claude)). |
 | 6 | *(optional)* **1 command-palette or cross-surface action** | A single action that reaches across surfaces. Good for discovering work-surface UX patterns. |
 
 How these compose into pages/modules is yours to design. That design *is* the discovery.
 
 ### Axis 2 — Workflow spine (the *how*: fixed, non-negotiable)
 
-Every surface you build passes through the full loop. If the timebox squeezes, you drop **checklist
+Every surface you build passes through the full loop. If the timebox squeezes, you trim **checklist
 items (Axis 1)** — never spine steps.
 
 1. **Brainstorm** — use the `superpowers:brainstorming` skill to shape the surface before you design it.
 2. **Spec** — write a short design doc. What it does, how it's used, what it depends on.
 3. **Code-free implementation plan** — per the lab plan format (Files / Depends on / Spec / Acceptance /
-   Verification / Commit per task). No literal code in the plan. See the code-free-plans section of
-   [Working with Claude](/docs/working-with-claude) for the format and the reasoning behind it.
+   Verification / Commit per task). No literal code in the plan. See the [code-free-plans section](/docs/working-with-claude#2-code-free-implementation-plans)
+   of [Working with Claude](/docs/working-with-claude) for the format and the reasoning behind it.
 4. **Sub-agent-driven build** — implement by dispatching agents (`Explore` to map, `Plan` to design,
-   `code-reviewer` to check), not by hand-coding everything in one context. Practice delegating.
-5. **Review** — run a review pass (the `pr-review-toolkit` agents, or the lab's automated PR reviewer
-   if you open PRs).
-6. **Log** — a `project_log.md` entry: ISO date, one-line subject, body with the *why*.
+   agents to check), not by hand-coding everything in one context. Practice delegating.
+5. **Review** — run a review pass using `superpowers:requesting-code-review` (which queues a
+   `pr-review-loop` cycle), or `pr-review-loop` directly to drive multi-pass review-fix cycles. The
+   lab's automated PR reviewer runs only on covered lab repos — not your personal sandbox repo.
+6. **Log** — a `project_log.md` entry: ISO date, one-line subject, body with the *why*. Format and
+   entry triggers: [`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md).
 
 Spec and plan are committed **before** the code for that surface. That ordering is the point.
 
@@ -113,7 +115,7 @@ The repo gets thrown away. The retro doesn't.
 
 ## Guardrails
 
-Lab-rules apply even on throwaway code — practicing them here is part of the point:
+Lab rules apply even on throwaway code — practicing them here is part of the point:
 
 - **Commits & PRs** — follow
   [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md)
@@ -123,7 +125,7 @@ Lab-rules apply even on throwaway code — practicing them here is part of the p
   **No gated datasets** (IEMOCAP, CANDOR, MOSEI) anywhere in this project. Use synthetic,
   openly-licensed, or your own throwaway data.
 - **Secrets** — for the authenticated integration: tokens/keys go in a gitignored `.env`, never
-  committed. Run secret-scanning before you push.
+  committed. Run secret-scanning before you push (e.g. `gitleaks detect`).
 - **File hygiene** — 5 MB/file limit; no checkpoints or binary artifacts committed.
 - **Spend** — stay in free tiers; run agent inference through your Claude Max subscription rather
   than a metered API key. Flag anything that would cost more than $10 before you incur it.
