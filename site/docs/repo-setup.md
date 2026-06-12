@@ -25,8 +25,9 @@ for real work) and clone it into your `<DEV_ROOT>` alongside the other lab repos
 
 ### 2. Add `.gitignore` basics
 
-No lab template yet — start from a standard gitignore for your stack, then make sure it covers the
-lab's protection rules
+No lab template yet — start from a standard gitignore for your stack (GitHub's repo-creation flow
+offers one, or pull from [github/gitignore](https://github.com/github/gitignore)), then make sure
+it covers the lab's protection rules
 ([`02-data-protection.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/02-data-protection.md)):
 
 - `.env` and other secret-bearing files
@@ -59,7 +60,7 @@ fills it — see
 ### 6. Caller YAML pointer — *phase 2, not yet required*
 
 Eventually each repo will carry a small caller workflow YAML that consumes lab-os's reusable
-CI adherence workflows (log-lint, docs-budget, secret-scanning). That rollout hasn't happened —
+CI adherence workflows (planned: log-lint, docs-budget, secret-scanning). That rollout hasn't happened —
 skip this step for now; it's listed so the checklist doesn't silently grow later.
 
 ## Done when
