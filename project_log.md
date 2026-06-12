@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-06-11 19:45 — Site owns human-facing docs · #TBD
+- 2026-06-11 19:45 — Site owns human-facing docs · #15
 - 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
@@ -25,7 +25,7 @@ checking — instead of agent-dense repo markdown doing double duty for stakehol
 **Alternatives:** Site wraps the repo markdown unchanged — rejected, a brochure over a
 codebase; site renders the repo markdown as-is — rejected, agent-dense prose shown to
 stakeholders.
-**Refs:** #TBD, docs/superpowers/specs/2026-06-11-lab-os-rename-handbook-site-design.md
+**Refs:** #15, docs/superpowers/specs/2026-06-11-lab-os-rename-handbook-site-design.md
 
 ---
 
