@@ -7,11 +7,31 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-06-12 12:00 — Plan-execution logs close with their shipping PR · #18
 - 2026-06-11 19:45 — Site owns human-facing docs · #15
 - 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-06-12 12:00 — Plan-execution logs close with their shipping PR
+
+**Decision:** A plan's `## Execution Log` closes with the PR that ships it. Post-merge
+evidence (deploy green, runtime verification, branch cleanup) goes to a comment on that
+PR; bigger facts route per the entry triggers. No trailing entries held for a future PR.
+Watson granted a narrow standing pre-authorization (recorded in his global CLAUDE.md):
+merge-closeout status comments on his own PRs post without per-action confirmation.
+**Why:** The execution log lives in the repo, so merge-time facts always arrive after the
+last commit that could carry them. Both prior closeouts hitched entries onto whatever PR
+came next (#16 carried the tasks 4–13 closeout), coupling unrelated PRs and dangling when
+no next PR exists. The routing table already sends bare status to PR comments — this names
+when the log closes so closeout facts stop defaulting into it.
+**Alternatives:** Dedicated one-line closeout PRs — rejected, noise against the
+single-concern merge bar. Predictive pre-merge entries — rejected, evidence written before
+it exists.
+**Refs:** #18, docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md
 
 ---
 
