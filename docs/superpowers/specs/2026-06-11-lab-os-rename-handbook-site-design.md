@@ -1,6 +1,10 @@
 # lab-os: rename, handbook site, play-test launch — design
 
 Status: reviewed — approved by Watson 2026-06-11 (PR #12; scoping amendments from review folded in).
+Amended 2026-06-12: white-label pivot (Watson, live review of PR #15) — the site is a skills-building
+exercise (learn spec-driven development, set up an agentic workspace), not a CAMELS lab introduction;
+guided-only setup, no lab-repo cloning. Supersedes the lab-introduction framing in §1/§5 and parts of
+D6's clone flow. Details: plan execution log, 2026-06-11 22:30 entry.
 
 ## 1. Problem
 

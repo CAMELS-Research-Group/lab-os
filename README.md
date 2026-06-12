@@ -2,13 +2,10 @@
 
 Cross-repo conventions for `WatsonWBlair`'s lab repos.
 
-## New to the lab? Start here
-
-**[`BOOTSTRAP.md`](BOOTSTRAP.md)** is the full new-member runbook — workspace layout, the core repos to
-clone, wiring lab-os into Cowork, the two `CLAUDE.md` templates, and the lab plugins. Cross-platform
-(Windows reference setup + macOS / Linux equivalents). Follow it end-to-end for a working environment.
-
-The rest of this README is reference for how the conventions in this repo are consumed.
+**New to the lab? Start at the handbook: <https://watsonwblair.github.io/lab-os/>** (source: `site/`).
+The site owns the human-facing docs — setup runbook, working-with-Claude methods, the onboarding
+project, the rules tour. This README is reference for how the conventions in this repo are consumed
+by agents and CI.
 
 ## What's here
 
@@ -30,21 +27,12 @@ The rest of this README is reference for how the conventions in this repo are co
   - [`log-lint.yml`](.github/workflows/log-lint.yml) — validates project-log structure and entry format
   - [`docs-budget.yml`](.github/workflows/docs-budget.yml) — warns when CLAUDE.md or rules files exceed byte budgets
   - [`merge-bar-check.yml`](.github/workflows/merge-bar-check.yml) — checklist completeness and log-cleanup gate
-- `BOOTSTRAP.md` — the setup runbook that ties it together.
-- `WORKING-WITH-CLAUDE.md` — established lab methods and best practices for working with Claude (read during onboarding).
-
-## Lab plugins
-
-The lab's Claude Code plugins live in [`lab-claude-plugins`](https://github.com/WatsonWBlair/lab-claude-plugins):
-
-```
-/plugin marketplace add WatsonWBlair/lab-claude-plugins
-/plugin install pr-review-loop@lab-claude-plugins
-```
+- `site/` — the Docusaurus handbook, built and deployed to GitHub Pages by [`deploy-site.yml`](.github/workflows/deploy-site.yml).
+- `BOOTSTRAP.md`, `WORKING-WITH-CLAUDE.md` — pointer stubs; their content moved to the handbook site.
 
 ## How repos consume it
 
-**Locally (Cowork)**: clone this repo into your lab workspace (`<DEV_ROOT>`) and link its rules so Cowork sees them at the workspace root. BOOTSTRAP.md §3 is the full walkthrough; the short form:
+**Locally (Cowork)**: clone this repo into your lab workspace (`<DEV_ROOT>`) and link its rules so Cowork sees them at the workspace root. The handbook's Getting Started page is the full walkthrough; the short form:
 
 ```powershell
 # Windows (PowerShell) — junction, no admin required

@@ -2,7 +2,7 @@
 
 **Contract:** grep-only surface. Look up by symptom; do not read whole.
 One section per gotcha, titled as the symptom you would search for.
-Setup *steps* live in [`BOOTSTRAP.md`](BOOTSTRAP.md); entries here are failure modes, not walkthroughs.
+Setup *steps* live in [`site/docs/getting-started.mdx`](site/docs/getting-started.mdx); entries here are failure modes, not walkthroughs.
 
 **Adding entries:** an expensive finding or gotcha routes here (not to the project log) per the
 §4.2 routing rule in
@@ -18,7 +18,8 @@ section below: symptom as heading, cause, resolution.
 `<DEV_ROOT>/.claude/rules` → `lab-os/.claude/rules` was not created, was created pointing at
 the wrong target, or was deleted.
 
-**Resolution:** Re-run the link step from [`BOOTSTRAP.md` §3](BOOTSTRAP.md#3-wire-lab-os-into-cowork).
+**Resolution:** Re-run the link step using the junction/symlink commands in
+[README — How repos consume it](README.md#how-repos-consume-it).
 
 Verify: open a Cowork session at `<DEV_ROOT>` and ask "what are the lab's commit-message rules?" —
 it should answer from `01-workflow.md`.
@@ -52,7 +53,8 @@ directory was not created first.
 ```bash
 rm -f ~/Development/.claude/rules          # remove stale symlink
 ```
-Then re-run the link step from [`BOOTSTRAP.md` §3](BOOTSTRAP.md#3-wire-lab-os-into-cowork).
+Then re-run the link step using the symlink command in
+[README — How repos consume it](README.md#how-repos-consume-it).
 
 ---
 
@@ -116,7 +118,8 @@ scripts that embed paths in strings (grep patterns, Python `os.path`, config fil
 
 **Resolution:**
 - Lab docs provide **both** blocks when the commands are non-trivial, labelled `# PowerShell`
-  and `# macOS / Linux` — match the pattern in [`BOOTSTRAP.md`](BOOTSTRAP.md).
+  and `# macOS / Linux` — match the pattern in
+  [`site/docs/getting-started.mdx`](site/docs/getting-started.mdx).
 - When writing a single snippet intended for both: prefer constructs that work in both
   (`$(cmd)` subexpressions, forward-slash paths, explicit quoting of paths with spaces). Test
   on both before committing.
@@ -131,7 +134,8 @@ scripts that embed paths in strings (grep patterns, Python `os.path`, config fil
 **Cause:** `/plugin install` was run but `/reload-plugins` was not, or the marketplace source
 was not added first.
 
-**Resolution:** Re-run the full sequence from [`BOOTSTRAP.md` §5](BOOTSTRAP.md#5-install-the-lab-plugins), then confirm with `/plugin`.
+**Resolution:** Re-run the full sequence from the plugin step of the bootstrap prompt in
+[Getting Started](site/docs/getting-started.mdx), then confirm with `/plugin`.
 
 ---
 
@@ -141,4 +145,5 @@ was not added first.
 filled in.
 
 **Resolution:** Open `~/.claude/CLAUDE.md` (Windows: `C:\Users\<you>\.claude\CLAUDE.md`), fill
-in every `<...>` placeholder. See [`BOOTSTRAP.md` §4a](BOOTSTRAP.md#4a-personal-global-your-persona-applies-in-every-session-every-project).
+in every `<...>` placeholder. See the personalization step of the bootstrap prompt in
+[Getting Started](site/docs/getting-started.mdx).
