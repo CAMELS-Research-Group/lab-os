@@ -9,7 +9,8 @@ description: The automation lab-os runs on itself — three CI adherence checks,
 This page describes the real tooling this repository runs on itself — an example of what your own
 workspace can grow into once the conventions from the rest of this handbook are in place. Two
 audiences, one answer each: if you're assessing the lab, this is the infrastructure it runs; if
-you're joining it, this is what will act on your PRs. Every section links its source of truth —
+you're joining it, this is what will act on your pull requests. Every section links its source of
+truth —
 when this page and the source disagree, the source wins.
 
 ## The three CI adherence checks
@@ -21,8 +22,8 @@ this repository enforces its own standards. The three checks are defined once in
 runs them on its own pull requests through a small *caller* file — a workflow whose only job is to
 invoke the shared ones —
 [`standards.yml`](https://github.com/WatsonWBlair/lab-os/blob/main/.github/workflows/standards.yml);
-any other repo can adopt all three by copying that one file — see
-[Setting Up a New Repo](/docs/repo-setup) (the
+any other repo can adopt all three by copying that one file — a later rollout step, marked
+not-yet-required in [Setting Up a New Repo](/docs/repo-setup) (the
 [README](https://github.com/WatsonWBlair/lab-os/blob/main/README.md) documents adoption under
 "How repos consume it").
 
@@ -61,7 +62,7 @@ Checks byte budgets on the always-loaded files agents read every session — `CL
 agent can usefully start with. Budgets and tiers:
 [`04-docs.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/04-docs.md).
 
-**A red check means** one of those files is more than 1.5× over its budget — and only in repos that have
+**A red check means** one of those files has grown past 1.5× its budget — and only in repos that have
 opted into enforcement. The default posture is warn-only: the job annotates overages but never
 fails, until a repo flips `enforce: true` after its first green run. lab-os itself enforces.
 
