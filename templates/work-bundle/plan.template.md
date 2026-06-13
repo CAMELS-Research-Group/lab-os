@@ -8,7 +8,7 @@
 
 **Design:** [design.md](./design.md)
 
-**Plan format note (lab rule):** tasks specify *what* the implementation must satisfy, not *how*.
+**Plan format note (lab-os convention):** tasks specify *what* the implementation must satisfy, not *how*.
 No literal code. The only code blocks allowed are short shell commands in **Verification** lines.
 
 ---

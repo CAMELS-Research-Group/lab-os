@@ -14,7 +14,7 @@
 
 > **Template.** Copy to `<repo>/.claude/CLAUDE.md` or `<repo>/CLAUDE.md`. Fill every `<...>`
 > placeholder. Delete this blockquote and all HTML guidance comments when done.
-> Lab-wide rules (`.claude/rules/0x-*`) load automatically — do not restate them here.
+> Shared rules (`.claude/rules/0x-*`) load automatically — do not restate them here.
 
 ## What this repo is
 
@@ -67,7 +67,7 @@
 
 <!-- Pointer only — do not restate what the rules files already say. -->
 
-Lab-wide conventions: `.claude/rules/01-workflow.md` (commits, PRs, merge bar),
+Shared conventions: `.claude/rules/01-workflow.md` (commits, PRs, merge bar),
 `02-data-protection.md`, `03-logging.md` (log format), `04-docs.md` (tiers, budgets).
 
 Repo-local rules (this repo, `10+` numbering): `.claude/rules/10-<name>.md`
