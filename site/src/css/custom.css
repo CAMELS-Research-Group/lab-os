@@ -16,25 +16,25 @@
 :root {
   --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
   --ifm-font-family-monospace: 'JetBrains Mono', 'Courier New', monospace;
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary: #5b54e8;
+  --ifm-color-primary-dark: #3d35e4;
+  --ifm-color-primary-darker: #3027e2;
+  --ifm-color-primary-darkest: #251dd3;
+  --ifm-color-primary-light: #7a74ec;
+  --ifm-color-primary-lighter: #8681ee;
+  --ifm-color-primary-lightest: #9c98f1;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-color-primary: #8b85f5;
+  --ifm-color-primary-dark: #6f68f3;
+  --ifm-color-primary-darker: #625af2;
+  --ifm-color-primary-darkest: #473eef;
+  --ifm-color-primary-light: #a5a1f7;
+  --ifm-color-primary-lighter: #b7b4f9;
+  --ifm-color-primary-lightest: #c9c7fa;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
