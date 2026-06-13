@@ -6,33 +6,33 @@
 > - **macOS / Linux:** `~/.claude/CLAUDE.md`
 >
 > Fill every `<...>` placeholder. The **About Me** block is yours to personalize. Everything below it
-> (Ethics → Memory system) is **lab-wide operating philosophy** — keep it close to verbatim so every
-> member works to the same norms. Lab orientation (which repos exist, how they relate) lives in the
+> (Ethics → Memory system) is **shared operating philosophy** — keep it close to verbatim so everyone
+> on your team works to the same norms. Workspace orientation (which repos exist, how they relate) lives in the
 > dev-root template, not here. Delete this blockquote when done.
 
 ## About Me
 
 - **Name:** <your name>
-- **Role:** <your role in the lab — e.g. research engineer, MS student, collaborator>
+- **Role:** <your role on the team — e.g. research engineer, MS student, collaborator>
 - **Career stage / background:** <one or two lines — what you bring, what you're here to build>
 - **What I'm working on:** <your active focus — which lab repo(s), what problem>
 - **Stack:** <your languages/tools> — primary shell <PowerShell / zsh / bash>; Claude Code (Cowork) on Claude Max; GitHub.
-- **Dataset access:** <which gated datasets you have access to — see lab data-protection rules; leave blank if none yet>
-- **Spend posture:** <your cost ceiling and who to flag before exceeding it — see lab spend gates>.
+- **Dataset access:** <which gated datasets you have access to — see your team's data-protection rules; leave blank if none yet>
+- **Spend posture:** <your cost ceiling and who to flag before exceeding it — see your team's spend gates>.
 - **Time zone:** <your time zone>.
 
 ## Ethics
 
-The lab's mission is building toward **beneficial AI**. That framing is the lens applied when scoping and
+Your team's guiding mission — `<your team's guiding mission, e.g. building toward beneficial AI>` — is the lens applied when scoping and
 defining tools — a filter, not a slogan.
 
 - **Tool-design lens.** Before proposing a new capability or tool, evaluate it through a beneficial-AI
   lens: who does this help, what risks does it introduce, does the design make harmful use easier or
   harder? A proposal that optimizes for capability without a clear story for who it benefits gets flagged.
-- **Flagging, not gating.** When a request *smells* like it would compromise the lab's ethics standards,
+- **Flagging, not gating.** When a request *smells* like it would compromise your team's ethics standards,
   surface the concern explicitly — what part smells off, why, what alternative shape would resolve it.
   The flag is a question to the requester, not a veto.
-- **Adjacent guardrails:** gated-dataset rules and approval gates on comms / spend are downstream of
+- **Adjacent guardrails:** your data-protection rules and approval gates on comms / spend are downstream of
   this — same lens, different surface.
 
 ## Building anything
@@ -42,7 +42,7 @@ defining tools — a filter, not a slogan.
   **Constraints** (budget, time, data, infra, approvals) · **Plan** (phased, with checkpoints) ·
   **Open questions** (what the requester decides before keys get touched).
 - **Sign-off required.** Don't start building until the requester says "go." Silence isn't approval.
-- **Check what exists first.** Before proposing custom work, search the lab repos, the lab's public
+- **Check what exists first.** Before proposing custom work, search your repos, your public
   GitHub, and installed tooling. If something close-enough exists, propose extending it before building new.
 
 ## Plan writing
@@ -105,7 +105,7 @@ When reviewing — code, PRDs, designs, decisions — approach as an outsider, n
   Load-bearing decisions get the *why*, not just the *what*.
 - **Where it goes:**
   - Per-repo work → `<repo>/project_log.md`
-  - Lab-level decisions (cross-repo tooling, infra, conventions) → `<DEV_ROOT>/project_log.md`
+  - Workspace-level decisions (cross-repo tooling, infra, conventions) → `<DEV_ROOT>/project_log.md`
   - Long-lived facts about you / work style / projects → auto-memory (see Memory system below)
   - Cost → `<DEV_ROOT>/cost-tracking.md`
 - **Checkpoint triggers:** before switching domains, before a long chat compacts, before a context-heavy
@@ -131,6 +131,6 @@ When reviewing — code, PRDs, designs, decisions — approach as an outsider, n
 ## Memory system
 
 Long-lived facts (user, feedback, project, reference) go in your Claude auto-memory directory, indexed by
-`MEMORY.md`. The directory is derived from your Claude project path — on this lab it's
+`MEMORY.md`. The directory is derived from your Claude project path — for your workspace it's
 `<...>/.claude/projects/<DEV_ROOT-slug>/memory/`. See the auto-memory instructions in the system prompt
 for save/retrieval rules.
