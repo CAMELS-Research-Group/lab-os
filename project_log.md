@@ -7,12 +7,32 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-06-13 15:00 — Handbook content rework gates tester launch · #25
 - 2026-06-12 12:00 — Plan-execution logs close with their shipping PR · #18
 - 2026-06-11 19:45 — Site owns human-facing docs · #15
 - 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-06-13 15:00 — Handbook content rework gates tester launch
+
+**Decision:** The handbook content + IA is being reworked across all seven pages before testers
+are invited; tester launch now waits on the rework. This supersedes the prior round's deferral —
+page-content restructuring left to play-test friction data, with launch "unblocked" after the
+chrome/IA round. The rework is decomposed: a backbone authoring-conventions round first, then
+per-page rounds (Getting Started next).
+**Why:** The deferral assumed the existing content was good enough for a first cohort and that
+friction data should drive structural change. On review of the shipped site, the content needs
+reframing (Working-with-Claude → SDD lifecycle; Onboarding Project → Onboarding Workshop), zero-tech
+support, and terminal-vs-Claude command clarity before a tester runs the arc — gaps a cohort hits
+immediately, not subtle friction worth waiting for.
+**Alternatives:** Launch on current content, rework in parallel — rejected, testers would hit content
+already judged inadequate. Partial gate (ship some, defer the reframes) — considered, rejected for a
+clean gated rework.
+**Refs:** #25, docs/superpowers/specs/2026-06-13-handbook-backbone-conventions-design.md, docs/superpowers/specs/2026-06-12-handbook-frontend-design-round-design.md
 
 ---
 
