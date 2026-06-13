@@ -17,7 +17,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Reference',
+      label: 'Deep Dives',
       collapsible: true,
       collapsed: false,
       items: [
