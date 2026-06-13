@@ -47,14 +47,19 @@ question sends you upstream.
 
 ## Tooling
 
-List the tooling repos your workspace relies on — shared conventions/rules, plugins, CI helpers — and
-how each is wired in (e.g. a `.claude/rules/` junction/symlink at `<DEV_ROOT>`).
+The shared tooling your workspace relies on — wired in during setup:
 
-- **`<your-conventions-repo>`** — cross-repo conventions (the conventions repo you cloned, e.g. a fork
-  of `lab-os`). Consumed by Cowork via the `.claude/rules/` junction/symlink at `<DEV_ROOT>`, and by
-  your PR-review GitHub Action at review time. Source-of-truth: `<URL>`.
-- **`<your-plugins-repo>`** _(optional)_ — any Claude Code plugins your workspace uses. Source-of-truth:
-  `<URL>`.
+- **`lab-os`** — the spec-driven-development conventions you cloned for this exercise. Its
+  `.claude/rules/` are consumed via a junction/symlink at `<DEV_ROOT>/.claude/rules/`, so a `git pull`
+  in `lab-os` keeps you current. Treat these as your **starting standards** — adapt or extend them as
+  your project's needs diverge. Source-of-truth: github.com/WatsonWBlair/lab-os.
+- **`lab-claude-plugins`** — the Claude Code plugins installed during setup (e.g. `pr-review-loop`),
+  via the plugin marketplace. Source-of-truth: github.com/WatsonWBlair/lab-claude-plugins.
+- **`superpowers`** — workflow plugins from the official Claude Code marketplace (brainstorming,
+  planning, TDD, subagent-driven execution).
+
+As your project grows, list your own repos and any further tooling here so a session at `<DEV_ROOT>`
+sees the whole workspace.
 
 ## Logs and tracking
 

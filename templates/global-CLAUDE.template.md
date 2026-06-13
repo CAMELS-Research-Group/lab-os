@@ -15,7 +15,7 @@
 - **Name:** <your name>
 - **Role:** <your role on the team — e.g. research engineer, MS student, collaborator>
 - **Career stage / background:** <one or two lines — what you bring, what you're here to build>
-- **What I'm working on:** <your active focus — which lab repo(s), what problem>
+- **What excites me / what I want to build:** <the problems and ideas that pull you in — what you'd work on even unprompted>
 - **Stack:** <your languages/tools> — primary shell <PowerShell / zsh / bash>; Claude Code (Cowork) on Claude Max; GitHub.
 - **Dataset access:** <which gated datasets you have access to — see your team's data-protection rules; leave blank if none yet>
 - **Spend posture:** <your cost ceiling and who to flag before exceeding it — see your team's spend gates>.
