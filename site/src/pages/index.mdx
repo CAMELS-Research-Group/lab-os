@@ -4,6 +4,8 @@ description: Learn spec-driven development and set up an agentic workspace — a
 ---
 
 import Link from '@docusaurus/Link';
+import OutcomeCard from '@site/src/components/OutcomeCard';
+import SectionCard from '@site/src/components/SectionCard';
 
 # Learn spec-driven development with an agentic workspace
 
@@ -14,24 +16,39 @@ development (writing down what to build, and the plan to build it, before any
 code) on a sandbox project: spec, plan, subagent build (implementation
 delegated to helper AI agents), review.
 
+<div style={{display:'flex',gap:'1rem',flexWrap:'wrap',marginTop:'1.5rem'}}>
+  <Link className="button button--primary button--lg" to="/docs/getting-started">Start here</Link>
+  <Link className="button button--secondary button--lg" to="/docs/working-with-claude">Working with Claude</Link>
+</div>
+
 ## What you end up with
 
-- A **working agentic workspace**: Claude Code wired to a personal `CLAUDE.md`,
-  a workspace map, and a linked rule set so every session starts from the same
-  conventions
-- The **spec-driven development workflow** — spec → plan → subagent build →
-  review — practiced end to end on a low-stakes sandbox project
-- A **small dashboard-style app you built yourself** — the exercise's learning
-  vehicle: every skill above gets practiced by building it, in your own
-  disposable repo
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:'1rem',marginTop:'1rem'}}>
+  <OutcomeCard
+    title="A working agentic workspace"
+    description="Claude Code wired to a personal CLAUDE.md, a workspace map, and a linked rule set so every session starts from the same conventions"
+  />
+  <OutcomeCard
+    title="The spec-driven development workflow"
+    description="spec → plan → subagent build → review — practiced end to end on a low-stakes sandbox project"
+  />
+  <OutcomeCard
+    title="An app you built yourself"
+    description="A small dashboard-style app — the exercise's learning vehicle: every skill above gets practiced by building it, in your own disposable repo"
+  />
+</div>
 
-<Link className="button button--primary button--lg" to="/docs/getting-started">Start here</Link>
+## Where to go
 
-## What's inside
-
-- **Getting started** — guided setup of your agentic workspace
-- **Working with Claude** — established methods for working with AI assistance
-- **The onboarding project** — a two-week sandbox build to practice the workflow
-- **The rules, explained** — a human tour of the conventions (workflow, data protection, logging, documentation)
-- **Setting up a new repo** — checklist for starting a repository that follows the conventions
-- **How to play-test** — running the onboarding arc and reporting friction
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:'1rem',marginTop:'1rem'}}>
+  <SectionCard
+    title="Get started"
+    description="Set up your workspace and run the onboarding arc"
+    to="/docs/getting-started"
+  />
+  <SectionCard
+    title="Reference"
+    description="The rules, repo setup, play-testing, and tooling tour"
+    to="/docs/rules-explained"
+  />
+</div>
