@@ -70,6 +70,6 @@ Defined in your global `~/.claude/CLAUDE.md`. Cross-cutting items at this level:
 
 - External-facing posts (PRs, issue comments, anything under your name; bot identity OK, user identity not)
 - Cloud spend above your stated ceiling
-- Data exposure risks (raw gated-dataset content; derived artifacts need PII review per
+- Data exposure risks (raw sensitive or restricted data; derived artifacts need PII review per
   `.claude/rules/02-data-protection.md`)
 - Destructive operations on shared state
