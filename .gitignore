@@ -4,3 +4,6 @@
 site/node_modules/
 site/build/
 site/.docusaurus/
+
+# Brainstorming visual-companion scratch
+.superpowers/
