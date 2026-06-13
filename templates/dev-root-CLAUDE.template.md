@@ -1,61 +1,65 @@
-# Development root — CAMELS Research Group lab orientation
+# Development root — <your team / project> workspace orientation
 
-> **Template.** Copy this to the `.claude/CLAUDE.md` at the root of your local lab workspace (the
-> directory you clone all lab repos into — referred to below as `<DEV_ROOT>`):
+> **Template.** Copy this to the `.claude/CLAUDE.md` at the root of your local workspace (the
+> directory you clone all your repos into — referred to below as `<DEV_ROOT>`):
 > - **Windows:** `<DEV_ROOT>\.claude\CLAUDE.md` (e.g. `C:\Users\<you>\Development\.claude\CLAUDE.md`)
 > - **macOS / Linux:** `<DEV_ROOT>/.claude/CLAUDE.md` (e.g. `~/Development/.claude/CLAUDE.md`)
 >
-> This file gives Cowork lab-wide orientation when you open a session at `<DEV_ROOT>` (not just inside a
-> single repo). Your personal persona / approval gates / model defaults live in your global
+> This file gives Cowork workspace-wide orientation when you open a session at `<DEV_ROOT>` (not just
+> inside a single repo). Your personal persona / approval gates / model defaults live in your global
 > `~/.claude/CLAUDE.md` (see `global-CLAUDE.template.md`) and apply everywhere. Per-repo `CLAUDE.md`
 > cascades when a session works inside a sub-project. Delete this blockquote when done.
 
-Working from the lab root (not just inside a single repo) is intentional — it's where cross-project
-coordination happens: multi-repo planning, lab-wide tooling and rules, cross-repo logs. Per-repo
+Working from the workspace root (not just inside a single repo) is intentional — it's where cross-project
+coordination happens: multi-repo planning, workspace-wide tooling and rules, cross-repo logs. Per-repo
 `CLAUDE.md` cascades when a session works inside a sub-project; nothing is lost by having the broader
 view available.
 
-## Research lineage
+## Project lineage
 
-The CAMELS research line is multi-repo and predates the current active repos. Don't treat older repos as
-unrelated:
+List the lineage of your project — earlier repos, POCs, or coursework that newer work descends from, so
+a session checks upstream before treating a question as new. Oldest-first; one line per entry naming what
+it was and what it proved or surfaced.
 
-1. **`SSUR_POC`** (public, github.com/WatsonWBlair/SSUR_POC) — original public-facing voice-to-voice POC;
-   upstream of `Vibe_App`.
-2. **`Vibe_App`** — the spark. Voice-to-voice POC that surfaced the questions driving the program.
-3. **`cs627`** — formal initial investigation. CS coursework that operationalized the early CAMELS hypotheses.
-4. **`LSCA`** — current home of CAMELS (Conversational Agents in Multimodal Embedded Latent Space).
-   APE-architecture, multimodal latent space, training pipeline. See `LSCA/CLAUDE.md` for project specifics.
-5. **`Conversational_Agent`** — voice-agent work; lives alongside the Vibe artifacts.
+Example chain (replace with your own):
+
+1. **`<earliest-prototype>`** — brief description of what it was and what it established.
+2. **`<intermediate-repo>`** — what question or finding it handed forward.
+3. **`<current-repo>`** — current home. See `<current-repo>/CLAUDE.md` for project specifics.
 
 When a "why this design?" or "where does X come from?" question lands, check upstream in this chain before
 assuming the answer is new.
 
 ## Active or foundational repos
 
+List every repo a session at `<DEV_ROOT>` might touch. Columns: **Repo** (name as cloned) · **Role**
+(one-line purpose) · **Status** (active / foundational / paused / reference).
+
 | Repo | Role | Status |
 |---|---|---|
-| `LSCA` | CAMELS multimodal latent space (Python, PyTorch) | Active research, primary focus |
-| `Global_Pathways` | First CAMELS application — Pace ESL language-practice (consumes the `camels` package built from LSCA) | Active — pre-implementation spec phase |
-| `Vibe_App` | Voice-to-voice POC; genesis of CAMELS | Foundational; reference for design decisions |
-| `cs627` | Initial CAMELS investigation (CS coursework) | Foundational |
-| `Conversational_Agent` | Voice agent (Whisper + Ollama + Bark) | Reference / related |
-| `FCM_Analysis` | Fuzzy C-Means vs GMM comparative analysis | Back burner — paused |
+| `<your-primary-repo>` | `<what it does — the main active work>` | Active — `<phase>` |
+| `<your-secondary-repo>` | `<what it does>` | Active — `<phase>` |
+| `<your-earlier-prototype>` | `<what it was; why it's kept>` | Foundational; reference for design decisions |
 
-Core bootstrap clone set: `LSCA`, `Global_Pathways`, and the tooling repos listed under Lab tooling below. Foundational and paused repos are cloned on demand when a question sends you upstream.
+Core bootstrap clone set: list the repos a new contributor must clone to start working (typically your
+active repos plus the tooling repos below). Foundational and paused repos are cloned on demand when a
+question sends you upstream.
 
-## Lab tooling
+## Tooling
 
-- **`lab-os`** — cross-repo conventions (this repo's source). Consumed by Cowork via the `.claude/rules/`
-  junction/symlink at `<DEV_ROOT>`, and by the PR-review GitHub Action at review time. Source-of-truth:
-  github.com/WatsonWBlair/lab-os.
-- **`lab-claude-plugins`** — lab Claude Code plugins (e.g. `pr-review-loop`). Installed via the plugin
-  marketplace. Source-of-truth: github.com/WatsonWBlair/lab-claude-plugins.
+List the tooling repos your workspace relies on — shared conventions/rules, plugins, CI helpers — and
+how each is wired in (e.g. a `.claude/rules/` junction/symlink at `<DEV_ROOT>`).
+
+- **`<your-conventions-repo>`** — cross-repo conventions (the conventions repo you cloned, e.g. a fork
+  of `lab-os`). Consumed by Cowork via the `.claude/rules/` junction/symlink at `<DEV_ROOT>`, and by
+  your PR-review GitHub Action at review time. Source-of-truth: `<URL>`.
+- **`<your-plugins-repo>`** _(optional)_ — any Claude Code plugins your workspace uses. Source-of-truth:
+  `<URL>`.
 
 ## Logs and tracking
 
 - **Per-repo logs:** `<repo>/project_log.md`
-- **Lab-level decisions** (cross-repo tooling, infra, lab-wide conventions): `<DEV_ROOT>/project_log.md`
+- **Workspace-level decisions** (cross-repo tooling, infra, workspace-wide conventions): `<DEV_ROOT>/project_log.md`
 - **Cost tracking** (inference spend, infra): `<DEV_ROOT>/cost-tracking.md`
 
 Entry format defined in your global `~/.claude/CLAUDE.md`.
