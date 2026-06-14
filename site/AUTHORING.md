@@ -62,7 +62,53 @@ On any page that mixes both, paste this **legend** once, near the top:
 > blocks titled **Claude session** are typed into an active Claude Code session.
 ```
 
-## 3. Zero-tech readers — link out, fill gaps
+## 3. Branch by OS or architecture with tabs — never stack
+
+When instructions fork by operating system, architecture, or any either/or axis, use Docusaurus
+**tabs** so the reader sees only their path. Do **not** stack `## Windows` / `## macOS` / `## Linux`
+sections down the page — that forces every reader to scroll past two-thirds of irrelevant content
+(context fatigue).
+
+Import the components once, right after the front-matter, then wrap the branches:
+
+````md
+---
+title: Install Git
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="os">
+<TabItem value="windows" label="Windows">
+
+```bash title="Terminal"
+winget install --id Git.Git -e
+```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash title="Terminal"
+brew install git
+```
+
+</TabItem>
+</Tabs>
+````
+
+- **`groupId="os"` syncs the choice across every page** — pick "macOS" on one page and all
+  `groupId="os"` tab sets show macOS (persisted in the reader's browser). Use the **same**
+  `value`s everywhere (`windows` / `macos` / `linux`) so the sync works.
+- **Blank lines around the content inside each `<TabItem>`** are required for MDX to parse the
+  markdown (code blocks, lists) within.
+- Keep content common to all branches (a final `git --version` check, an auth step) **outside** the
+  tabs, below them.
+- A `.md` file works — Docusaurus compiles it as MDX, so the imports and JSX are valid; no rename
+  to `.mdx` needed.
+- This applies to any either/or fork, not just OS: CPU vs GPU, package manager, cloud provider.
+
+## 4. Zero-tech readers — link out, fill gaps
 
 Assume some readers have zero technical background.
 
@@ -73,7 +119,7 @@ Assume some readers have zero technical background.
 - **Screenshots** are fine in these sub-pages where they materially help; accept they need refreshing as
   tool UIs change, and prefer text + links where a screenshot would just rot.
 
-## 4. When you move or rename a heading
+## 5. When you move or rename a heading
 
 Some headings are linked from elsewhere. The anchors in `working-with-claude` are cited by
 `PR-LIFECYCLE.md` and `TROUBLESHOOTING.md`. If a page round moves or renames a cited heading, **update

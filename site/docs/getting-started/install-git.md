@@ -3,6 +3,9 @@ sidebar_position: 3
 title: Install Git
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Install Git
 
 Git copies ("clones") repositories to your machine and tracks every change you make. You need it before
@@ -10,7 +13,12 @@ you can run the bootstrap prompt.
 
 **Official source:** [git-scm.com/downloads](https://git-scm.com/downloads)
 
-## Windows
+## Install for your OS
+
+Pick your operating system — your choice is remembered across the handbook.
+
+<Tabs groupId="os">
+<TabItem value="windows" label="Windows">
 
 **Option A — winget (recommended if you have Windows 10 1709+ or Windows 11):**
 
@@ -24,7 +32,8 @@ you have a reason to change them.
 
 After either option, close and reopen PowerShell before running the version check below.
 
-## macOS
+</TabItem>
+<TabItem value="macos" label="macOS">
 
 **Option A — Xcode Command Line Tools (simplest):**
 
@@ -40,7 +49,8 @@ A dialog appears asking you to install the tools. Click **Install**. Git is incl
 brew install git
 ```
 
-## Linux
+</TabItem>
+<TabItem value="linux" label="Linux">
 
 **Debian / Ubuntu:**
 
@@ -55,6 +65,9 @@ sudo dnf install git
 ```
 
 For other distributions, see [git-scm.com/download/linux](https://git-scm.com/download/linux).
+
+</TabItem>
+</Tabs>
 
 ## Confirm the install
 

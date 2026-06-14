@@ -3,6 +3,9 @@ sidebar_position: 4
 title: Install GitHub CLI
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Install GitHub CLI
 
 The GitHub CLI (`gh`) is the tool you use to open pull requests, clone repositories, and interact with
@@ -10,7 +13,12 @@ GitHub from your terminal. You need it before you can run the bootstrap prompt.
 
 **Official source:** [cli.github.com](https://cli.github.com)
 
-## Windows
+## Install for your OS
+
+Pick your operating system — your choice is remembered across the handbook.
+
+<Tabs groupId="os">
+<TabItem value="windows" label="Windows">
 
 **Option A — winget (recommended):**
 
@@ -23,7 +31,8 @@ winget install --id GitHub.cli -e --source winget
 
 After either option, close and reopen PowerShell.
 
-## macOS
+</TabItem>
+<TabItem value="macos" label="macOS">
 
 **Homebrew:**
 
@@ -34,7 +43,8 @@ brew install gh
 No Homebrew? Install it first from [brew.sh](https://brew.sh), or download the macOS `.pkg` directly from
 [github.com/cli/cli/releases/latest](https://github.com/cli/cli/releases/latest).
 
-## Linux
+</TabItem>
+<TabItem value="linux" label="Linux">
 
 **Debian / Ubuntu (official apt repository):**
 
@@ -56,6 +66,9 @@ sudo dnf install 'dnf-command(config-manager)' && sudo dnf config-manager --add-
 ```
 
 For other Linux distributions, see [cli.github.com/manual/installation](https://cli.github.com/manual/installation).
+
+</TabItem>
+</Tabs>
 
 ## Authenticate with GitHub
 

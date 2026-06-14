@@ -3,6 +3,9 @@ sidebar_position: 2
 title: Terminal Basics
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Terminal Basics
 
 A terminal (also called a command line or shell) is a text window where you type a command and press
@@ -12,7 +15,12 @@ You don't need to memorize commands — the handbook always shows exactly what t
 
 ## How to open a terminal
 
-### Windows — PowerShell
+Pick your operating system — your choice is remembered across the handbook.
+
+<Tabs groupId="os">
+<TabItem value="windows" label="Windows">
+
+**PowerShell:**
 
 1. Press the **Windows key**, type `PowerShell`, and click **Windows PowerShell** in the results.
 2. A blue (or dark) window opens with a `PS C:\...>` prompt. Type here.
@@ -20,17 +28,26 @@ You don't need to memorize commands — the handbook always shows exactly what t
 > **Tip:** You can also right-click the Start button and choose **Terminal** or **Windows PowerShell**
 > directly.
 
-### macOS — Terminal
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+**Terminal:**
 
 1. Press **Cmd + Space** to open Spotlight, type `Terminal`, and press **Enter**.
 2. A window opens with a `%` or `$` prompt. Type here.
 
 > **Tip:** Terminal lives in **Applications → Utilities → Terminal** if you prefer to find it in Finder.
 
-### Linux — Terminal app
+</TabItem>
+<TabItem value="linux" label="Linux">
+
+**Terminal app:**
 
 Open your desktop's terminal emulator. Common names: **Terminal**, **Konsole**, **GNOME Terminal**,
 **xterm**. You can usually find it in your app menu or right-click the desktop.
+
+</TabItem>
+</Tabs>
 
 ## Reading command blocks
 
