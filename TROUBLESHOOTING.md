@@ -167,8 +167,15 @@ touch this cache — it lives under `node_modules/`, a different location.
 
 **Resolution:**
 ```bash
+# macOS / Linux (and Git Bash / WSL on Windows)
 cd site
 rm -rf node_modules/.cache .docusaurus build
+npm run build
+```
+```powershell
+# Windows PowerShell
+cd site
+Remove-Item -Recurse -Force node_modules/.cache, .docusaurus, build
 npm run build
 ```
 
