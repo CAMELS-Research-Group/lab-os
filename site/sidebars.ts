@@ -10,7 +10,18 @@ const sidebars: SidebarsConfig = {
       collapsible: true,
       collapsed: false,
       items: [
-        'getting-started',
+        {
+          type: 'category',
+          label: 'Getting Started',
+          collapsible: true,
+          collapsed: true,
+          link: {type: 'doc', id: 'getting-started/index'},
+          items: [
+            'getting-started/terminal-basics',
+            'getting-started/install-git',
+            'getting-started/install-github-cli',
+          ],
+        },
         'working-with-claude',
         'onboarding-project',
       ],

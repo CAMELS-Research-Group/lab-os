@@ -18,33 +18,18 @@ paste one prompt, Claude interviews you and performs the steps — your first ag
 `<DEV_ROOT>` is the single directory your workspace lives in. Pick one and use it consistently —
 **Windows:** `C:\Users\<you>\Development` · **macOS / Linux:** `~/Development`.
 
+> **Reading the commands:** blocks titled **Terminal** run in your OS terminal;
+> blocks titled **Claude session** are typed into an active Claude Code session.
+
 ## Prerequisites
 
-| Need | Why | Check |
-|---|---|---|
-| **Claude subscription (Pro or Max)** | Agentic sessions use a lot of model time; a flat-rate subscription beats pay-per-use API billing | log in at [claude.ai](https://claude.ai) |
-| **Git** | Copy ("clone") repositories to your machine and track changes | `git --version` |
-| **GitHub CLI (`gh`)** | The pull-request (PR) workflow you'll practice in the sandbox project | `gh --version` |
+New to terminals? → [Terminal basics](./terminal-basics)
 
-After installing `gh`, authenticate (same commands on every platform):
-
-```bash
-gh auth login
-gh auth setup-git
-```
-
-Confirm with `gh auth status` — it should show "Logged in to github.com".
-
-<details>
-<summary>New to this? What `gh auth` actually does</summary>
-
-GitHub needs to know who you are before it lets you push code or open pull requests.
-`gh auth login` opens a browser window where you sign in to GitHub once; after that, the `gh` tool
-remembers you. `gh auth setup-git` tells Git — the separate tool that actually moves code — to
-reuse that same sign-in instead of asking for a password every time. Once `gh auth status` says
-"Logged in", both tools work on your behalf.
-
-</details>
+| Need | Why | Official docs | From scratch |
+|---|---|---|---|
+| **Claude subscription (Pro or Max)** | Agentic sessions use a lot of model time; a flat-rate subscription beats pay-per-use API billing | [claude.ai](https://claude.ai) | — |
+| **Git** | Copy ("clone") repositories to your machine and track changes | [git-scm.com](https://git-scm.com) | [→ Install Git](./install-git) |
+| **GitHub CLI (`gh`)** | The pull-request (PR) workflow you'll practice in the sandbox project | [cli.github.com](https://cli.github.com) | [→ Install GitHub CLI](./install-github-cli) |
 
 ## Step 1 — Install Claude Code
 
@@ -59,7 +44,7 @@ overwrites, or links files. The templates in
 [lab-os/templates/](https://github.com/WatsonWBlair/lab-os/tree/main/templates) stay the source of
 truth — the prompt has Claude clone the repo and read them from there.
 
-```text
+```text title="Claude session"
 I'm setting up an agentic development workspace following the lab-os
 handbook. Walk me through setup interactively. Rules for the whole session:
 
@@ -146,27 +131,42 @@ repo ships its own third.
 <Tabs groupId="os">
 <TabItem value="windows" label="Windows (PowerShell)">
 
-| Check | Expected |
-|---|---|
-| `Get-Item "$HOME\Development\.claude\rules" \| Select-Object LinkType, Target` | `LinkType` = Junction; `Target` ends in `lab-os\.claude\rules` |
+```bash title="Terminal"
+Get-Item "$HOME\Development\.claude\rules" | Select-Object LinkType, Target
+```
+
+Expected: `LinkType` = Junction; `Target` ends in `lab-os\.claude\rules`.
 
 </TabItem>
 <TabItem value="mac-linux" label="macOS / Linux">
 
-| Check | Expected |
-|---|---|
-| `ls -l ~/Development/.claude/rules` | Arrow pointing to `lab-os/.claude/rules` |
+```bash title="Terminal"
+ls -l ~/Development/.claude/rules
+```
+
+Expected: arrow pointing to `lab-os/.claude/rules`.
 
 </TabItem>
 </Tabs>
 
-Then, on any OS:
+Then, in an active Claude Code session:
 
-| Check | Expected |
-|---|---|
-| `/plugin` | lists `pr-review-loop@lab-claude-plugins` and `superpowers@claude-plugins-official` |
-| Fresh session at `<DEV_ROOT>`: ask "what are the lab's commit-message rules?" | Answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject) |
-| Your global `~/.claude/CLAUDE.md` | About Me reflects **you** — no `<...>` placeholders left |
+```text title="Claude session"
+/plugin
+```
+
+Expected: lists `pr-review-loop@lab-claude-plugins` and `superpowers@claude-plugins-official`.
+
+Start a fresh session at `<DEV_ROOT>` and ask:
+
+```text title="Claude session"
+what are the lab's commit-message rules?
+```
+
+Expected: answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject).
+
+Also confirm your global `~/.claude/CLAUDE.md` has no `<...>` placeholders left — About Me should
+reflect you.
 
 **If a check fails:** junction/symlink check fails → re-run the prompt's link step (step 5), or use
 the manual commands in the [lab-os README](https://github.com/WatsonWBlair/lab-os#how-repos-consume-it).
