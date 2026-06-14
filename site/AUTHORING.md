@@ -94,6 +94,13 @@ brew install git
 ```
 
 </TabItem>
+<TabItem value="linux" label="Linux">
+
+```bash title="Terminal"
+sudo apt install git
+```
+
+</TabItem>
 </Tabs>
 ````
 
