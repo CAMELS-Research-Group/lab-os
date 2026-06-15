@@ -36,7 +36,7 @@ this checklist. *(optional)* items are trimmable if the timebox squeezes.
 | 2 | **At least one integration is authenticated** | a real sign-in (SSO / OAuth) or an API key — one of your two, forcing real secret handling |
 | 3 | **1 CRUD surface** | create / read / update / delete over something you own |
 | 4 | **1 data-visualization surface** | charts, derived-metrics table, timeline — turn data into a view |
-| 5 | *(optional)* **1 background / async-job or agent-driven surface** | ties into the lab's overnight-agent work — see [autonomous loops](/docs/working-with-claude#6-autonomous--overnight-loops) |
+| 5 | *(optional)* **1 background / async-job or agent-driven surface** | ties into the lab's overnight-agent work — see the [Autonomous loops](/docs/working-with-claude/autonomous-loops) deep dive |
 | 6 | *(optional)* **1 command-palette or cross-surface action** | one action reaching across surfaces; good UX-pattern discovery |
 
 How these compose into pages/modules is yours to design. That design *is* the discovery.
@@ -49,7 +49,7 @@ first** — never spine steps.
 1. **Brainstorm** — `superpowers:brainstorming` to shape the surface before designing it.
 2. **Spec** — a short design doc: what it does, how it's used, what it depends on.
 3. **Code-free implementation plan** — per the
-   [lab plan format](/docs/working-with-claude#2-code-free-implementation-plans). No literal code.
+   [Plan stage](/docs/working-with-claude/plan) of the lifecycle. No literal code.
 4. **Sub-agent-driven build** — implement by delegating to subagents (helper AI agents), not
    hand-coding everything in one session. Practice delegating.
 5. **Review** — `superpowers:requesting-code-review` (dispatches a reviewer and queues a

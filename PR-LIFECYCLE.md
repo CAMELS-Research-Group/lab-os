@@ -7,8 +7,8 @@ Bar**) and [`.claude/rules/03-logging.md`](.claude/rules/03-logging.md) (log
 entries, budgets); this doc links them rather than restating them.
 
 It consolidates what previously lived in four places: the cron reviewer's design
-(`pr-review-agent/SPEC.md`), the `pr-review-loop` plugin docs, the review-discipline section of
-[Working with Claude §5](site/docs/working-with-claude.md#5-review-discipline), and the solo-maintainer bypass pattern,
+(`pr-review-agent/SPEC.md`), the `pr-review-loop` plugin docs, the
+[Working with Claude → Review](site/docs/working-with-claude/review.md) stage, and the solo-maintainer bypass pattern,
 which was practiced but unwritten until now.
 
 **At a glance:**
@@ -56,8 +56,9 @@ Two automated reviewers with distinct roles:
 
 Either path satisfies the review step; on an active PR they compose (the cron agent's findings
 feed the loop's next cycle). The review *method* — multi-agent first pass + audit pass,
-outsider's eye, self-report-is-not-evidence — is
-[Working with Claude §4–5](site/docs/working-with-claude.md#4-verification-discipline).
+outsider's eye, self-report-is-not-evidence — is the
+[Working with Claude → Verify](site/docs/working-with-claude/verify.md) and
+[Review](site/docs/working-with-claude/review.md) stages.
 
 ## 4. Remediation
 
@@ -85,7 +86,7 @@ The bypass is codified, not informal:
 When the required peer review is impossible (sole maintainer; self-approval blocked), an
 **independent multi-agent review** — first pass + audit pass per the lab model defaults
 (cheaper-model first pass, stronger-model audit;
-[Working with Claude §5](site/docs/working-with-claude.md#5-review-discipline))
+[Working with Claude → Review](site/docs/working-with-claude/review.md))
 — must be completed and **posted to the PR** before admin bypass. The merge note references the
 posted review. This codifies the practice established on Global_Pathways #139–#142.
 
