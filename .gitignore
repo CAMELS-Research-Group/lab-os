@@ -7,3 +7,6 @@ site/.docusaurus/
 
 # Brainstorming visual-companion scratch
 .superpowers/
+
+# Playwright MCP scratch (snapshots, screenshots)
+.playwright-mcp/

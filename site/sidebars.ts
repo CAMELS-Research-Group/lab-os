@@ -41,6 +41,26 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Workshops',
+      collapsible: true,
+      collapsed: false,
+      link: {type: 'doc', id: 'workshops/index'},
+      items: [
+        {
+          type: 'category',
+          label: 'Building with Claude',
+          collapsible: true,
+          collapsed: true,
+          link: {type: 'doc', id: 'workshops/building-with-claude/index'},
+          items: [
+            'workshops/building-with-claude/preflight',
+            'workshops/building-with-claude/exercises',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Deep Dives',
       collapsible: true,
       collapsed: false,
