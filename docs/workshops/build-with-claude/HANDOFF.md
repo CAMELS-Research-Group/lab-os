@@ -38,6 +38,7 @@ This is **white-label** material: generic SDD-with-Claude, no CAMELS/lab specifi
   clean tree, Plan location, `git worktree add/remove`). Ready to finalize and send the day
   before. In chat; not yet filed.
 - **Verification command contract** — filed: `verification-command-contract.md`.
+- **Exercise 4 facilitator runbook** — filed: `exercise-4-facilitator-runbook.md`.
 
 ## The 5 exercises (one line each)
 
@@ -55,8 +56,7 @@ This is **white-label** material: generic SDD-with-Claude, no CAMELS/lab specifi
    conversation defines the worksheets. Pairs with the virtual plan-generation pre-session.
 2. **Schedule the virtual pre-session** on generating plans (before the in-person day).
 3. **Finalize + send the pre-flight checklist** the day before; require a "ready" reply.
-4. **Exercise 4 facilitator runbook** (offered, not yet written) — speaker notes + the 3–4
-   most likely failure modes and how to recover on stage. Highest-risk moment, worth doing.
+4. **Exercise 4 facilitator runbook** — done; filed as `exercise-4-facilitator-runbook.md`.
 5. **File the agenda + 5 exercises** as participant handouts (currently chat-only). This folder
    is the proposed home; confirm location.
 6. **White-label infra implements the verification command contract.** Design lead captured in
