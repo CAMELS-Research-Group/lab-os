@@ -47,11 +47,11 @@ defining tools — a filter, not a slogan.
 
 ## Plan writing
 
-Implementation plans specify **what** the implementation must satisfy, not **how**. Per task, six elements:
+Implementation plans specify **what** the implementation must satisfy, not **how**. Per task, seven elements:
 **Files** (Create / Modify, exact paths) · **Depends on** (task numbers) · **Spec** (markdown link to the
 design doc section) · **Acceptance** (bulleted behaviors the implementation must demonstrate) ·
-**Verification** (the exact command the implementing agent runs to confirm done) · **Commit**
-(conventional-commit subject). A one-sentence Context paragraph per task is fine when the *why* isn't
+**Verification** (the exact command the implementing agent runs to confirm done) · **Agent-suitable**
+(yes / partial / no — can an agent run it unattended) · **Commit** (conventional-commit subject). A one-sentence Context paragraph per task is fine when the *why* isn't
 obvious from the title.
 
 **No literal code, no test code, no step-by-step TDD walkthroughs.** The behaviors *are* the test surface;

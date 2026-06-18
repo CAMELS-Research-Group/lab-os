@@ -11,13 +11,16 @@ specifies **what** the implementation must satisfy, not **how** to write it. Bre
 into tasks is work you do up front — don't hand an agent a design spec and expect it to break the
 work down too.
 
-Per task, six elements:
+Per task, seven elements:
 
 - **Files** — exact create/modify paths.
 - **Depends on** — the task numbers that must land first.
 - **Spec** — a link to the design-doc section this task implements.
 - **Acceptance** — the bulleted behaviors the implementation must demonstrate.
 - **Verification** — the exact command that confirms the task is done.
+- **Agent-suitable** — `yes` / `partial` / `no`: can an agent run this task unattended? `yes` =
+  Acceptance + Verification fully pin "done"; `partial` = an agent does the bulk but a human
+  checkpoint is needed mid-task; `no` = human-driven.
 - **Commit** — the conventional-commit subject.
 
 **No literal code, no test code, no step-by-step test-first (TDD) walkthroughs.** The behaviors
