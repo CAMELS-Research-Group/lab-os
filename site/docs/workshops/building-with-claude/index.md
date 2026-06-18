@@ -30,6 +30,10 @@ The meal lands mid-afternoon — a late lunch / early dinner — right after the
 run, so the highest-energy conversation of the day spills into the break instead of getting
 cut off.
 
+Times are block *start* times; each block is a short teach followed by its exercise, so a
+block runs until the next row. Exercise durations are listed on
+[the exercises page](./exercises.md).
+
 | Time | Block |
 |---|---|
 | 12:00 | **Welcome & the day's arc** — where specs/plans leave off, what "done" looks like by 5pm |

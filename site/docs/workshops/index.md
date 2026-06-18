@@ -21,7 +21,7 @@ Workshops assume you arrive prepared. The recommended sequence:
    end). You should be comfortable with spec → plan before a workshop, not learning it there.
 2. **Bring a spec and a plan for your own work.** A workshop turns *your* plan into output —
    it isn't useful without one. If your plan isn't execution-ready, the
-   [Plan stage](/docs/working-with-claude/plan.md) walks you through getting it there.
+   [Plan stage](/docs/working-with-claude/plan) walks you through getting it there.
 3. **Attend the build day.** [Building with Claude](./building-with-claude/index.md) is the
    in-person session where you execute that plan — roadmap it, sequence it, and run large
    chunks autonomously.

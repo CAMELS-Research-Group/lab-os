@@ -61,12 +61,6 @@ the skill the day is building.
 - **If you're stuck:** if Claude goes sideways, stop it, note where it lost the thread, and
   we'll cover recovery in the debrief — that's exactly the learning.
 
-:::note Facilitator note
-Verification is only deterministic if each project exposes a single, repo-root, exit-code-true
-verification command. The behavior the materials assume is pinned in the
-[verification command contract](https://github.com/WatsonWBlair/lab-os/blob/main/docs/workshops/build-with-claude/verification-command-contract.md).
-:::
-
 ## Exercise 5 — Scaling execution (25 min)
 
 - **Goal:** Hand off more than one task at once — a chunk Claude works through start to finish.
