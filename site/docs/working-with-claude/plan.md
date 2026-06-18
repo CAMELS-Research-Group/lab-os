@@ -18,9 +18,7 @@ Per task, seven elements:
 - **Spec** — a link to the design-doc section this task implements.
 - **Acceptance** — the bulleted behaviors the implementation must demonstrate.
 - **Verification** — the exact command that confirms the task is done.
-- **Agent-suitable** — `yes` / `partial` / `no`: can an agent run this task unattended? `yes` =
-  Acceptance + Verification fully pin "done"; `partial` = an agent does the bulk but a human
-  checkpoint is needed mid-task; `no` = human-driven.
+- **Agent-suitable** — `yes` / `partial` / `no`: can an agent run this task unattended?
 - **Commit** — the conventional-commit subject.
 
 **No literal code, no test code, no step-by-step test-first (TDD) walkthroughs.** The behaviors
