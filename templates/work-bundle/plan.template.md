@@ -37,6 +37,8 @@ No literal code. The only code blocks allowed are short shell commands in **Veri
 <short shell command the implementing agent runs to confirm done>
 ```
 
+**Agent-suitable:** <yes | partial | no> <!-- can an agent run this task unattended? yes = Acceptance+Verification fully pin "done"; partial = agent does the bulk but a human checkpoint is needed mid-task; no = human-driven -->
+
 **Commit:** `<type>(<scope>): <subject>`
 
 ---
@@ -58,6 +60,8 @@ No literal code. The only code blocks allowed are short shell commands in **Veri
 ```shell
 <command>
 ```
+
+**Agent-suitable:** <yes | partial | no>
 
 **Commit:** `<type>: <subject>`
 

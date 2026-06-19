@@ -147,3 +147,39 @@ filled in.
 **Resolution:** Open `~/.claude/CLAUDE.md` (Windows: `C:\Users\<you>\.claude\CLAUDE.md`), fill
 in every `<...>` placeholder. See the personalization step of the bootstrap prompt in
 [Getting Started](site/docs/getting-started.mdx).
+
+---
+
+## `npm run build` hangs at "Creating an optimized production build" (0 CPU, never finishes)
+
+**Symptom:** `cd site && npm run build` prints `[INFO] [en] Creating an optimized production
+build...` and then stalls indefinitely. The docusaurus node process sits at a flat working-set
+size using **0% CPU** (deadlocked, not compiling), no webpack worker processes spawn, and no
+`build/` output appears. Clearing `.docusaurus` and deleting `build/` does **not** help, and the
+hang reproduces even on a pristine checkout — so it is not a content or broken-link problem
+(`onBrokenLinks: 'throw'` would error fast, not hang).
+
+**Cause:** A corrupt **webpack persistent cache** at `site/node_modules/.cache/`. It happens when
+a prior build is killed mid-run (e.g. two builds launched concurrently and one is terminated, or
+a build is interrupted while writing the cache). Subsequent builds hang in the main process trying
+to deserialize the corrupt cache, before any worker threads start. `rm -rf .docusaurus` does **not**
+touch this cache — it lives under `node_modules/`, a different location.
+
+**Resolution:**
+```bash
+# macOS / Linux (and Git Bash / WSL on Windows)
+cd site
+rm -rf node_modules/.cache .docusaurus build
+npm run build
+```
+```powershell
+# Windows PowerShell
+cd site
+Remove-Item -Recurse -Force node_modules/.cache, .docusaurus, build
+npm run build
+```
+
+Avoid the trigger: do not run two `npm run build` invocations against the same `site/` at once,
+and let a build finish (or kill it cleanly) rather than racing it. On Windows, kill a stuck build
+by **PID** (`taskkill /F /PID <pid>`) — never blanket-kill `node.exe`, which also takes down
+Claude Code's own MCP processes.

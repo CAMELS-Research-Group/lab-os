@@ -20,7 +20,7 @@ Budgets (bytes): per-repo `CLAUDE.md` 8 KB · `.claude/rules/*.md` 5 KB each · 
 
 - **PRD** — living doc, stable path, amended never archived. Required: Problem · Success criteria (measurable) · Scope (in/explicitly out) · Constraints · Plan (phased) · Open questions. No embedded decision log — `project_log.md` owns decisions.
 - **Design doc** — one slice: problem, decisions with rationale + rejected alternatives, known gaps stated honestly. Top status line (draft/reviewed/superseded-by).
-- **Plan** — code-free: per task, Files/Depends on/Spec link/Acceptance/Verification/Commit; only code blocks: shell in Verification lines. Carries `## Execution Log`.
+- **Plan** — code-free: per task, Files/Depends on/Spec link/Acceptance/Verification/Agent-suitable/Commit; only code blocks: shell in Verification lines. Carries `## Execution Log`.
 
 ## Rules numbering
 

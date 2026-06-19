@@ -75,6 +75,13 @@ const config: Config = {
     colorMode: {
       respectPrefersColorScheme: true,
     },
+    docs: {
+      sidebar: {
+        // Collapse sibling categories when another is opened — only one
+        // category stays expanded at a time, keeping the sidebar tidy.
+        autoCollapseCategories: true,
+      },
+    },
     navbar: {
       title: 'lab-os',
       logo: {

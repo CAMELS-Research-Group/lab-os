@@ -10,8 +10,32 @@ const sidebars: SidebarsConfig = {
       collapsible: true,
       collapsed: false,
       items: [
-        'getting-started',
-        'working-with-claude',
+        {
+          type: 'category',
+          label: 'Getting Started',
+          collapsible: true,
+          collapsed: true,
+          link: {type: 'doc', id: 'getting-started/index'},
+          items: [
+            'getting-started/terminal-basics',
+            'getting-started/install-git',
+            'getting-started/install-github-cli',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Working with Claude',
+          collapsible: true,
+          collapsed: true,
+          link: {type: 'doc', id: 'working-with-claude/index'},
+          items: [
+            'working-with-claude/plan',
+            'working-with-claude/build',
+            'working-with-claude/autonomous-loops',
+            'working-with-claude/verify',
+            'working-with-claude/review',
+          ],
+        },
         {
           type: 'doc',
           id: 'onboarding-project',
@@ -24,8 +48,8 @@ const sidebars: SidebarsConfig = {
       label: 'Workshops',
       collapsible: true,
       collapsed: false,
+      link: {type: 'doc', id: 'workshops/index'},
       items: [
-        'workshops/index',
         {
           type: 'category',
           label: 'Part 1 — Planning',
@@ -72,7 +96,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Reference',
+      label: 'Deep Dives',
       collapsible: true,
       collapsed: false,
       items: [
