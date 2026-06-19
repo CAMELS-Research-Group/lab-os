@@ -12,7 +12,62 @@ const sidebars: SidebarsConfig = {
       items: [
         'getting-started',
         'working-with-claude',
-        'onboarding-project',
+        {
+          type: 'doc',
+          id: 'onboarding-project',
+          label: 'Onboarding Project (superseded)',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Workshops',
+      collapsible: true,
+      collapsed: false,
+      items: [
+        'workshops/index',
+        {
+          type: 'category',
+          label: 'Part 1 — Planning',
+          collapsible: true,
+          collapsed: false,
+          items: [
+            'workshops/planning/index',
+            'workshops/planning/pre-work',
+            'workshops/planning/prd-interrogation-worksheet',
+            'workshops/planning/plan-decomposition-worksheet',
+            'workshops/planning/completion-checklist',
+            'workshops/planning/homework',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Part 2 — Building',
+          collapsible: true,
+          collapsed: false,
+          items: [
+            'workshops/building/index',
+            'workshops/building/pre-flight',
+            'workshops/building/exercises',
+            'workshops/building/execution-verification-worksheet',
+            'workshops/building/quality-gates-worksheet',
+            'workshops/building/completion-checklist',
+            'workshops/building/homework',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Part 3 — Closeout',
+          collapsible: true,
+          collapsed: false,
+          items: [
+            'workshops/closeout/index',
+            'workshops/closeout/pre-work',
+            'workshops/closeout/learnings-carry-forward-worksheet',
+            'workshops/closeout/presentation-worksheet',
+            'workshops/closeout/completion-checklist',
+          ],
+        },
       ],
     },
     {
