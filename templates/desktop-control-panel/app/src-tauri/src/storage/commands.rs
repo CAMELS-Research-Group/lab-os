@@ -242,9 +242,10 @@ fn aggregate_phoneme_trends(rows: &[String]) -> Vec<PhonemeTrend> {
     acc.into_iter()
         .filter(|(_, a)| a.attempts_total > 0)
         .map(|(phoneme, a)| {
-            let example_word = crate::evaluation::feedback::lookup_articulation(&phoneme)
-                .map(|e| e.example_word.to_string())
-                .unwrap_or_default();
+            // ESL articulation enrichment removed with the evaluation module
+            // (P4 starter strip). `example_word` stays in the wire contract as
+            // an empty string until the product layer repopulates it.
+            let example_word = String::new();
             let trend_direction = trend_direction(&a.session_flag_rate);
             PhonemeTrend {
                 phoneme,
@@ -669,25 +670,16 @@ mod tests {
     }
 
     #[test]
-    fn get_phoneme_trends_example_word_lookup() {
+    fn get_phoneme_trends_example_word_empty_after_esl_strip() {
+        // ESL articulation enrichment was removed with the evaluation module
+        // (P4 starter strip): `example_word` is now always empty regardless of
+        // whether the phoneme was in the former V1 articulation table.
         let (_dir, conn) = open_tmp();
         insert_session_full(&conn, "s1", "2026-06-01T01:00:00Z", r#"{"θ":{"occurrences":2,"flagged":1,"mean_certainty":0.4}}"#);
 
         let trends = get_phoneme_trends_impl(&conn).unwrap();
         let t = trend_for(&trends, "θ");
-        // θ is in the V1 articulation table → non-empty example word.
-        assert!(!t.example_word.is_empty(), "θ should resolve an example word");
-    }
-
-    #[test]
-    fn get_phoneme_trends_unknown_phoneme_empty_example_word() {
-        let (_dir, conn) = open_tmp();
-        // "ZZZ" is not in the 13-entry articulation table.
-        insert_session_full(&conn, "s1", "2026-06-01T01:00:00Z", r#"{"ZZZ":{"occurrences":2,"flagged":1,"mean_certainty":0.4}}"#);
-
-        let trends = get_phoneme_trends_impl(&conn).unwrap();
-        let t = trend_for(&trends, "ZZZ");
-        assert_eq!(t.example_word, "", "unknown phoneme falls back to empty word");
+        assert_eq!(t.example_word, "", "example word is empty post-strip");
         assert_eq!(t.attempts_total, 2, "still carries real attempt data");
     }
 

@@ -18,8 +18,6 @@
 
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 
-use crate::evaluation::EvaluationError;
-use crate::recording::MicrophoneError;
 use crate::storage::StorageError;
 use crate::update::UpdateError;
 
@@ -58,12 +56,6 @@ pub enum AppError {
     #[error("storage error: {0}")]
     Storage(#[from] StorageError),
 
-    #[error("microphone error: {0}")]
-    Microphone(#[from] MicrophoneError),
-
-    #[error("inference error: {0}")]
-    Inference(#[from] EvaluationError),
-
     #[error("backend error: {0}")]
     Backend(#[from] BackendError),
 
@@ -85,8 +77,6 @@ impl AppError {
     pub(crate) fn kind(&self) -> &'static str {
         match self {
             AppError::Storage(_) => "storage",
-            AppError::Microphone(_) => "microphone",
-            AppError::Inference(_) => "inference",
             AppError::Backend(_) => "backend",
             AppError::Keyring(_) => "keyring",
             AppError::Update(_) => "update",
@@ -105,14 +95,6 @@ impl AppError {
             // variants are programmer / data-integrity errors with no
             // retry semantics.
             AppError::Storage(_) => false,
-            // Mic permission or device disconnect — user can retry.
-            AppError::Microphone(_) => true,
-            // Evaluation feature errors (threshold load, model load, digest
-            // mismatch, runtime failure, bad input shape) are all terminal at
-            // the AppError boundary for V1. CL-19 surfaces them as banners
-            // rather than retry toasts. Per-variant recoverability can refine
-            // this later if a transient case emerges.
-            AppError::Inference(_) => false,
             // Network is the typical cause — default to recoverable; the
             // inner BackendError will distinguish transient vs terminal once
             // it's fleshed out in CL-10.
@@ -160,8 +142,6 @@ mod tests {
     fn all_variants() -> Vec<AppError> {
         vec![
             AppError::Storage(StorageError::InvalidState("x".into())),
-            AppError::Microphone(MicrophoneError::PermissionDenied),
-            AppError::Inference(EvaluationError::RuntimeFailure("x".into())),
             AppError::Backend(BackendError::Placeholder("x".into())),
             AppError::Keyring(KeyringError::Placeholder("x".into())),
             AppError::Update(UpdateError::FetchFailed("x".into())),
@@ -178,18 +158,6 @@ mod tests {
     fn kind_is_snake_case_variant_name_storage() {
         let err = AppError::Storage(StorageError::InvalidState("x".into()));
         assert_eq!(to_json(&err)["kind"], json!("storage"));
-    }
-
-    #[test]
-    fn kind_is_snake_case_variant_name_microphone() {
-        let err = AppError::Microphone(MicrophoneError::PermissionDenied);
-        assert_eq!(to_json(&err)["kind"], json!("microphone"));
-    }
-
-    #[test]
-    fn kind_is_snake_case_variant_name_inference() {
-        let err = AppError::Inference(EvaluationError::RuntimeFailure("x".into()));
-        assert_eq!(to_json(&err)["kind"], json!("inference"));
     }
 
     #[test]
@@ -225,18 +193,6 @@ mod tests {
     #[test]
     fn recoverable_storage_is_false() {
         let err = AppError::Storage(StorageError::InvalidState("x".into()));
-        assert_eq!(to_json(&err)["recoverable"], json!(false));
-    }
-
-    #[test]
-    fn recoverable_microphone_is_true() {
-        let err = AppError::Microphone(MicrophoneError::PermissionDenied);
-        assert_eq!(to_json(&err)["recoverable"], json!(true));
-    }
-
-    #[test]
-    fn recoverable_inference_is_false() {
-        let err = AppError::Inference(EvaluationError::RuntimeFailure("x".into()));
         assert_eq!(to_json(&err)["recoverable"], json!(false));
     }
 
