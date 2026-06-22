@@ -1,0 +1,115 @@
+.share-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 18, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.share-modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem 1.75rem 1.75rem;
+  box-shadow: var(--shadow);
+}
+
+.share-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.share-modal-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.share-modal-header button.ghost {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.share-intro {
+  color: var(--ink-soft);
+  margin: 0 0 1.2rem;
+}
+
+.feedback-field-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.feedback-textarea {
+  width: 100%;
+  font-size: 1rem;
+  font-family: inherit;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  resize: vertical;
+  min-height: 5.5rem;
+}
+
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.feedback-error {
+  color: var(--warn);
+  font-size: 0.9rem;
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--warn-soft);
+  border-radius: var(--radius-sm);
+}
+
+.share-confirm {
+  margin-top: 1.2rem;
+  padding: 0.75rem 1rem;
+  background: var(--good-soft);
+  border-radius: var(--radius-sm);
+  color: var(--accent-strong);
+}
+
+.share-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+@media (max-width: 639px) {
+  /* Modal becomes full-screen on phone — a small floating card is
+     awkward at this size, and a sheet feels more native. */
+  .share-backdrop {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .share-modal {
+    width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 1.25rem 1.1rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .share-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

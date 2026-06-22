@@ -1,0 +1,561 @@
+name: App release
+
+# CI-6 / CI-11 + #98 — workflow_dispatch multi-platform build + gated publish.
+#   Design: documentation/engineering/planning/2026-06-09-ci6-release-workflow-design.md
+#   Plan:   documentation/engineering/planning/2026-06-09-ci6-release-workflow-plan.md
+#   Channels (#98): documentation/engineering/planning/2026-06-09-per-platform-release-channels-design.md
+#
+# Builds the Tauri client for Windows x64 (.msi) + macOS arm64 (.dmg, macos-14)
+# by default; macOS Intel x86_64 (.dmg, macos-13) is OPT-IN via platform=macos-intel
+# (the macos-13 pool is unreliable and a queued leg blocks publish — see setup
+# matrix). Each runner fetches its own arch ONNX
+# Runtime >=1.24 loadable library (matches the `ort` api-24 pin) into
+# app/src-tauri/resources/onnxruntime/. A gated publish job (explicit
+# publish=true + actor guard — NO approval pause, see prereq 1) publishes each
+# platform INDEPENDENTLY (#98) to the public Pace-IAS/IAS repo as two release
+# classes:
+#   - immutable split archives  app-v<ver>-win / app-v<ver>-mac /
+#       app-v<ver>-mac-intel                                  (the installer)
+#   - mutable channel pointers   win-stable / mac-stable / mac-intel-stable
+#       (each holds only latest.json)
+# Each build leg bakes its own channel manifest URL, so a client polls only its
+# platform's channel (Apple-silicon → mac-stable, Intel → mac-intel-stable). A
+# failed build on one platform cannot block another's publish. Unsigned posture
+# on all platforms (signing deferred — #75/#79).
+#
+# OPERATOR PREREQS (Watson — the publish job cannot run without these):
+#   1. ias-release GitHub Environment — bare, NO required reviewer (#153): the
+#      required-reviewers protection rule is unavailable on a private
+#      personal-account repo (API returns 422 even on Pro; needs an org on
+#      Team/Enterprise — verified 2026-06-09, re-confirmed 2026-06-10). The
+#      publish job therefore does NOT pause for approval. Compensating
+#      controls: publish defaults to false and must be dispatched true; the
+#      job's if-guard requires actor WatsonWBlair; the environment restricts
+#      deployments to main and scopes IAS_RELEASE_TOKEN. With no reviewer,
+#      the actor if-guard is the load-bearing barrier — the environment
+#      itself is token-scoping + branch policy only (admins can bypass it).
+#      Revisit on org migration (release-runbook Step 0 owns this posture).
+#   2. Secret IAS_RELEASE_TOKEN — fine-grained PAT, contents:write scoped to
+#      Pace-IAS/IAS only, bound to the ias-release Environment.
+#      *** EXPIRES 2026-09-15 — rotate before then or every publish 403s. ***
+#   3. Actions variables: IAS_MODEL_URL, IAS_MODEL_SHA256, IAS_MODEL_VERSION
+#      (values per release-runbook §1). The updater manifest URL is no longer an
+#      Actions variable — it is derived per-leg in the setup job (win/mac-stable),
+#      so the old IAS_UPDATER_MANIFEST_URL variable is unused and may be removed.
+#   4. (No longer required) tauri.conf.json `version` is set at BUILD TIME from
+#      the normalized dispatch `version` (build job step), so the installer
+#      name / tag / manifest all derive from one source. The bump is build-local
+#      and NOT committed back — bump the repo `version` via a separate
+#      chore(release) commit when you cut the release for the record.
+#
+# The bundled-DLL functional path (install → run a session, no eval:error) is
+# live: runnable-build Task 1 landed — resources/onnxruntime is bundled via
+# tauri.windows.conf.json / tauri.macos.conf.json plus the lib.rs resolver.
+#
+# Re-dispatch cost: re-running after a transient publish failure rebuilds the
+# dispatched installers from scratch (~10-20 min). The archive no-clobber guard
+# protects provenance, not build minutes — retries are NOT cheap. Channel
+# overwrites ARE idempotent (the pointer step can be re-run safely).
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform(s) to build
+        type: choice
+        options: [all, windows, macos, macos-intel]
+        default: all
+      version:
+        description: Release version — bare semver, e.g. 0.2.0 (v / app-v prefixes are stripped)
+        type: string
+        required: true
+      publish:
+        description: Create the public release on Pace-IAS/IAS — publishes WITHOUT a separate approval pause (prereq 1); this input IS the gate. If false, build artifacts only.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    name: setup (validate + matrix)
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gen.outputs.version }}
+      matrix: ${{ steps.gen.outputs.matrix }}
+    steps:
+      # fetch-depth: 0 — the draft-changelog step below walks the full history
+      # of app/src-tauri/tauri.conf.json to find the previous version-bump commit;
+      # a shallow clone would truncate that walk and mis-compute the range.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: gen
+        env:
+          RAW_VERSION: ${{ inputs.version }}
+          PLATFORM: ${{ inputs.platform }}
+        run: |
+          set -euo pipefail
+          # normalize: strip a leading app-v / v, then require bare semver
+          v="${RAW_VERSION#app-v}"; v="${v#v}"
+          if ! printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "::error::version '$RAW_VERSION' is not valid semver (expected MAJOR.MINOR.PATCH, e.g. 0.2.0)"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          # Each leg carries its OWN per-platform channel manifest URL (win-stable /
+          # mac-stable), baked at build time so a client polls only its platform's
+          # channel. config.rs reads it via option_env! — zero Rust change. macOS now
+          # publishes standalone (mac-stable is independent), so there is NO
+          # platform=macos publish guard: a macOS-only publish touches only mac-stable.
+          win='{"name":"windows","runner":"windows-latest","manifest_url":"https://github.com/Pace-IAS/IAS/releases/download/win-stable/latest.json"}'
+          mac='{"name":"macos","runner":"macos-14","manifest_url":"https://github.com/Pace-IAS/IAS/releases/download/mac-stable/latest.json"}'
+          # Intel macOS leg (OPT-IN — deliberately NOT in `all`). macos-13 is the
+          # last Intel (x86_64) GitHub-hosted runner and its pool is chronically
+          # backed up; because `publish` needs ALL build legs to reach a terminal
+          # state, a leg left QUEUED on that pool stalls the entire release (win +
+          # mac publishes wait behind it). So Intel builds only on an explicit
+          # `platform=macos-intel` dispatch. When cut it still produces the x86_64
+          # .dmg, bundles the x86_64 ORT dylib from its native onnxruntime wheel,
+          # and publishes to its own mac-intel-stable channel (independent of
+          # mac-stable). Re-add to `all` once a reliable Intel runner exists.
+          maci='{"name":"macos-intel","runner":"macos-13","manifest_url":"https://github.com/Pace-IAS/IAS/releases/download/mac-intel-stable/latest.json"}'
+          case "$PLATFORM" in
+            windows)     inc="[$win]" ;;
+            macos)       inc="[$mac]" ;;          # arm64 only — Intel is opt-in below
+            macos-intel) inc="[$maci]" ;;         # opt-in Intel cut (scarce macos-13 pool)
+            all)         inc="[$win,$mac]" ;;     # default release path — NO Intel leg
+            *) echo "::error::unknown platform '$PLATFORM'"; exit 1 ;;
+          esac
+          echo "matrix={\"include\":$inc}" >> "$GITHUB_OUTPUT"
+
+      - name: Draft CHANGELOG entry for this release (preview only — never published)
+        env:
+          VERSION: ${{ steps.gen.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Compute the commit range (previous tauri.conf.json version-bump commit,
+          # HEAD]. `git log -- <path>` lists every commit that touched the version
+          # file; the most recent one before HEAD is the previous release boundary.
+          # The dispatched version may or may not be bumped in the tree yet (the
+          # build job sets it build-locally and does NOT commit), so we walk the
+          # version-file history rather than trusting the file's current value.
+          mapfile -t bumps < <(git log --format='%H' -- app/src-tauri/tauri.conf.json)
+          # bumps[0] is the most recent commit touching the file. If HEAD itself is
+          # that commit (a real bump landed), use the NEXT one as the lower bound so
+          # the range still spans the work since the prior release.
+          head_sha=$(git rev-parse HEAD)
+          lower=""
+          if [ "${bumps[0]:-}" = "$head_sha" ]; then
+            lower="${bumps[1]:-}"
+          else
+            lower="${bumps[0]:-}"
+          fi
+          if [ -n "$lower" ]; then
+            range="${lower}..HEAD"
+          else
+            range="HEAD"  # no prior bump found — whole history
+          fi
+          echo "::notice::draft CHANGELOG range for v$VERSION: $range"
+
+          # Build a Keep-a-Changelog draft section from the non-merge, non-bump,
+          # non-log commits in range, preserving any (#NN) PR refs in the subject.
+          {
+            echo "## [$VERSION] — DRAFT (edit before release)"
+            echo
+            echo "### Changed"
+            git log --no-merges --format='- %s' $range \
+              | grep -vE '^- (chore\(release\): bump version|docs\(log\): record)' \
+              || echo "- (no commits in range — fill in manually)"
+            echo
+          } > changelog-draft.md
+
+          echo "----- DRAFT CHANGELOG ENTRY (preview, NOT published) -----"
+          cat changelog-draft.md
+          echo "----------------------------------------------------------"
+          echo "::notice::This draft is a preview only. The authoritative entry lands via the CHANGELOG.md edit in the release-automation PR — CI never publishes it."
+
+      - name: Require a CHANGELOG.md section for this release (fail before the publish gate)
+        if: ${{ inputs.publish }}
+        env:
+          VERSION: ${{ steps.gen.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Release notes are sourced from the `## [<VERSION>]` section of CHANGELOG.md
+          # by the gated publish job. Validate that section exists and is non-empty
+          # HERE in setup — before the build legs and the gated publish job (no
+          # approval pause — prereq 1 / #153; the dispatch is the approval) — so
+          # a forgotten changelog edit fails the run early instead of silently shipping a
+          # generic note past the gate (#152). Gated to `publish=true` dispatches: a
+          # build-artifacts-only run (publish=false) consumes no release notes, so it is
+          # not held to the changelog precondition. Same literal `## [VERSION]` match the
+          # publish job's extraction uses (index-based, not regex; trailing `]` guards
+          # against a [0.2.4] vs [0.2.40] prefix collision).
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::error::CHANGELOG.md not found — add a '## [$VERSION]' section before releasing."
+            exit 1
+          fi
+          section=$(awk -v hdr="## [$VERSION]" '
+            index($0, hdr) == 1 { capture=1; next }
+            capture && index($0, "## [") == 1 { exit }
+            capture { print }
+          ' CHANGELOG.md)
+          if ! printf '%s' "$section" | grep -q '[^[:space:]]'; then
+            echo "::error::no non-empty '## [$VERSION]' section in CHANGELOG.md — add release notes for this version before releasing."
+            exit 1
+          fi
+          echo "::notice::CHANGELOG.md has a non-empty '## [$VERSION]' section — release notes will publish from it."
+
+  build:
+    name: build (${{ matrix.name }})
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+      - name: Fetch ONNX Runtime (>=1.24) into bundled resources
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "onnxruntime>=1.24"
+          capi=$(python -c "import onnxruntime, os; print(os.path.join(os.path.dirname(onnxruntime.__file__), 'capi'))")
+          dest=app/src-tauri/resources/onnxruntime
+          mkdir -p "$dest"
+          # The bundler references FIXED resource names — onnxruntime.dll
+          # (tauri.windows.conf.json) and libonnxruntime.dylib (tauri.macos.conf.json),
+          # mirrored by BUNDLED_ORT_DYLIB_REL in lib.rs. The Windows wheel already
+          # ships an unversioned onnxruntime.dll, but the macOS wheel ships a
+          # versioned core dylib (e.g. libonnxruntime.1.26.0.dylib), so normalize it
+          # to the canonical name. Match the core lib only, not the provider shims
+          # (libonnxruntime_providers_*.dylib).
+          cp "$capi"/onnxruntime*.dll "$dest"/ 2>/dev/null || true
+          core_dylib=$(ls "$capi"/libonnxruntime.*.dylib "$capi"/libonnxruntime.dylib 2>/dev/null | head -n1 || true)
+          [ -n "$core_dylib" ] && cp "$core_dylib" "$dest/libonnxruntime.dylib"
+          if [ -z "$(ls -A "$dest" 2>/dev/null)" ]; then
+            echo "::error::no ONNX Runtime loadable library found under $capi (wrong arch / wheel layout)"
+            ls -la "$capi" || true
+            exit 1
+          fi
+          ls -la "$dest"
+      - name: Set tauri.conf.json version to the dispatched release version
+        env:
+          VERSION: ${{ needs.setup.outputs.version }}
+        working-directory: app/src-tauri
+        run: |
+          set -euo pipefail
+          # Single source of truth: the dispatched (normalized, bare-semver)
+          # version drives the installer name AND the archive tag AND the
+          # manifest. Patch tauri.conf.json in-place at BUILD TIME so the
+          # bundler names the installer from the same version the publish job
+          # tags with. This is build-local ONLY — the bump is NOT committed back
+          # to the repo (the working tree is discarded with the runner); the
+          # repo `version` is bumped by a separate chore(release) commit.
+          node -e '
+            const fs = require("fs");
+            const f = "tauri.conf.json";
+            const c = JSON.parse(fs.readFileSync(f, "utf8"));
+            const v = process.env.VERSION;
+            c.version = v;
+            fs.writeFileSync(f, JSON.stringify(c, null, 2) + "\n");
+            console.log("tauri.conf.json version set to " + v);
+          '
+      - name: Install frontend deps
+        working-directory: app
+        run: npm ci
+      - name: Build installer (tauri — runs npm run build, then bundles)
+        working-directory: app
+        env:
+          NAME: ${{ matrix.name }}
+          IAS_MODEL_URL: ${{ vars.IAS_MODEL_URL }}
+          IAS_MODEL_SHA256: ${{ vars.IAS_MODEL_SHA256 }}
+          IAS_MODEL_VERSION: ${{ vars.IAS_MODEL_VERSION }}
+          # Per-platform channel URL from the setup matrix (NOT the old shared
+          # vars.IAS_UPDATER_MANIFEST_URL) — this leg's client polls only its channel.
+          IAS_UPDATER_MANIFEST_URL: ${{ matrix.manifest_url }}
+        run: |
+          set -euo pipefail
+          # Windows (.msi) packaging is deterministic — build once. Both macOS
+          # legs (arm64 "macos" + Intel "macos-intel") take the .dmg retry path.
+          if [ "$NAME" = "windows" ]; then
+            npm run tauri build
+            exit 0
+          fi
+          # macOS .dmg packaging (Tauri's bundle_dmg.sh) drives Finder via osascript
+          # and runs hdiutil attach/detach on a headless runner — it intermittently
+          # fails on a "Resource busy" detach race (#97; three earlier 2026-06-09 runs
+          # packaged green on identical config). --verbose surfaces the real
+          # osascript/hdiutil stderr the bundler otherwise swallows behind the opaque
+          # "failed to run bundle_dmg.sh". Bounded retry is scoped to the macOS leg so
+          # it never rebuilds the Windows installer. Cargo is already compiled after
+          # attempt 1, so a retry only re-runs the (fast, flaky) bundling step.
+          attempts=3
+          for i in $(seq 1 "$attempts"); do
+            echo "::group::tauri build (macOS) attempt $i/$attempts"
+            if npm run tauri build -- --verbose; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::macOS tauri build attempt $i/$attempts failed"
+            # A failed attempt can leave the DMG volume mounted; the next hdiutil
+            # detach then hits "Resource busy". Force-detach any stale mount and clear
+            # the dmg scratch dir so the retry starts clean. The volume name is the
+            # tauri.conf.json `productName` ("P3 Platform") — keep this pattern in sync
+            # if that is ever renamed, or the stale mount silently won't be detached.
+            ( hdiutil info 2>/dev/null | awk '/\/Volumes\/P3 Platform/ {print $1}' \
+                | while read -r dev; do
+                    [ -z "$dev" ] && continue
+                    echo "::notice::detaching stale DMG mount $dev before retry"
+                    hdiutil detach "$dev" -force 2>/dev/null || true
+                  done ) || true
+            rm -rf src-tauri/target/release/bundle/dmg 2>/dev/null || true
+          done
+          echo "::error::macOS tauri build failed after $attempts attempts (see --verbose output above)"
+          exit 1
+      - name: Verify the expected installer for this platform was produced
+        env:
+          NAME: ${{ matrix.name }}
+        working-directory: app/src-tauri/target/release/bundle
+        run: |
+          set -euo pipefail
+          # targets: "all" emits extra artifacts (nsis .exe, .app, .app.tar.gz); we only
+          # ship .msi/.dmg. Assert the expected one exists HERE so config/targets drift
+          # fails in the build job, not mid-publish after the release is already created.
+          case "$NAME" in
+            windows)            glob="msi/*.msi"; kind=".msi" ;;
+            macos|macos-intel)  glob="dmg/*.dmg"; kind=".dmg" ;;
+            *) echo "::error::unknown matrix name '$NAME'"; exit 1 ;;
+          esac
+          if ! ls $glob >/dev/null 2>&1; then
+            echo "::error::expected $kind installer not found for '$NAME' (Tauri targets/config drift?)"
+            ls -R . || true
+            exit 1
+          fi
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.name }}
+          path: |
+            app/src-tauri/target/release/bundle/msi/*.msi
+            app/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: publish (gated → ias-release)
+    needs: [setup, build]
+    # always() so a FAILED build leg (e.g. macOS) does not skip the publish — each
+    # platform publishes from whatever artifact IS present. Still gated on publish=true
+    # and a green setup; a cancelled build does not publish. The actor guard is a
+    # compensating control for the missing environment reviewer (prereq 1 / #153):
+    # only Watson's own dispatch can reach the publish steps.
+    if: ${{ always() && inputs.publish && github.actor == 'WatsonWBlair' && needs.setup.result == 'success' && needs.build.result != 'cancelled' }}
+    runs-on: ubuntu-latest
+    environment: ias-release  # scopes IAS_RELEASE_TOKEN + restricts deploys to main; does NOT pause for approval (prereq 1 / #153)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # no npm cache here: gen-latest-json.mjs is pure Node stdlib (no npm ci),
+          # so a cache would be dead weight — do not mirror build's cache asymmetry.
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: installer-*
+          # merge-multiple: false (default) — keep each leg's artifact under its
+          # own artifacts/installer-<name>/ subdir. Both macOS legs (arm64 + Intel)
+          # produce a .dmg; merging would flatten them into one dir and the
+          # per-leg glob could not tell the arm64 dmg from the Intel dmg.
+          merge-multiple: false
+      - name: Extract release notes for this version from CHANGELOG.md
+        env:
+          VERSION: ${{ needs.setup.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Pull the body of the `## [<VERSION>]` section out of the committed
+          # CHANGELOG.md (the human-edited source of truth — the draft from the
+          # setup job's preview was promoted into this file via the PR). The body
+          # becomes the --notes for BOTH per-platform archives. The setup job already
+          # required a non-empty section (fails before this gated job); the checks
+          # below are the same guard repeated at publish time — a missing/empty
+          # section hard-fails rather than silently shipping a generic note (#152).
+          notes_file="release-notes.md"
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::error::CHANGELOG.md not found — cannot source release notes (setup validates this pre-gate)."
+            exit 1
+          fi
+          # awk: print lines AFTER the matching `## [VERSION]` header, stopping at
+          # the next `## [` header. Literal (index-based) match — NOT regex —
+          # so the `[`/`]` in the header are matched verbatim (a regex bracket
+          # expression would silently mis-parse the version). The trailing `]`
+          # in the header guards against a prefix collision (`[0.2.4]` vs
+          # `[0.2.40]`). The header line itself is not included.
+          awk -v hdr="## [$VERSION]" '
+            index($0, hdr) == 1 { capture=1; next }
+            capture && index($0, "## [") == 1 { exit }
+            capture { print }
+          ' CHANGELOG.md > "$notes_file"
+          if ! grep -q '[^[:space:]]' "$notes_file"; then
+            echo "::error::no non-empty '## [$VERSION]' section in CHANGELOG.md — refusing to publish a generic release note."
+            exit 1
+          fi
+          echo "----- release notes for v$VERSION -----"
+          cat "$notes_file"
+          echo "---------------------------------------"
+          echo "RELEASE_NOTES_FILE=$PWD/$notes_file" >> "$GITHUB_ENV"
+      - name: Publish per-platform archives + channels (independent legs)
+        env:
+          GH_TOKEN: ${{ secrets.IAS_RELEASE_TOKEN }}
+          VERSION: ${{ needs.setup.outputs.version }}
+          REPO: Pace-IAS/IAS
+        run: |
+          # NOTE: GitHub invokes this step as `bash -e -o pipefail {0}` — errexit is
+          # ON by default. This job's independence model REQUIRES it OFF: a failed
+          # publish_platform must return its code to the driver (r_win/r_mac), not
+          # abort the whole script, or the second leg never runs. Disable it explicitly.
+          set +e
+          set -uo pipefail
+          shopt -s nullglob globstar
+
+          # Publish ONE platform: immutable split archive (app-v<ver>-<suffix>,
+          # no-clobber) + mutable channel pointer (<channel>, holds only latest.json).
+          # Returns: 0 published · 2 skipped (no artifact) · 1 failed.
+          # Each platform is fully independent — a macOS failure leaves win-stable
+          # byte-identical and vice-versa (no shared release object, no shared pointer).
+          publish_platform() {
+            local plat="$1" ext="$2" suffix="$3" channel="$4" artifact="$5"
+            # Per-leg working dir so the two legs never share a manifest path — isolation
+            # is structural, not ordering-dependent. The uploaded asset is still named
+            # latest.json (gh uses the file's basename), so the channel URL is unchanged.
+            local workdir="$suffix"
+            mkdir -p "$workdir"
+            rm -f "$workdir/latest.json" "$workdir/fetched.json"
+            # download-artifact (merge-multiple: false) lands each leg's installer
+            # under artifacts/<artifact-name>/ — scope the glob to THIS leg's subdir
+            # so the two .dmg legs (arm64 vs Intel) never pick each other's archive.
+            # globstar's ** matches zero-or-more dirs, so this also catches a file
+            # placed directly under the artifact dir (no separate *.ext pattern needed).
+            local files=(artifacts/"$artifact"/**/*."$ext")
+            if [ ${#files[@]} -eq 0 ]; then
+              echo "::notice::no .$ext artifact present — skipping $plat (build absent, failed, or not requested)"
+              return 2
+            fi
+            local installer="${files[0]}"
+            local archive_tag="app-v${VERSION}-${suffix}"
+
+            # 1. ARCHIVE — immutable, no-clobber verbatim (design §7). Split tag is
+            #    written exactly once by exactly one leg. --latest=false: the updater
+            #    no longer reads the GitHub 'latest' pointer (channels own updates).
+            if gh release view "$archive_tag" --repo "$REPO" >/dev/null 2>&1; then
+              echo "::error::Release $archive_tag already exists on $REPO. Do NOT clobber — run the release-runbook bad-release rollback (delete the release + tag) before re-dispatching."
+              return 1
+            fi
+            # --notes-file: the archive release notes come from the dispatched
+            # version's CHANGELOG.md section (same body for win + mac). The
+            # channel pointer below keeps its own descriptive note (it holds only
+            # latest.json, not human-facing release notes).
+            gh release create "$archive_tag" --repo "$REPO" --latest=false \
+              --title "$archive_tag" --notes-file "$RELEASE_NOTES_FILE" \
+              "$installer" || return 1
+
+            # 2. READ-BACK the ACTUAL (space→dot sanitized) asset name GitHub stored —
+            #    closes the download_url drift hazard (manifest built from truth).
+            local asset
+            asset=$(gh release view "$archive_tag" --repo "$REPO" --json assets --jq '.assets[].name' | grep -E "\.${ext}\$" | head -n1 || true)
+            if [ -z "$asset" ]; then
+              echo "::error::no .$ext asset on $archive_tag after upload"; return 1
+            fi
+
+            # 3. MANIFEST — single-platform: flat download_url AND the sole platforms
+            #    entry both point at the archive asset at the split tag.
+            node tools/release/gen-latest-json.mjs \
+              --platform "$plat" --version "$VERSION" --file "$asset" --repo "$REPO" --out "$workdir/latest.json" || return 1
+            echo "--- $channel latest.json ---"; cat "$workdir/latest.json"
+
+            # 4. CHANNEL — mutable pointer, holds ONLY latest.json. Create if absent,
+            #    clobber the asset if present (overwrite is the intended op — design D3).
+            if ! gh release view "$channel" --repo "$REPO" >/dev/null 2>&1; then
+              # Tolerate a create that fails because the channel already exists (e.g.
+              # a transient 'release view' blip): re-check, and only fail if it's
+              # genuinely still absent. The channel step is idempotent (design §7).
+              gh release create "$channel" --repo "$REPO" --latest=false \
+                --title "$channel" --notes "Update channel pointer for $plat — holds only latest.json (overwritten each publish)." \
+                || gh release view "$channel" --repo "$REPO" >/dev/null 2>&1 \
+                || { echo "::error::failed to create channel release $channel"; return 1; }
+            fi
+            gh release upload "$channel" "$workdir/latest.json" --repo "$REPO" --clobber || return 1
+
+            # 5. VERIFY — channel latest.json resolves and its download_url ranged-GETs
+            #    200/206 (ranged GET, not HEAD: asset redirects can 403/405 a bare HEAD).
+            #    Bounded retry: GitHub's releases/download/ redirect lags a few seconds
+            #    behind a fresh upload (asset propagation), so an immediate GET can 404 a
+            #    publish that is in fact correct (#98 smoke run 27217102128, issue #102).
+            #    get_with_retry <url> <curl-opts...> → echoes the final HTTP code; 0 if
+            #    it reached 200/206 within the window. Pass `-o <file>` for a full GET
+            #    (manifest) or `-r 0-0 -o /dev/null` for a 1-byte resolvability probe.
+            get_with_retry() {
+              local target="$1"; shift
+              local i http
+              for i in $(seq 1 10); do
+                http=$(curl -sSL -w '%{http_code}' "$@" "$target" || echo 000)
+                case "$http" in 200|206) echo "$http"; return 0 ;; esac
+                echo "::notice::$target not resolvable yet (attempt $i/10, HTTP $http) — waiting for asset propagation" >&2
+                sleep 10
+              done
+              echo "$http"; return 1
+            }
+            local manifest_url="https://github.com/$REPO/releases/download/$channel/latest.json"
+            get_with_retry "$manifest_url" -o "$workdir/fetched.json" >/dev/null \
+              || { echo "::error::$channel latest.json did not resolve at $manifest_url after retries"; return 1; }
+            local url code
+            # Parse download_url out of the fetched manifest. Own error check, distinct
+            # from the resolvability probe below: malformed/empty JSON or a missing
+            # download_url must surface a clear parse error here, not fall through to an
+            # opaque downstream HTTP failure on an empty url (#152). node hard-fails
+            # (exit 1) on bad JSON or a non-string/empty download_url.
+            url=$(node -e "const m=require('./$workdir/fetched.json'); if(!m||typeof m.download_url!=='string'||!m.download_url){console.error('manifest has no usable download_url');process.exit(1);} console.log(m.download_url);") \
+              || { echo "::error::$plat channel manifest at $manifest_url is malformed or missing a download_url — cannot verify the published channel"; return 1; }
+            code=$(get_with_retry "$url" -r 0-0 -o /dev/null) \
+              || { echo "::error::$plat download_url did not resolve (HTTP $code) after retries: $url"; return 1; }
+            echo "$code  $url"
+
+            echo "::notice::published $plat → archive $archive_tag, channel $channel"
+            return 0
+          }
+
+          # Args: <gen-latest-json --platform key> <ext> <archive suffix> <channel> <artifact subdir>
+          # The macOS arm64 + Intel legs are fully independent: distinct split tags
+          # (mac / mac-intel), distinct channels (mac-stable / mac-intel-stable),
+          # distinct manifest platform keys (macos-aarch64 / macos-x86_64).
+          rc=0; present=0
+          publish_platform windows      msi win       win-stable        installer-windows;     r_win=$?
+          publish_platform macos        dmg mac       mac-stable        installer-macos;       r_mac=$?
+          publish_platform macos-x86_64 dmg mac-intel mac-intel-stable  installer-macos-intel; r_maci=$?
+          [ "$r_win" -ne 2 ]  && present=$((present+1)); [ "$r_win" -eq 1 ]  && rc=1
+          [ "$r_mac" -ne 2 ]  && present=$((present+1)); [ "$r_mac" -eq 1 ]  && rc=1
+          [ "$r_maci" -ne 2 ] && present=$((present+1)); [ "$r_maci" -eq 1 ] && rc=1
+          if [ "$present" -eq 0 ]; then
+            echo "::error::publish=true but no installer artifacts were present (all builds absent or failed) — nothing to publish."
+            ls -la artifacts || true
+            exit 1
+          fi
+          exit $rc

@@ -1,0 +1,75 @@
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 18, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 210;
+  padding: 1rem;
+}
+
+.confirm-modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: min(440px, 100%);
+  padding: 1.5rem 1.75rem 1.75rem;
+  box-shadow: var(--shadow);
+}
+
+.confirm-title {
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.confirm-body {
+  color: var(--ink-soft);
+  margin: 0 0 1.5rem;
+}
+
+.confirm-body p {
+  margin: 0 0 0.6rem;
+}
+
+.confirm-body p:last-child {
+  margin-bottom: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+/* Destructive confirm. The palette is deliberately non-punitive (no alarm
+   red), so this is a warm, desaturated terracotta — clearly distinct from the
+   sage primary without shouting. */
+button.confirm-danger {
+  background: #b3543f;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+button.confirm-danger:hover {
+  background: #9c4634;
+}
+
+@media (max-width: 639px) {
+  .confirm-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .confirm-modal {
+    width: 100%;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 1.25rem 1.1rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .confirm-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}

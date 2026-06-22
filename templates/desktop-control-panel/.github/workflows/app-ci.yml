@@ -1,0 +1,93 @@
+name: App CI
+
+# Per-PR gate for the Tauri client (app/). Realizes backlog CI-2, trimmed to the
+# scripts that actually exist in app/package.json (dev/build/preview/tauri/test) —
+# there is no `npm run lint`/`typecheck`; `npm run build` (tsc -b) IS the typecheck.
+#
+# Platform split: frontend on Linux (cheap, no system deps); Rust on Windows only.
+# The app ships Windows + macOS (Linux deferred, backlog #76), so running Rust on
+# ubuntu would pull the whole Tauri-Linux system-dep burden (webkit2gtk/ALSA/dbus)
+# for a target we don't ship. macOS Rust is exercised at release time (CI-6).
+#
+# Real-model Rust tests are #[ignore]-marked, so `cargo test` never loads ORT.
+# But the per-platform ONNX Runtime lib is a declared `bundle.resources` entry
+# (onnxruntime.dll via tauri.windows.conf.json, merged into tauri.conf.json on
+# this windows-latest host), and tauri-build validates that the resource EXISTS
+# at compile time — so the rust job stubs a zero-byte DLL before `cargo test`
+# (the unit tests don't load it; the real per-arch lib is fetched only in the
+# release workflow). The hard gates are the behavior checks: typecheck/build + tests.
+#
+# Speed notes (the rust job was the long pole — cold Windows MSVC compile):
+#   - `cargo test --lib` skips extra test-target/doctest builds.
+#   - CARGO_PROFILE_TEST_DEBUG=0 skips MSVC PDB/debuginfo generation (big win).
+#   - `Swatinem/rust-cache` warms after the first `main` run, so later PRs only
+#     recompile changed crates.
+#   - clippy is intentionally NOT run here: it's a separate rustc driver that
+#     recompiles the whole dep tree (~2x the job), and it's only report-only while
+#     main isn't clippy-clean. Revisit as a scheduled job or a blocking gate after
+#     a one-time fmt/clippy cleanup pass. `cargo fmt --check` stays — it parses
+#     only (no compile) and is report-only for now (main isn't rustfmt-clean).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/app-ci.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/app-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: frontend (typecheck + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: Typecheck + build (tsc -b && vite build)
+        run: npm run build
+      - name: Unit tests (vitest)
+        run: npm test
+      - name: Dependency audit (report-only)
+        run: npm audit --audit-level=high || true
+
+  rust-tests:
+    name: rust-tests
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app/src-tauri
+    env:
+      CARGO_PROFILE_TEST_DEBUG: "0"  # skip MSVC PDB generation — tests don't need it
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add rustfmt component
+        run: rustup component add rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+      - name: Stub bundled ONNX Runtime DLL (tauri-build resource-exists check)
+        shell: bash
+        run: mkdir -p resources/onnxruntime && touch resources/onnxruntime/onnxruntime.dll
+      - name: Tests (lib only; ignored real-model tests are skipped automatically)
+        run: cargo test --lib
+      - name: Format check (report-only — see header)
+        run: cargo fmt --check
+        continue-on-error: true

@@ -1,0 +1,59 @@
+[package]
+name = "app"
+version = "0.2.5"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.77.2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.1", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.11.1", features = [] }
+tauri-plugin-log = "2"
+tauri-plugin-opener = "2"
+
+# V1 client dependencies — see planning/mvp-pilot/2026-05-20-ias-client.md (CL-1)
+# CL-14: switched ort to load-dynamic to match the spike's working config on
+# Watson's Windows toolchain. The default (static-link) path pulls in the
+# entire ONNXRuntime C++ static lib at link time and fails with LNK2019 for
+# MSVC 14.30+ STL symbols under the installed VS 2019 Build Tools (MSVC
+# 14.29). load-dynamic links only the loader stub; the ONNXRuntime DLL is
+# loaded at runtime via `ort::init_from(...).commit()` (orchestrator wiring,
+# CL-19 — see spike/rust-poc/src/main.rs:87 for the pattern). Without this,
+# CL-14's `cargo test evaluation::phonemizer` cannot link.
+ort = { version = "2.0.0-rc.12", default-features = false, features = ["std", "ndarray", "tracing", "load-dynamic", "api-24"] }
+cpal = "0.17"
+rubato = "3.0"
+keyring = "4.0"
+# `stream` enables Response::bytes_stream() for the CL-24 chunked model download
+# (evaluation/model_download.rs); `json` was unused (no reqwest::Response::json()
+# call anywhere in the tree) so it is dropped.
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "stream"] }
+# `std` is the feature that actually exposes StreamExt + stream::iter used by
+# model_download; declaring it explicitly rather than relying on reqwest's
+# feature unification keeps the build robust if reqwest's features change.
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+rusqlite = { version = "0.40", features = ["bundled"] }
+tokio = { version = "1", features = ["full"] }
+thiserror = "2.0"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+sha2 = "0.10"
+semver = "1"
+
+[dev-dependencies]
+mockall = "0.14"
+tempfile = "3"

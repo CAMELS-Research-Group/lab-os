@@ -1,0 +1,83 @@
+.passage-screen .passage-card {
+  padding: 2rem 2.25rem;
+}
+
+.passage-title {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 36;
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin: 0 0 1rem;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+.passage-paragraph {
+  font-family: var(--font-display);
+  /* Body optical size: lower opsz = wider strokes for readability */
+  font-variation-settings: "opsz" 12;
+  font-size: 1.1rem;
+  line-height: 1.75;
+  margin: 0 0 1rem;
+  color: var(--ink);
+}
+
+.passage-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.passage-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.passage-actions .primary {
+  font-size: 1.05rem;
+  padding: 0.8rem 2rem;
+}
+
+.reassurance {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 639px) {
+  .passage-screen .passage-card {
+    padding: 1.1rem 1.1rem;
+  }
+
+  .passage-title {
+    font-size: 1.25rem;
+  }
+
+  .passage-paragraph {
+    font-size: 1.05rem;
+    line-height: 1.7;
+  }
+
+  /* Sticky bottom action bar — "Start reading" always reachable, even
+     when the learner has scrolled into the passage. iOS safe-area aware. */
+  .passage-screen .passage-actions {
+    position: sticky;
+    bottom: 0;
+    margin: 1.5rem -1rem 0;
+    padding: 0.9rem 1rem calc(0.9rem + env(safe-area-inset-bottom));
+    background: linear-gradient(
+      to bottom,
+      rgba(246, 244, 239, 0) 0%,
+      var(--bg) 28%
+    );
+  }
+
+  .passage-screen .passage-actions .primary {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+  }
+
+  .reassurance {
+    margin-top: 0.6rem;
+  }
+}

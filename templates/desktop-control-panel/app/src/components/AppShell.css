@@ -1,0 +1,214 @@
+/* App shell — "quiet & focused" (Option 2): slim icon rail + context bar.
+   Translated from spike/design/app-shell-options/option-2-focus.html, using
+   theme tokens. The shell owns the viewport; the routed screen scrolls inside
+   .appshell-scroll while the rail and context bar stay put. */
+
+.appshell {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  height: 100vh;
+  background: var(--bg);
+}
+
+/* ── Slim icon rail ─────────────────────────────────────────────── */
+.rail {
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 0;
+  gap: 8px;
+}
+
+.rail-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: var(--forest);
+  color: #f0efe4;
+  font-family: var(--font-display);
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  text-decoration: none;
+}
+
+.rail-link {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  transition: background-color 0.22s ease, color 0.22s ease;
+}
+
+.rail-link:hover {
+  background: var(--bg-2);
+  color: var(--forest);
+}
+
+.rail-link--on {
+  background: var(--sage-tint);
+  color: var(--forest);
+}
+
+/* gold marker bar at the rail's left edge, beside the active icon */
+.rail-link--on::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 24px;
+  border-radius: 3px;
+  background: var(--gold);
+}
+
+.rail-icon {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.rail-tip {
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+}
+
+.rail-spacer {
+  margin-top: auto;
+}
+
+/* ── Content column ─────────────────────────────────────────────── */
+.appshell-col {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.ctx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.ctx-title {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 40;
+  font-weight: 500;
+  font-size: 20px;
+  margin: 0;
+}
+
+.ctx-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+}
+
+.ctx-feedback {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+}
+
+.ctx-feedback:hover {
+  color: var(--forest);
+  border-color: var(--sage);
+  background: var(--bg-2);
+}
+
+.ctx-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--sage-tint);
+  color: var(--forest);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.ctx-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--good);
+}
+
+.ctx-week {
+  white-space: nowrap;
+}
+
+.ctx-miniring {
+  --p: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: conic-gradient(
+    var(--sage) calc(var(--p) * 1%),
+    var(--bg-2) 0
+  );
+  display: grid;
+  place-items: center;
+}
+
+.ctx-miniring i {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: var(--card);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-style: normal;
+  color: var(--forest);
+}
+
+/* Routed screen scrolls here; each screen keeps its own .screen padding. */
+.appshell-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── Narrow widths ──────────────────────────────────────────────── */
+@media (max-width: 639px) {
+  .appshell {
+    grid-template-columns: 60px 1fr;
+  }
+
+  .ctx {
+    padding: 14px 16px;
+  }
+
+  /* Drop the supporting label; keep Give Feedback, status pill + ring. */
+  .ctx-week {
+    display: none;
+  }
+
+  .ctx-right {
+    gap: 10px;
+  }
+}

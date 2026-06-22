@@ -1,0 +1,181 @@
+.settings-back {
+  margin-bottom: 1.2rem;
+  padding-left: 0;
+}
+
+.settings-section-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 1rem;
+}
+
+.settings-note {
+  color: var(--accent-strong);
+  font-size: 0.9rem;
+  margin: 0 0 0.9rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--good-soft);
+  border-radius: var(--radius-sm);
+}
+
+.settings-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  justify-content: space-between;
+}
+
+/* Second+ rows inside a multi-row card get a hairline separator. */
+.settings-row-divided {
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+}
+
+.settings-data-btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.settings-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.settings-row-title {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.settings-row-desc {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 52ch;
+}
+
+/* Language control (LanguageSelect) — the L1Setup `.field-label` / `.text-input`
+   styles are scoped under `.l1-setup`, so the Settings language card restates
+   the equivalent look here using theme tokens. */
+.settings-screen .field-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.settings-screen .field-label.optional {
+  margin-top: 1.5rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.language-select,
+.language-text-input {
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.language-select:focus,
+.language-text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Toggle switch */
+.toggle-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 150ms ease;
+  margin-top: 2px;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toggle-on {
+  background: var(--accent);
+}
+
+.toggle-off {
+  background: var(--line);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: left 150ms ease;
+}
+
+.toggle-on .toggle-thumb {
+  left: 21px;
+}
+
+.toggle-off .toggle-thumb {
+  left: 3px;
+}
+
+@media (max-width: 639px) {
+  .settings-row {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .toggle-btn {
+    align-self: flex-start;
+  }
+}
+
+/* Reset-app fade-to-black. A full-viewport overlay that animates from
+   transparent to opaque black, softening the jump back to first-run. The
+   350ms here is mirrored by RESET_FADE_MS in Settings.tsx, which delays the
+   actual teardown + route until the screen has darkened. */
+.reset-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #000;
+  opacity: 0;
+  animation: reset-fade-in 350ms ease forwards;
+}
+
+@keyframes reset-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Respect reduced-motion: skip the animated fade and show the cover instantly
+   (the brief RESET_FADE_MS delay still applies, but nothing animates). */
+@media (prefers-reduced-motion: reduce) {
+  .reset-fade {
+    animation: none;
+    opacity: 1;
+  }
+}

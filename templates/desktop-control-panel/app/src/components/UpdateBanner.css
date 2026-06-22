@@ -1,0 +1,78 @@
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--forest);
+  color: #fff;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  flex-wrap: wrap;
+}
+
+.update-banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.update-banner-label {
+  font-weight: 600;
+}
+
+.update-banner-notes {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+}
+
+.update-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.update-banner-btn {
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  transition: opacity 120ms ease;
+}
+
+.update-banner-btn:hover {
+  opacity: 0.85;
+}
+
+.update-banner-btn--apply {
+  background: #fff;
+  color: var(--forest);
+}
+
+.update-banner-btn--dismiss {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.update-banner-error {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.82rem;
+  font-style: italic;
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 480px) {
+  .update-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .update-banner-actions {
+    width: 100%;
+  }
+}

@@ -1,0 +1,30 @@
+# Node / frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+
+# Rust / Tauri build output
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Secrets (commit .env.example only)
+app/.env
+
+# Bundled runtime binaries (vendored at build time, not committed — >5MB)
+app/src-tauri/resources/onnxruntime/
+
+# Large model artifacts
+*.onnx
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

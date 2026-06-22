@@ -1,0 +1,168 @@
+/* Home dashboard — "quiet & focused" (Option 2). One calm centered column.
+   Translated from spike/design/app-shell-options/option-2-focus.html (#home),
+   using theme tokens. */
+
+.home-screen {
+  padding-top: 46px;
+}
+
+.home-center {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.home-eyebrow {
+  font-size: 12.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.home-head {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 96;
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1.08;
+  letter-spacing: -0.5px;
+  margin: 12px 0;
+}
+
+.home-head em {
+  font-style: italic;
+  color: var(--sage);
+}
+
+.home-screen .lede {
+  font-size: 17px;
+  max-width: 48ch;
+}
+
+.home-startblock {
+  margin: 36px 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 34px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.home-bigring {
+  --p: 0;
+  flex: 0 0 auto;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--sage) calc(var(--p) * 1%),
+    var(--bg-2) 0
+  );
+  display: grid;
+  place-items: center;
+}
+
+.home-bigring i {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--card);
+  display: grid;
+  place-items: center;
+  flex-direction: column;
+  font-style: normal;
+  text-align: center;
+}
+
+.home-bigring i b {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+}
+
+.home-bigring i small {
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}
+
+.home-startbody h3 {
+  font-family: var(--font-display);
+  font-variation-settings: "opsz" 40;
+  font-weight: 400;
+  font-size: 23px;
+  margin: 0;
+}
+
+.home-startbody p {
+  color: var(--ink-soft);
+  margin: 6px 0 18px;
+}
+
+.home-cta.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 16px;
+  padding: 14px 26px;
+  border-radius: 13px;
+  box-shadow: 0 14px 26px -14px rgba(51, 64, 47, 0.9);
+  transition: transform 0.25s ease, background-color 120ms ease;
+}
+
+.home-cta.primary:hover {
+  transform: translateY(-2px);
+}
+
+.home-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.home-stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.home-stat-n {
+  font-family: var(--font-display);
+  font-size: 28px;
+}
+
+.home-stat-k {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin-top: 5px;
+}
+
+.home-stat-k b {
+  color: var(--flag);
+  font-weight: 400;
+}
+
+.home-firsttime {
+  margin-top: 22px;
+  color: var(--ink-faint);
+  font-size: 13.5px;
+}
+
+@media (max-width: 639px) {
+  .home-head {
+    font-size: 34px;
+  }
+
+  .home-startblock {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .home-stats {
+    grid-template-columns: 1fr;
+  }
+}

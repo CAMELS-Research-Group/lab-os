@@ -1,0 +1,232 @@
+/* Calm, non-punitive palette per FRD §4.7. Soft backgrounds, warm accents,
+   readable typography. Tone is "supportive coach", not "graded test". */
+
+:root {
+  /* "Quiet & focused" (app-shell Option 2). Soft warm neutrals, dark forest for
+     primary actions and the nav rail, sage for green accents, gold for the
+     active-nav marker, warm orange for live/attention states. */
+  --bg: #fbfaf6;
+  --bg-2: #f1f0e7;         /* muted elevated surface (rail hover, ring track) */
+  --surface: #ffffff;
+  --surface-soft: #f1f0e7; /* alias of --bg-2 for legacy callers */
+  --card: #ffffff;         /* alias of --surface for Option 2 components */
+  --ink: #1f261f;
+  --ink-soft: #5c645a;
+  --ink-faint: #959c91;
+
+  /* Brand cores */
+  --forest: #33402f;       /* dark — primary CTAs + nav rail */
+  --forest-2: #46553f;     /* CTA hover (lighter forest) */
+  --sage: #8a9a75;         /* green accent — rings, selections, highlights */
+  --sage-tint: #e6ebda;    /* soft sage background */
+  --gold: #c8a24b;         /* active-nav accent bar */
+  --flag: #cc8a3d;         /* live recording / attention */
+
+  /* Semantic aliases mapped onto the palette so existing screens inherit the
+     new look without renaming tokens. --accent = the green accent; CTAs use
+     --forest via the .primary button below. */
+  --accent: var(--sage);
+  --accent-strong: var(--forest);
+  --accent-soft: var(--sage-tint);
+  --warn: #b07a3a;         /* warm amber — flagged feedback, not red */
+  --warn-soft: #f3e6cf;
+  --good: #5f8a5a;
+  --good-soft: #d8eadd;
+  --line: #e8e6d8;
+  --shadow: 0 1px 2px rgba(31, 38, 31, 0.03), 0 18px 40px -26px rgba(31, 38, 31, 0.30);
+  --radius: 16px;
+  --radius-sm: 12px;
+
+  /* Editorial type system. Fraunces (variable serif) for display and passages;
+     Inria Sans for UI chrome; Charis SIL for IPA. The passage is the product —
+     it should read like real prose, not UI text. */
+  --font-display: "Fraunces", "Charter", "Iowan Old Style", "Georgia", serif;
+  --font-body: "Inria Sans", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-ipa: "Charis SIL", "Doulos SIL", "Lucida Sans Unicode", "Segoe UI", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.1rem;
+  transition: background-color 120ms ease, transform 80ms ease;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button.primary {
+  background: var(--forest);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+button.primary:hover {
+  background: var(--forest-2);
+}
+
+button.primary:disabled {
+  background: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+button.secondary:hover {
+  background: var(--surface-soft);
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 0.4rem 0.7rem;
+}
+
+button.ghost:hover {
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+
+.app-shell {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen {
+  max-width: 880px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}
+
+.screen h1 {
+  font-family: var(--font-display);
+  /* Fraunces opsz axis: larger optical size at display sizes */
+  font-variation-settings: "opsz" 96;
+  font-size: 2rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.screen .lede {
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+  margin: 0 0 2rem;
+  max-width: 56ch;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.ipa {
+  font-family: var(--font-ipa);
+  font-feature-settings: "kern" 1;
+}
+
+/* Route transition: a soft 220ms fade. Applied to each .screen by default;
+   prefers-reduced-motion users get an instant swap. */
+.screen {
+  animation: screen-fade-in 220ms ease-out both;
+}
+
+@keyframes screen-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation: none;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────
+   Phone (portrait): <640px
+   ─────────────────────────────────────────────────────────────── */
+@media (max-width: 639px) {
+  .screen {
+    padding: 1.25rem 1rem 7rem; /* extra bottom padding for sticky action bars */
+  }
+
+  .screen h1 {
+    font-size: 1.6rem;
+  }
+
+  .screen .lede {
+    font-size: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Larger tap targets per WCAG 2.5.5. ~46px clear with 16px font. */
+  button.primary,
+  button.secondary {
+    padding: 0.85rem 1.2rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────
+   Desktop large: ≥1100px — editorial asymmetric spreads
+   ─────────────────────────────────────────────────────────────── */
+@media (min-width: 1100px) {
+  .screen {
+    max-width: 1040px;
+    padding: 3rem 2.5rem 4.5rem;
+  }
+
+  .screen h1 {
+    /* Push the optical size axis further at desktop sizes */
+    font-variation-settings: "opsz" 144;
+    font-size: 2.4rem;
+    letter-spacing: -0.02em;
+  }
+}
