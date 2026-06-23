@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #TBD
+- 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
 - 2026-06-19 05:58 — Workshop Program supersedes onboarding-project and one-day Building · #39
 - 2026-06-13 15:00 — Handbook content rework gates tester launch · #25
 - 2026-06-12 12:00 — Plan-execution logs close with their shipping PR · #18
@@ -24,7 +24,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 **Decision:** Added `docs/workshops/building/sample-plan.md` — a pre-baked three-task plan (re-home fork identity · brand the handbook · add a backlog/planning surface) that a participant who reaches Building without a plan of their own runs against their own fork. ENG-tier under `docs/`, not published to the site and not in the sidebar; participants point Claude at the file from their fork's CLI. The fork's `cd site && npm run build` (broken-link-throw) is the gate for all three tasks.
 **Why:** The mixed-cohort Building kickoff has newcomers who finish setup with no execution-ready plan and so can't practise the three execution modes. A small real plan unblocks them. Kept non-published to hold the program's bring-your-own-project line ("no prescribed sample project") on the public surface — the fallback exists for the blocked without the handbook advertising a sample as the path. Realises the fallback-starter the 2026-06-19 program decision deferred.
 **Alternatives:** Publish as a participant page — rejected, contradicts the no-prescribed-sample stance on the public site. Demo-only build by the facilitator, no participant plan — rejected, leaves newcomers watching instead of practising.
-**Refs:** #TBD (filled at PR cut), docs/workshops/building/sample-plan.md, Development/_packets/lab-os/workshop-program/
+**Refs:** #42, docs/workshops/building/sample-plan.md, Development/_packets/lab-os/workshop-program/
 
 ---
 
