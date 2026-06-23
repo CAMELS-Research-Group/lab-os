@@ -7,7 +7,7 @@
 //!   guarantee, enforced server-side). When true, fetches the manifest,
 //!   compares versions, and returns [`UpdateInfo`].
 //! - [`apply_update`] — re-fetches the manifest (to confirm an update exists
-//!   and enforce the opt-in gate), then opens the IAS download page in the
+//!   and enforce the opt-in gate), then opens the release download page in the
 //!   default browser via `tauri-plugin-opener`. No URL crosses the IPC
 //!   boundary. On failure returns `AppError::Update` (the user explicitly
 //!   triggered this action, so surfacing an error is appropriate — unlike the
@@ -39,11 +39,21 @@ use crate::update::{is_update_available, parse_manifest, Manifest, UpdateError};
 
 pub use crate::AppState;
 
-/// Public IAS download page. `apply_update` opens this rather than the raw
-/// installer `download_url`: the page resolves the newest per-platform
-/// installer and carries the install / SmartScreen instructions, so the
-/// learner gets guided steps instead of a bare `.msi`/`.dmg` download (#120).
-const IAS_DOWNLOAD_PAGE_URL: &str = "https://watsonwblair.github.io/IAS/";
+/// Public release download page that `apply_update` opens (rather than the raw
+/// installer `download_url`): a download page can resolve the newest
+/// per-platform installer and carry install instructions, so the user gets
+/// guided steps instead of a bare `.msi`/`.dmg`.
+///
+/// OPTIONAL / configure-post-fork: this is build-time overridable via the
+/// `RELEASE_DOWNLOAD_PAGE_URL` env var (read by `option_env!`). When unset —
+/// the default for a fresh fork — it falls back to an unresolvable `.invalid`
+/// sentinel (RFC 6761) so the app builds and runs with auto-update effectively
+/// disabled and never opens a stale host. A fork that wants auto-update sets
+/// this to its own release/download page. See the app README.
+const RELEASE_DOWNLOAD_PAGE_URL: &str = match option_env!("RELEASE_DOWNLOAD_PAGE_URL") {
+    Some(v) => v,
+    None => "https://example.invalid/releases",
+};
 
 // ---------------------------------------------------------------------------
 // ManifestFetcher trait — the unit-test seam
@@ -213,11 +223,11 @@ pub async fn check_for_update(
     check_for_update_impl(&conn, &ReqwestFetcher)
 }
 
-/// Re-fetch the manifest, then open the IAS download page in the system
+/// Re-fetch the manifest, then open the release download page in the system
 /// browser.
 ///
 /// The manifest fetch still runs (it confirms an update is available and
-/// enforces the opt-in gate), but the learner is sent to the IAS download
+/// enforces the opt-in gate), but the user is sent to the release download
 /// page rather than the raw installer `download_url`. No URL crosses the IPC
 /// boundary. On fetch or parse failure this command returns `AppError::Update`
 /// — unlike `check_for_update`, the user explicitly triggered this action, so
@@ -246,15 +256,15 @@ pub async fn apply_update<R: Runtime>(
     // When update checks are disabled the gate returns None — no egress has
     // occurred. Return a typed error so the caller can distinguish "disabled"
     // from a successful browser-open (never a silent Ok(())). The resolved
-    // manifest itself is no longer used for the URL — we send the learner to
-    // the IAS download page (below) rather than the raw installer — but the
+    // manifest itself is no longer used for the URL — we send the user to
+    // the release download page (below) rather than the raw installer — but the
     // fetch still confirms an update exists and enforces the opt-in gate.
     manifest.ok_or(AppError::Update(UpdateError::ChecksDisabled))?;
 
-    // Open the IAS download page instead of the manifest's raw `download_url`.
+    // Open the release download page instead of the manifest's raw `download_url`.
     use tauri_plugin_opener::OpenerExt as _;
     app.opener()
-        .open_url(IAS_DOWNLOAD_PAGE_URL, None::<&str>)
+        .open_url(RELEASE_DOWNLOAD_PAGE_URL, None::<&str>)
         .map_err(|e| AppError::Update(UpdateError::OpenBrowserFailed(e.to_string())))?;
 
     Ok(())

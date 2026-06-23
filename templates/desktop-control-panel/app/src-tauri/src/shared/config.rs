@@ -1,45 +1,43 @@
-//! IAS client configuration — build-time constants and runtime paths.
-//!
-//! Spec: ADD §3.1 ("Configuration files"), TRD §4.8 (Model URL + digest pinning).
+//! App configuration — build-time constants and runtime paths.
 //!
 //! # [`BuildConfig`]
 //!
-//! Static, compile-time-injected constants for the URLs, version strings, and
-//! cryptographic material that pin a release build to a specific backend +
-//! model + updater key set. Values come from environment variables read at
-//! build time via [`option_env!`] (with dev-friendly fallbacks). A
-//! corresponding `cargo:rerun-if-env-changed=...` directive in [`build.rs`]
-//! ensures these constants are rebuilt whenever the build environment changes.
+//! Static, compile-time-injected constants for the version string, updater
+//! manifest endpoint, and updater public key. Values come from environment
+//! variables read at build time via [`option_env!`] (with dev-friendly
+//! fallbacks). A corresponding `cargo:rerun-if-env-changed=...` directive in
+//! [`build.rs`] ensures these constants are rebuilt whenever the build
+//! environment changes.
 //!
-//! The seven env vars consumed by a release build script:
+//! The env vars consumed by a release build script:
 //!
-//! - `IAS_BACKEND_URL` — IAS backend service base URL
-//! - `IAS_MODEL_URL` — ONNX model download URL
-//! - `IAS_MODEL_SHA256` — hex-encoded SHA-256 of the pinned model file
-//! - `IAS_MODEL_VERSION` — semver-ish identifier for the pinned model
-//! - `IAS_APP_VERSION` — client app version (defaults to `CARGO_PKG_VERSION`)
-//! - `IAS_UPDATER_PUBKEY` — Tauri updater public key (minisign / TUF)
-//! - `IAS_UPDATER_MANIFEST_URL` — updater manifest endpoint
+//! - `APP_VERSION` — client app version (defaults to `CARGO_PKG_VERSION`)
+//! - `UPDATER_PUBKEY` — updater public key (minisign / TUF), if the updater
+//!   path uses one
+//! - `UPDATER_MANIFEST_URL` — updater manifest endpoint
 //!
-//! ## Dev-build behavior
+//! ## Dev-build behavior (and white-label default)
 //!
-//! When the env vars are unset (typical local `cargo build`):
+//! Auto-update is OPTIONAL and configure-post-fork. When the env vars are unset
+//! — the default for a fresh fork and for a typical local `cargo build`:
 //!
-//! - `BACKEND_URL` points at `https://localhost:8000` (the dev sidecar).
-//! - `MODEL_URL` and `UPDATER_MANIFEST_URL` use the `example.invalid` TLD
-//!   reserved by RFC 6761 — they will not resolve, so the dev build cannot
-//!   accidentally talk to a real production endpoint.
-//! - `MODEL_SHA256` is the all-zero 64-char string. Any real `.onnx` file
-//!   loaded at runtime will fail the digest check — **this is intentional**.
-//!   A dev build that wants to exercise the real model-load path must set
-//!   `IAS_MODEL_SHA256` explicitly.
-//! - `UPDATER_PUBKEY` is empty; CL-23 will treat that as "updates disabled".
+//! - `UPDATER_MANIFEST_URL` uses the `example.invalid` TLD reserved by RFC 6761.
+//!   It will not resolve, so the build cannot accidentally talk to a real
+//!   endpoint. The update check is additionally gated behind an opt-in setting
+//!   (off by default), so with no override the app never makes a network call
+//!   and the updater is effectively disabled — the build is clean with NO
+//!   required release-host value.
+//! - `UPDATER_PUBKEY` is empty → updates disabled.
+//!
+//! A fork that wants auto-update sets `UPDATER_MANIFEST_URL` (and the release
+//! download page — see `update::commands`) to its own host AFTER forking. See
+//! the app README.
 //!
 //! # [`RuntimeConfig`]
 //!
 //! Derived at app start from a [`tauri::AppHandle`] (production) or a
 //! [`PathSource`] (tests). Resolves the on-disk paths the client writes to:
-//! the SQLite database, the model cache directory, and the log directory.
+//! the SQLite database and the log directory.
 
 use std::path::PathBuf;
 
@@ -49,116 +47,54 @@ use crate::shared::error::AppError;
 // BuildConfig
 // ---------------------------------------------------------------------------
 
-/// All-zero 64-char SHA-256 digest used as the dev-build sentinel for
-/// `IAS_MODEL_SHA256`. Any real model will fail this digest check at load
-/// time — that's the point. Production builds set `IAS_MODEL_SHA256` to the
-/// real digest of the released model artifact.
-const DEV_MODEL_SHA256: &str =
-    "0000000000000000000000000000000000000000000000000000000000000000";
-
-/// Build-time pinned constants for the IAS client.
+/// Build-time constants for the app.
 ///
 /// See module docs for the env-var surface and dev-build behavior.
 pub struct BuildConfig;
 
 impl BuildConfig {
-    /// IAS backend base URL.
-    pub const BACKEND_URL: &'static str =
-        match option_env!("IAS_BACKEND_URL") {
-            Some(v) => v,
-            None => "https://localhost:8000",
-        };
-
-    /// ONNX model download URL.
-    pub const MODEL_URL: &'static str =
-        match option_env!("IAS_MODEL_URL") {
-            Some(v) => v,
-            None => "https://example.invalid/ias-model-placeholder.onnx",
-        };
-
-    /// Hex-encoded SHA-256 of the pinned model file. The runtime model loader
-    /// refuses to load a file whose digest doesn't match this value — that's
-    /// what makes the client refuse a swapped model.
-    pub const MODEL_SHA256: &'static str =
-        match option_env!("IAS_MODEL_SHA256") {
-            Some(v) => v,
-            None => DEV_MODEL_SHA256,
-        };
-
-    /// Semver-ish identifier for the pinned model.
-    pub const MODEL_VERSION: &'static str =
-        match option_env!("IAS_MODEL_VERSION") {
-            Some(v) => v,
-            None => "0.0.0-dev",
-        };
-
     /// Client app version. Cargo always sets `CARGO_PKG_VERSION`, so this can
     /// safely fall back to it via `env!`.
     pub const APP_VERSION: &'static str =
-        match option_env!("IAS_APP_VERSION") {
+        match option_env!("APP_VERSION") {
             Some(v) => v,
             None => env!("CARGO_PKG_VERSION"),
         };
 
-    /// Tauri updater public key. Empty in dev → updates disabled (per CL-23).
+    /// Updater public key. Empty in dev / unconfigured → updates disabled.
     pub const UPDATER_PUBKEY: &'static str =
-        match option_env!("IAS_UPDATER_PUBKEY") {
+        match option_env!("UPDATER_PUBKEY") {
             Some(v) => v,
             None => "",
         };
 
     /// Updater manifest endpoint.
+    ///
+    /// OPTIONAL / configure-post-fork: unset → an unresolvable `.invalid`
+    /// sentinel (RFC 6761), so a fresh fork builds clean and the update check
+    /// reports "no update" without reaching a real host. A fork that wants
+    /// auto-update overrides `UPDATER_MANIFEST_URL` with its own endpoint.
     pub const UPDATER_MANIFEST_URL: &'static str =
-        match option_env!("IAS_UPDATER_MANIFEST_URL") {
+        match option_env!("UPDATER_MANIFEST_URL") {
             Some(v) => v,
             None => "https://example.invalid/updates.json",
         };
-
-    /// On-disk cache filename for the downloaded model.
-    ///
-    /// Derived from the terminal path segment of [`MODEL_URL`] (OQ2 decision,
-    /// 2026-06-08): the file the CL-24 download writes and the file
-    /// `evaluation::orchestrator::resolve_model_path` looks for are the same
-    /// name *by construction*, so a model-version bump (which changes
-    /// `IAS_MODEL_URL`) needs no lockstep code edit. Falls back to a stable
-    /// default if the URL has no usable segment (defensive — a real
-    /// `IAS_MODEL_URL` always ends in `…/<file>.onnx`).
-    pub fn model_filename() -> &'static str {
-        let seg = terminal_path_segment(Self::MODEL_URL);
-        if seg.is_empty() {
-            "ias-model.onnx"
-        } else {
-            seg
-        }
-    }
-}
-
-/// Last path segment of a URL, with any `?query` / `#fragment` stripped.
-/// Pure + lifetime-preserving so [`BuildConfig::model_filename`] can hand back
-/// a `&'static str` and unit tests can cover the parsing without touching the
-/// compile-time const.
-fn terminal_path_segment(url: &str) -> &str {
-    match url.rsplit('/').next() {
-        Some(seg) => match seg.split(['?', '#']).next() {
-            Some(name) => name,
-            None => seg,
-        },
-        None => "",
-    }
 }
 
 // ---------------------------------------------------------------------------
 // RuntimeConfig
 // ---------------------------------------------------------------------------
 
-/// Filenames + subdir names beneath the OS app-data dir. Kept as `const`s so
-/// the tests can refer to them by name rather than re-spelling literals.
-const DB_FILENAME: &str = "ias.db";
-const MODEL_CACHE_SUBDIR: &str = "models";
+/// Filename beneath the OS app-data dir. Kept as a `const` so the tests can
+/// refer to it by name rather than re-spelling the literal.
+///
+/// Placeholder name — rename after forking if a product-specific DB filename
+/// is preferred (purely cosmetic; nothing external depends on it).
+const DB_FILENAME: &str = "app.db";
 
-/// Abstraction over the three Tauri-provided directory lookups
-/// [`RuntimeConfig`] needs. Production uses the [`tauri::AppHandle`] impl;
-/// tests use a [`tempfile::TempDir`]-backed fake.
+/// Abstraction over the two Tauri-provided directory lookups [`RuntimeConfig`]
+/// needs. Production uses the [`tauri::AppHandle`] impl; tests use a
+/// [`tempfile::TempDir`]-backed fake.
 ///
 /// The trait exists purely to make `RuntimeConfig` unit-testable without
 /// constructing a real Tauri app — `tauri::AppHandle` is non-trivial to mock.
@@ -195,8 +131,7 @@ impl From<ConfigError> for AppError {
 ///
 /// Layout under `<app_data_dir>`:
 ///
-/// - `ias.db` — SQLite database (see CL-6).
-/// - `models/` — model cache directory (see CL-14).
+/// - `app.db` — SQLite database.
 ///
 /// The log directory is whatever Tauri's `app_log_dir()` returns — on
 /// Windows that's `%LOCALAPPDATA%\<bundle_identifier>\logs`; on macOS it's
@@ -205,7 +140,6 @@ impl From<ConfigError> for AppError {
 #[derive(Debug, Clone)]
 pub struct RuntimeConfig {
     pub db_path: PathBuf,
-    pub model_cache_dir: PathBuf,
     pub log_dir: PathBuf,
 }
 
@@ -226,7 +160,6 @@ impl RuntimeConfig {
 
         Ok(Self {
             db_path: data_root.join(DB_FILENAME),
-            model_cache_dir: data_root.join(MODEL_CACHE_SUBDIR),
             log_dir,
         })
     }
@@ -274,85 +207,21 @@ mod tests {
 
     #[test]
     fn build_config_constants_are_accessible() {
-        // Smoke test: the constants compile + link and are non-empty in a
-        // dev build. Production-env-injected values will be covered when the
+        // Smoke test: the surviving constants compile + link and are present in
+        // a dev build. Production-env-injected values will be covered when the
         // release-build automation lands.
-        assert!(!BuildConfig::BACKEND_URL.is_empty());
-        assert!(!BuildConfig::MODEL_URL.is_empty());
-        assert!(!BuildConfig::MODEL_SHA256.is_empty());
-        assert!(!BuildConfig::MODEL_VERSION.is_empty());
         assert!(!BuildConfig::APP_VERSION.is_empty());
-        // UPDATER_PUBKEY is intentionally empty in dev — assert it's the
-        // empty string rather than non-empty.
+        // UPDATER_PUBKEY is intentionally empty in dev / unconfigured — assert
+        // it's the empty string rather than non-empty.
         assert_eq!(BuildConfig::UPDATER_PUBKEY, "");
         assert!(!BuildConfig::UPDATER_MANIFEST_URL.is_empty());
     }
 
     #[test]
-    fn build_config_dev_model_sha256_is_64_zeros() {
-        // The dev sentinel is what guarantees the runtime digest check fails
-        // on any real model — keep that invariant under test so a future
-        // edit to the literal can't silently weaken it.
-        assert_eq!(BuildConfig::MODEL_SHA256.len(), 64);
-        assert!(BuildConfig::MODEL_SHA256.chars().all(|c| c == '0'));
-    }
-
-    #[test]
-    fn build_config_dev_model_version_is_pinned_sentinel() {
-        // Dev fallback for MODEL_VERSION is a deliberate sentinel surfaced
-        // when a release build forgets to set IAS_MODEL_VERSION. Don't drift.
-        assert_eq!(BuildConfig::MODEL_VERSION, "0.0.0-dev");
-    }
-
-    #[test]
-    fn terminal_path_segment_extracts_filename() {
-        assert_eq!(
-            terminal_path_segment(
-                "https://github.com/Pace-IAS/pronounce/releases/download/model-v0.1.0/ias-model-0.1.0.onnx"
-            ),
-            "ias-model-0.1.0.onnx"
-        );
-    }
-
-    #[test]
-    fn terminal_path_segment_strips_query_and_fragment() {
-        assert_eq!(
-            terminal_path_segment("https://cdn.example/ias-model-0.2.0.onnx?token=abc"),
-            "ias-model-0.2.0.onnx"
-        );
-        assert_eq!(
-            terminal_path_segment("https://cdn.example/ias-model-0.2.0.onnx#sha"),
-            "ias-model-0.2.0.onnx"
-        );
-    }
-
-    #[test]
-    fn terminal_path_segment_empty_for_trailing_slash() {
-        // A URL ending in `/` has no filename segment — model_filename()
-        // falls back rather than producing an empty path component.
-        assert_eq!(terminal_path_segment("https://cdn.example/models/"), "");
-    }
-
-    #[test]
-    fn model_filename_matches_model_url_terminal_segment() {
-        // The invariant OQ2 is protecting: the cache filename is exactly the
-        // last segment of MODEL_URL, so download-target == resolve-path. The
-        // dev fallback URL ends in `ias-model-placeholder.onnx`.
-        assert_eq!(
-            BuildConfig::model_filename(),
-            terminal_path_segment(BuildConfig::MODEL_URL)
-        );
-        assert!(!BuildConfig::model_filename().is_empty());
-    }
-
-    #[test]
-    fn build_config_dev_urls_use_invalid_tld() {
-        // Dev fallback URLs must use the `.invalid` TLD (RFC 6761) so that a
-        // misconfigured dev build cannot accidentally reach a real endpoint.
-        assert!(
-            BuildConfig::MODEL_URL.contains("example.invalid"),
-            "MODEL_URL dev fallback should use example.invalid TLD"
-        );
+    fn build_config_dev_updater_url_uses_invalid_tld() {
+        // The dev / unconfigured fallback must use the `.invalid` TLD (RFC 6761)
+        // so a fresh fork cannot accidentally reach a real endpoint and the
+        // updater is effectively disabled with no required host value.
         assert!(
             BuildConfig::UPDATER_MANIFEST_URL.contains("example.invalid"),
             "UPDATER_MANIFEST_URL dev fallback should use example.invalid TLD"
@@ -419,24 +288,6 @@ mod tests {
             src.data_dir
         );
         assert_eq!(cfg.db_path.file_name().unwrap(), DB_FILENAME);
-    }
-
-    #[test]
-    fn runtime_config_model_cache_dir_is_under_data_dir() {
-        let root = TempDir::new().unwrap();
-        let src = FakePathSource::under(&root);
-        let cfg = RuntimeConfig::from_path_source(&src).unwrap();
-
-        assert!(
-            cfg.model_cache_dir.starts_with(&src.data_dir),
-            "model_cache_dir {:?} should be under data_dir {:?}",
-            cfg.model_cache_dir,
-            src.data_dir
-        );
-        assert_eq!(
-            cfg.model_cache_dir.file_name().unwrap(),
-            MODEL_CACHE_SUBDIR
-        );
     }
 
     #[test]

@@ -1,78 +1,95 @@
-# P3 Platform — Walking-Skeleton Demo
+# Desktop Control-Panel Starter
 
-Throwaway-but-credible Tauri shell that walks the five V1 screens with **real
-microphone capture and faked phoneme inference**. Built to drive user-flow
-conversations at the next IAS stakeholder meeting before committing to ADD-level
-decisions and real inference work.
+A domain-free Tauri desktop control-panel walking skeleton: a React frontend +
+a Rust (Tauri 2) backend with a small, generic capability spine — first-run
+gate, settings (theme + opt-in update checks), local SQLite app data, an
+about/version surface, and an optional self-update banner. It deliberately
+carries **no product domain logic**; fork it and build your own app surface on
+top.
 
-This is **not the production app**. It exists to make the V1 user experience
-tangible. Everything that would normally come back from the encoder is scripted
-in `src/data/scriptedResults.ts`.
+## Rebrand after forking
 
-## Running
+This starter ships with explicit placeholder identity so a fork can find and
+replace every branding point by grepping for three tokens:
 
-Prerequisites: Node 20+, npm, and the Rust toolchain (`rustup` + MSVC build
-tools on Windows).
+| Token | Where it appears | Replace with |
+|-------|------------------|--------------|
+| `[DEFAULT]` | Human-facing display names — window title, app title, `productName`, `index.html` `<title>`, UI header/brand copy | Your app's display name |
+| `default-app` | Machine identifiers — npm `package.json` `name`, Cargo crate `name`, local-storage key namespace | Your package/crate name (kebab-case) |
+| `com.example.default` | Tauri bundle `identifier` in `src-tauri/tauri.conf.json` | Your reverse-DNS bundle id |
+
+```bash
+# From the repo root — see every branding point to change:
+grep -rn -e '\[DEFAULT\]' -e 'default-app' -e 'com.example.default' .
+```
+
+`tauri.conf.json` and `package.json` are strict JSON (no inline comments), so
+their placeholder values are documented here rather than in the files.
+
+## Prerequisites
+
+- Node 20+ and npm
+- Rust stable (`rustup`) and the platform build deps:
+  - **Windows:** the MSVC build tools (Desktop development with C++)
+  - **macOS:** Xcode command-line tools
+  - **Linux:** the standard Tauri 2 system deps (webkit2gtk, etc.)
+
+## Run / build / test
 
 ```bash
 cd app
-npm install      # one time
-npm run tauri dev
+npm install               # one time
+
+npm run tauri dev         # run the full desktop app (first launch builds Rust; 3-8 min)
+npm run dev               # frontend only, in a browser at http://localhost:1420
+
+npm run build             # frontend production build (tsc + vite)
+npm test                  # frontend unit tests (vitest)
+
+# Rust backend:
+cargo test  --manifest-path src-tauri/Cargo.toml --lib
+cargo build --manifest-path src-tauri/Cargo.toml --lib
+
+# Full desktop bundle (.msi / .dmg):
+npm run tauri build                  # uses safe defaults (updater disabled)
+npm run tauri:build:release          # loads .env for release config (see below)
 ```
 
-First launch builds the Tauri Rust shell, which can take 3–8 minutes while
-Cargo pulls dependencies. Subsequent launches are seconds.
+## Releases and auto-update (optional, configure post-fork)
 
-For a faster iteration loop on the React UI alone (no Tauri shell), run
-`npm run dev` and open `http://localhost:1420` in a browser.
+Auto-update is **optional and off by default**. The app builds and runs with no
+release host configured: the updater's manifest URL and the release download
+page both fall back to an unresolvable `example.invalid` sentinel (RFC 6761),
+and the update check is additionally gated behind an opt-in setting that is off
+by default. So a fresh fork builds clean, makes no network calls, and the update
+check reports "no update" — there is no required release host and nothing breaks
+if it is left unset.
 
-## The demo storyline
+To enable auto-update for your fork, configure the release host **after
+forking**. There is a single place to set it: the build-time environment
+variables in **`app/.env`** (template: `app/.env.example`), which feed
+`BuildConfig` in `app/src-tauri/src/shared/config.rs` and the release download
+page in `app/src-tauri/src/update/commands.rs`:
 
-- Learner: "Mei", L1 Mandarin.
-- She picks her L1 in setup, reads the visiting_nyc.txt passage, sees a few
-  non-blocking pings during the read, gets a per-phoneme summary flagging
-  /θ/, /r/, /l/, taps /θ/ to read articulatory guidance, then sees a Progress
-  view with four prior sessions and trend arrows. She decides to share with
-  her tutor and sees exactly what would leave the device.
+- `UPDATER_MANIFEST_URL` — your release feed (e.g. a GitHub Releases
+  `latest.json`)
+- `RELEASE_DOWNLOAD_PAGE_URL` — the page the "Download update" button opens
+- `UPDATER_PUBKEY` — updater signing public key, if used
+- `APP_VERSION` — optional; defaults to the Cargo package version
 
-The fake history, scripted results, and ping schedule are constants so the
-demo is reproducible across stakeholder meetings.
+```bash
+cd app
+cp .env.example .env       # then edit .env with your host
+npm run tauri:build:release
+```
 
-## What's fake
+The CI release workflow lives at `.github/workflows/app-release.yml` (repo
+root). Repoint its publish target to your fork's release repo before using it.
 
-- All inference. Per-phoneme attempt and flag counts come from
-  `SCRIPTED_RESULTS` regardless of what's said into the mic.
-- The 4 prior sessions. Constants in `fakeHistory.ts`.
-- The "ping" events during reading. Scheduled in `pingSchedule.ts` by absolute
-  timestamp from "Start" press; not actually triggered by speech.
-- The "Send to tutor" action — the modal is a no-op confirmation.
+## What this is not
 
-## What's real
-
-- Microphone capture via `navigator.mediaDevices.getUserMedia` and
-  `MediaRecorder`. Stakeholders can play back what they recorded on the
-  results screen.
-- The L1 questionnaire and its persistence to `localStorage`.
-- The articulation-guidance copy — drawn verbatim from
-  `documentation/docs/pedagogy/articulation_table.md` (draft v0.1, pending
-  phonetician review).
-- The 13 target phonemes, the passage, and the FRD-specified L1 suggestions.
-
-## Reset
-
-A small **Reset** button in the bottom-right corner clears localStorage and
-returns to the first-run flow — for dev use during demos.
-
-## Out of scope
-
-Called out in the parent plan
-(`.claude/plans/my-next-task-is-precious-harp.md`). Worth reviewing before the
-meeting so out-of-scope items don't get treated as feedback gaps:
-
-- Real phoneme inference (WavLM Base+ CTC head, `camels` package).
-- Threshold calibration with IAS tutor scoring.
-- Phonetician sign-off on articulation copy.
-- IPA sagittal diagrams (CC BY-SA 3.0 sourcing).
-- Installer / signing / model download.
-- SQLite history persistence.
-- Accessibility audit.
+No ESL/pronunciation/domain logic, no bundled ML model, no backend service
+dependency — those were stripped from the source app. Companion docs at the
+starter root (`STRIPPED.md`, `EXTENSION-POINTS.md`) cover the provenance of what
+was removed and how to add command modules, screens, migrations, and a release
+host.

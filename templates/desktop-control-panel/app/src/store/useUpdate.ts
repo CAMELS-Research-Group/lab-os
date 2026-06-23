@@ -43,7 +43,7 @@ export type UpdateState = {
   /**
    * Trigger the update flow. Delegates to `applyUpdate()` and swallows any
    * `IpcError` so the store never crashes the banner. The Rust side opens the
-   * IAS download page in the system browser (which resolves the newest
+   * release download page in the system browser (which resolves the newest
    * installer and carries install instructions); on failure `applyFailed` is
    * set to true so the banner can prompt a retry. `apply()` itself never throws.
    *

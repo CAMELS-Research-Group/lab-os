@@ -6,11 +6,9 @@ import { errorCopyFor } from "../lib/errorCopy";
  * App-level update notification banner.
  *
  * Renders only when `available && !dismissed`. Shows the new version string,
- * optional release notes, an action button that opens the IAS download page
- * (apply()), and a dismiss control that hides the banner for the current
+ * optional release notes, an action button that opens the release download
+ * page (apply()), and a dismiss control that hides the banner for the current
  * session.
- *
- * Spec: CL-23-lite update banner design.
  */
 export default function UpdateBanner() {
   const available = useUpdate((s) => s.available);
