@@ -34,12 +34,16 @@ The parser maps the deck's existing structure — no separate data format:
 
 - `### S<n> · <title>` starts a slide; `S1 · Title` is the title slide and
   `S<n> · Divider — …` is an act divider; everything else is a content slide.
-- Under **On-slide**, a leading `*italic*` item is the slide's lede, a
-  whole-item `**bold**` is the payoff caption, numbered items render without
-  bullets, and `` `code` ``/inline `**bold**` are flattened to plain text.
+- Under **On-slide**, a leading `*italic*` item is the slide's lede and a
+  whole-item `**bold**` is the payoff caption; inline `` `code` ``, `**bold**`,
+  and `*italic*` markers are flattened to plain text. Numbered items render as
+  plain lines — no bullet glyph, and the `1.`/`2.` ordinals are dropped, so
+  number a list only where the prose or arrows carry the order.
 - **Notes** becomes the speaker-notes pane.
 
-The build is strict: it asserts the source parses to exactly 27 contiguous
-slides and prints a per-slide overflow estimate. A `TIGHT` warning means a
-slide's body may not fit — tighten its on-slide bullets (push nuance to the
-notes) and rebuild.
+The build is strict about *count and numbering*: it asserts the source parses
+to exactly 27 slides with contiguous S-numbers, and prints a per-slide overflow
+estimate. That guards the slide count, not structural integrity — a header with
+a malformed separator is skipped, so it's caught only if it also changes the
+count. A `TIGHT` warning means a slide's body may not fit — tighten its
+on-slide bullets (push nuance to the notes) and rebuild.

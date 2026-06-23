@@ -50,10 +50,12 @@ FONT      = "Calibri"
 # ======================== markdown parsing ================================
 
 def _strip_inline(text):
-    """Drop inline code backticks and inline bold markers; this renderer has
-    no inline rich-text, so `code` and **emphasis** become plain text."""
+    """Drop inline code backticks and emphasis markers; this renderer has no
+    inline rich-text, so `code`, **bold**, and *italic* become plain text.
+    Bold is unwrapped before italic so `**x**` doesn't leave a stray `*`."""
     text = text.replace("`", "")
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"\*(.+?)\*", r"\1", text)
     return text.strip()
 
 
