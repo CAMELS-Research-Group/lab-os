@@ -1,63 +1,41 @@
 name: App release
 
-# ⚠ WHITE-LABEL TODO (T13): this release workflow is GP/IAS-derived and is NOT yet
-# white-labelled. It hardcodes a specific release target (Pace-IAS/IAS), per-platform
-# manifest URLs, and ESL model vars (IAS_MODEL_*) that no longer apply after the strip.
-# It is INERT in this template (a nested .github is not run by the parent repo); a
-# forker must configure or replace it post-fork. Tracked for T13 (templatize the
-# CI/release workflows + EXTENSION-POINTS).
-#
-# CI-6 / CI-11 + #98 — workflow_dispatch multi-platform build + gated publish.
-#   Design: documentation/engineering/planning/2026-06-09-ci6-release-workflow-design.md
-#   Plan:   documentation/engineering/planning/2026-06-09-ci6-release-workflow-plan.md
-#   Channels (#98): documentation/engineering/planning/2026-06-09-per-platform-release-channels-design.md
-#
-# Builds the Tauri client for Windows x64 (.msi) + macOS arm64 (.dmg, macos-14)
+# Manual (workflow_dispatch) multi-platform Tauri release pipeline for THIS repo.
+# Builds the desktop client for Windows x64 (.msi) + macOS arm64 (.dmg, macos-14)
 # by default; macOS Intel x86_64 (.dmg, macos-13) is OPT-IN via platform=macos-intel
-# (the macos-13 pool is unreliable and a queued leg blocks publish — see setup
-# matrix). Each runner fetches its own arch ONNX
-# Runtime >=1.24 loadable library (matches the `ort` api-24 pin) into
-# app/src-tauri/resources/onnxruntime/. A gated publish job (explicit
-# publish=true + actor guard — NO approval pause, see prereq 1) publishes each
-# platform INDEPENDENTLY (#98) to the public Pace-IAS/IAS repo as two release
-# classes:
+# (the macos-13 pool is unreliable and a queued leg blocks publish — see the setup
+# matrix). A gated publish job (explicit publish=true + actor guard) publishes each
+# platform INDEPENDENTLY to THIS repo's own GitHub Releases as two classes:
 #   - immutable split archives  app-v<ver>-win / app-v<ver>-mac /
 #       app-v<ver>-mac-intel                                  (the installer)
 #   - mutable channel pointers   win-stable / mac-stable / mac-intel-stable
 #       (each holds only latest.json)
-# Each build leg bakes its own channel manifest URL, so a client polls only its
-# platform's channel (Apple-silicon → mac-stable, Intel → mac-intel-stable). A
-# failed build on one platform cannot block another's publish. Unsigned posture
-# on all platforms (signing deferred — #75/#79).
+# Each build leg bakes its own channel manifest URL (derived from this repo), so a
+# client polls only its platform's channel (Apple-silicon → mac-stable, Intel →
+# mac-intel-stable). A failed build on one platform cannot block another's publish.
+# Unsigned posture on all platforms (add signing post-fork if you need it).
 #
-# OPERATOR PREREQS (Watson — the publish job cannot run without these):
-#   1. ias-release GitHub Environment — bare, NO required reviewer (#153): the
-#      required-reviewers protection rule is unavailable on a private
-#      personal-account repo (API returns 422 even on Pro; needs an org on
-#      Team/Enterprise — verified 2026-06-09, re-confirmed 2026-06-10). The
-#      publish job therefore does NOT pause for approval. Compensating
-#      controls: publish defaults to false and must be dispatched true; the
-#      job's if-guard requires actor WatsonWBlair; the environment restricts
-#      deployments to main and scopes IAS_RELEASE_TOKEN. With no reviewer,
-#      the actor if-guard is the load-bearing barrier — the environment
-#      itself is token-scoping + branch policy only (admins can bypass it).
-#      Revisit on org migration (release-runbook Step 0 owns this posture).
-#   2. Secret IAS_RELEASE_TOKEN — fine-grained PAT, contents:write scoped to
-#      Pace-IAS/IAS only, bound to the ias-release Environment.
-#      *** EXPIRES 2026-09-15 — rotate before then or every publish 403s. ***
-#   3. Actions variables: IAS_MODEL_URL, IAS_MODEL_SHA256, IAS_MODEL_VERSION
-#      (values per release-runbook §1). The updater manifest URL is no longer an
-#      Actions variable — it is derived per-leg in the setup job (win/mac-stable),
-#      so the old IAS_UPDATER_MANIFEST_URL variable is unused and may be removed.
-#   4. (No longer required) tauri.conf.json `version` is set at BUILD TIME from
-#      the normalized dispatch `version` (build job step), so the installer
-#      name / tag / manifest all derive from one source. The bump is build-local
-#      and NOT committed back — bump the repo `version` via a separate
-#      chore(release) commit when you cut the release for the record.
-#
-# The bundled-DLL functional path (install → run a session, no eval:error) is
-# live: runnable-build Task 1 landed — resources/onnxruntime is bundled via
-# tauri.windows.conf.json / tauri.macos.conf.json plus the lib.rs resolver.
+# WHAT A FORKER MUST SET before the publish job can run:
+#   1. Secret RELEASE_TOKEN — a token with contents:write on THIS repo (a
+#      fine-grained PAT or ${{ secrets.GITHUB_TOKEN }} if its default permissions
+#      suffice), bound to the `release` Environment.
+#   2. (Optional) Adjust the actor guard on the publish job — it is currently
+#      restricted to a single GitHub login as a compensating control for the
+#      missing environment reviewer; set it to your own login or replace it with
+#      an environment required-reviewer if your plan supports one.
+#   3. (Optional) Channel names (win-stable / mac-stable / mac-intel-stable) and
+#      the publish gate are defaults — rename them in the setup matrix + publish
+#      job if your release scheme differs.
+#   4. A manifest generator at `app/tools/release/gen-latest-json.mjs` — the
+#      publish job calls it to write each channel's `latest.json`. It is NOT
+#      bundled in this starter (the source app's was deployment-specific), so the
+#      gated PUBLISH leg is non-functional until you provide one (pure Node
+#      stdlib; args: --platform --version --file --repo --out) or replace the
+#      step. The BUILD legs work without it.
+# tauri.conf.json `version` is set at BUILD TIME from the normalized dispatch
+# `version` (build job step), so the installer name / tag / manifest all derive
+# from one source. The bump is build-local and NOT committed back — bump the repo
+# `version` via a separate chore(release) commit when you cut the release.
 #
 # Re-dispatch cost: re-running after a transient publish failure rebuilds the
 # dispatched installers from scratch (~10-20 min). The archive no-clobber guard
@@ -77,7 +55,7 @@ on:
         type: string
         required: true
       publish:
-        description: Create the public release on Pace-IAS/IAS — publishes WITHOUT a separate approval pause (prereq 1); this input IS the gate. If false, build artifacts only.
+        description: Create the public release on this repo — publishes WITHOUT a separate approval pause; this input IS the gate. If false, build artifacts only.
         type: boolean
         default: false
 
@@ -116,18 +94,17 @@ jobs:
           # channel. config.rs reads it via option_env! — zero Rust change. macOS now
           # publishes standalone (mac-stable is independent), so there is NO
           # platform=macos publish guard: a macOS-only publish touches only mac-stable.
-          win='{"name":"windows","runner":"windows-latest","manifest_url":"https://github.com/Pace-IAS/IAS/releases/download/win-stable/latest.json"}'
-          mac='{"name":"macos","runner":"macos-14","manifest_url":"https://github.com/Pace-IAS/IAS/releases/download/mac-stable/latest.json"}'
+          win='{"name":"windows","runner":"windows-latest","manifest_url":"${{ github.server_url }}/${{ github.repository }}/releases/download/win-stable/latest.json"}'
+          mac='{"name":"macos","runner":"macos-14","manifest_url":"${{ github.server_url }}/${{ github.repository }}/releases/download/mac-stable/latest.json"}'
           # Intel macOS leg (OPT-IN — deliberately NOT in `all`). macos-13 is the
           # last Intel (x86_64) GitHub-hosted runner and its pool is chronically
           # backed up; because `publish` needs ALL build legs to reach a terminal
           # state, a leg left QUEUED on that pool stalls the entire release (win +
           # mac publishes wait behind it). So Intel builds only on an explicit
           # `platform=macos-intel` dispatch. When cut it still produces the x86_64
-          # .dmg, bundles the x86_64 ORT dylib from its native onnxruntime wheel,
-          # and publishes to its own mac-intel-stable channel (independent of
+          # .dmg and publishes to its own mac-intel-stable channel (independent of
           # mac-stable). Re-add to `all` once a reliable Intel runner exists.
-          maci='{"name":"macos-intel","runner":"macos-13","manifest_url":"https://github.com/Pace-IAS/IAS/releases/download/mac-intel-stable/latest.json"}'
+          maci='{"name":"macos-intel","runner":"macos-13","manifest_url":"${{ github.server_url }}/${{ github.repository }}/releases/download/mac-intel-stable/latest.json"}'
           case "$PLATFORM" in
             windows)     inc="[$win]" ;;
             macos)       inc="[$mac]" ;;          # arm64 only — Intel is opt-in below
@@ -192,9 +169,9 @@ jobs:
           # Release notes are sourced from the `## [<VERSION>]` section of CHANGELOG.md
           # by the gated publish job. Validate that section exists and is non-empty
           # HERE in setup — before the build legs and the gated publish job (no
-          # approval pause — prereq 1 / #153; the dispatch is the approval) — so
-          # a forgotten changelog edit fails the run early instead of silently shipping a
-          # generic note past the gate (#152). Gated to `publish=true` dispatches: a
+          # approval pause; the dispatch is the approval) — so a forgotten changelog
+          # edit fails the run early instead of silently shipping a generic note past
+          # the gate. Gated to `publish=true` dispatches: a
           # build-artifacts-only run (publish=false) consumes no release notes, so it is
           # not held to the changelog precondition. Same literal `## [VERSION]` match the
           # publish job's extraction uses (index-based, not regex; trailing `]` guards
@@ -238,29 +215,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: app/src-tauri
-      - name: Fetch ONNX Runtime (>=1.24) into bundled resources
-        run: |
-          set -euo pipefail
-          python -m pip install --quiet "onnxruntime>=1.24"
-          capi=$(python -c "import onnxruntime, os; print(os.path.join(os.path.dirname(onnxruntime.__file__), 'capi'))")
-          dest=app/src-tauri/resources/onnxruntime
-          mkdir -p "$dest"
-          # The bundler references FIXED resource names — onnxruntime.dll
-          # (tauri.windows.conf.json) and libonnxruntime.dylib (tauri.macos.conf.json),
-          # mirrored by BUNDLED_ORT_DYLIB_REL in lib.rs. The Windows wheel already
-          # ships an unversioned onnxruntime.dll, but the macOS wheel ships a
-          # versioned core dylib (e.g. libonnxruntime.1.26.0.dylib), so normalize it
-          # to the canonical name. Match the core lib only, not the provider shims
-          # (libonnxruntime_providers_*.dylib).
-          cp "$capi"/onnxruntime*.dll "$dest"/ 2>/dev/null || true
-          core_dylib=$(ls "$capi"/libonnxruntime.*.dylib "$capi"/libonnxruntime.dylib 2>/dev/null | head -n1 || true)
-          [ -n "$core_dylib" ] && cp "$core_dylib" "$dest/libonnxruntime.dylib"
-          if [ -z "$(ls -A "$dest" 2>/dev/null)" ]; then
-            echo "::error::no ONNX Runtime loadable library found under $capi (wrong arch / wheel layout)"
-            ls -la "$capi" || true
-            exit 1
-          fi
-          ls -la "$dest"
       - name: Set tauri.conf.json version to the dispatched release version
         env:
           VERSION: ${{ needs.setup.outputs.version }}
@@ -290,12 +244,10 @@ jobs:
         working-directory: app
         env:
           NAME: ${{ matrix.name }}
-          IAS_MODEL_URL: ${{ vars.IAS_MODEL_URL }}
-          IAS_MODEL_SHA256: ${{ vars.IAS_MODEL_SHA256 }}
-          IAS_MODEL_VERSION: ${{ vars.IAS_MODEL_VERSION }}
-          # Per-platform channel URL from the setup matrix (NOT the old shared
-          # vars.IAS_UPDATER_MANIFEST_URL) — this leg's client polls only its channel.
-          IAS_UPDATER_MANIFEST_URL: ${{ matrix.manifest_url }}
+          # Per-platform channel URL from the setup matrix — this leg's client
+          # polls only its channel. config.rs reads it at build time via
+          # option_env!("UPDATER_MANIFEST_URL") (the env name must match).
+          UPDATER_MANIFEST_URL: ${{ matrix.manifest_url }}
         run: |
           set -euo pipefail
           # Windows (.msi) packaging is deterministic — build once. Both macOS
@@ -324,9 +276,10 @@ jobs:
             # A failed attempt can leave the DMG volume mounted; the next hdiutil
             # detach then hits "Resource busy". Force-detach any stale mount and clear
             # the dmg scratch dir so the retry starts clean. The volume name is the
-            # tauri.conf.json `productName` ("P3 Platform") — keep this pattern in sync
-            # if that is ever renamed, or the stale mount silently won't be detached.
-            ( hdiutil info 2>/dev/null | awk '/\/Volumes\/P3 Platform/ {print $1}' \
+            # tauri.conf.json `productName`, read here so this stays correct after a
+            # fork renames the product (a hardcoded name would silently fail to detach).
+            prod=$(node -p "require('./src-tauri/tauri.conf.json').productName")
+            ( hdiutil info 2>/dev/null | awk -v vol="/Volumes/$prod" 'index($0, vol) {print $1}' \
                 | while read -r dev; do
                     [ -z "$dev" ] && continue
                     echo "::notice::detaching stale DMG mount $dev before retry"
@@ -366,16 +319,17 @@ jobs:
           retention-days: 14
 
   publish:
-    name: publish (gated → ias-release)
+    name: publish (gated → release)
     needs: [setup, build]
     # always() so a FAILED build leg (e.g. macOS) does not skip the publish — each
     # platform publishes from whatever artifact IS present. Still gated on publish=true
     # and a green setup; a cancelled build does not publish. The actor guard is a
-    # compensating control for the missing environment reviewer (prereq 1 / #153):
-    # only Watson's own dispatch can reach the publish steps.
-    if: ${{ always() && inputs.publish && github.actor == 'WatsonWBlair' && needs.setup.result == 'success' && needs.build.result != 'cancelled' }}
+    # compensating control for a release Environment without a required reviewer:
+    # only the repo owner's own dispatch can reach the publish steps. Narrow this to
+    # a specific login, or swap it for an environment required-reviewer, post-fork.
+    if: ${{ always() && inputs.publish && github.actor == github.repository_owner && needs.setup.result == 'success' && needs.build.result != 'cancelled' }}
     runs-on: ubuntu-latest
-    environment: ias-release  # scopes IAS_RELEASE_TOKEN + restricts deploys to main; does NOT pause for approval (prereq 1 / #153)
+    environment: release  # scopes RELEASE_TOKEN + restricts deploys per environment policy; does NOT pause for approval
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -431,9 +385,9 @@ jobs:
           echo "RELEASE_NOTES_FILE=$PWD/$notes_file" >> "$GITHUB_ENV"
       - name: Publish per-platform archives + channels (independent legs)
         env:
-          GH_TOKEN: ${{ secrets.IAS_RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           VERSION: ${{ needs.setup.outputs.version }}
-          REPO: Pace-IAS/IAS
+          REPO: ${{ github.repository }}
         run: |
           # NOTE: GitHub invokes this step as `bash -e -o pipefail {0}` — errexit is
           # ON by default. This job's independence model REQUIRES it OFF: a failed
@@ -473,7 +427,7 @@ jobs:
             #    written exactly once by exactly one leg. --latest=false: the updater
             #    no longer reads the GitHub 'latest' pointer (channels own updates).
             if gh release view "$archive_tag" --repo "$REPO" >/dev/null 2>&1; then
-              echo "::error::Release $archive_tag already exists on $REPO. Do NOT clobber — run the release-runbook bad-release rollback (delete the release + tag) before re-dispatching."
+              echo "::error::Release $archive_tag already exists on $REPO. Do NOT clobber — delete the bad release and its tag, then re-dispatch."
               return 1
             fi
             # --notes-file: the archive release notes come from the dispatched
@@ -494,6 +448,9 @@ jobs:
 
             # 3. MANIFEST — single-platform: flat download_url AND the sole platforms
             #    entry both point at the archive asset at the split tag.
+            # WHITE-LABEL: gen-latest-json.mjs is NOT bundled — a fork must provide
+            # app/tools/release/gen-latest-json.mjs (pure Node stdlib) or replace
+            # this step. See the header's "WHAT A FORKER MUST SET" item 4.
             node tools/release/gen-latest-json.mjs \
               --platform "$plat" --version "$VERSION" --file "$asset" --repo "$REPO" --out "$workdir/latest.json" || return 1
             echo "--- $channel latest.json ---"; cat "$workdir/latest.json"

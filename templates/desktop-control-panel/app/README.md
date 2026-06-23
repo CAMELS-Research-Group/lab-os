@@ -84,7 +84,15 @@ npm run tauri:build:release
 ```
 
 The CI release workflow lives at `.github/workflows/app-release.yml` (repo
-root). Repoint its publish target to your fork's release repo before using it.
+root). It is **fork-portable** — it builds and publishes to *your* repo's GitHub
+Releases automatically (`${{ github.repository }}`), so there is no publish target
+to repoint. Before the gated publish job will run, a fork must:
+- set a `RELEASE_TOKEN` secret (contents:write on your repo), bound to a `release`
+  Environment;
+- provide `app/tools/release/gen-latest-json.mjs` — a small Node (stdlib)
+  generator that writes each channel's `latest.json`. It is **not bundled** (the
+  source app's was deployment-specific); the build legs work without it, but the
+  publish leg is non-functional until you add or replace it.
 
 ## What this is not
 

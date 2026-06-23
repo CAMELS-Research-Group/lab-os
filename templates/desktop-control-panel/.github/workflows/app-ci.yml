@@ -9,13 +9,8 @@ name: App CI
 # ubuntu would pull the whole Tauri-Linux system-dep burden (webkit2gtk/ALSA/dbus)
 # for a target we don't ship. macOS Rust is exercised at release time (CI-6).
 #
-# Real-model Rust tests are #[ignore]-marked, so `cargo test` never loads ORT.
-# But the per-platform ONNX Runtime lib is a declared `bundle.resources` entry
-# (onnxruntime.dll via tauri.windows.conf.json, merged into tauri.conf.json on
-# this windows-latest host), and tauri-build validates that the resource EXISTS
-# at compile time — so the rust job stubs a zero-byte DLL before `cargo test`
-# (the unit tests don't load it; the real per-arch lib is fetched only in the
-# release workflow). The hard gates are the behavior checks: typecheck/build + tests.
+# The hard gates are the behavior checks: typecheck/build (frontend) + tests
+# (frontend + Rust). Rust runs only on Windows (see platform split above).
 #
 # Speed notes (the rust job was the long pole — cold Windows MSVC compile):
 #   - `cargo test --lib` skips extra test-target/doctest builds.
@@ -83,10 +78,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: app/src-tauri
-      - name: Stub bundled ONNX Runtime DLL (tauri-build resource-exists check)
-        shell: bash
-        run: mkdir -p resources/onnxruntime && touch resources/onnxruntime/onnxruntime.dll
-      - name: Tests (lib only; ignored real-model tests are skipped automatically)
+      - name: Tests (lib only)
         run: cargo test --lib
       - name: Format check (report-only — see header)
         run: cargo fmt --check
