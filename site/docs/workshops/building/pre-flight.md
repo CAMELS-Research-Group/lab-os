@@ -35,12 +35,14 @@ when those checks pass.
 
 ## 3 — Your project repo is nested in your dev home, on an experiment branch
 
-Your project lives as its own git repo nested inside your dev home (e.g. `<DEV_ROOT>/<project>/`),
+Your project code lives as its own git repo nested inside your dev home (e.g. `<DEV_ROOT>/<project>/`),
 gitignored by the fork so its history stays separate. The Building exercises use git to isolate
-work and review changes, so you need a branch that is safe to experiment on.
+work and review changes, so you need a branch that is safe to experiment on. Running the sample plan
+with no codebase of your own? You build in the fork itself — read "the repo you'll build in" below as
+your fork.
 
-- [ ] Your project repo (your code) exists inside your dev home — your plan lives separately, at the
-      fork's `_plans/` (see §4)
+- [ ] The repo you'll build in exists in your dev home — your nested project repo (your code), or your
+      fork on the sample plan; your plan lives separately at the fork's `_plans/` (see §4)
 - [ ] You have created or checked out an experiment branch in it (not `main` or `master`)
 - [ ] `git status` reports **nothing to commit, working tree clean** on that branch
 
@@ -70,7 +72,8 @@ The Building exercises use git worktrees to create an isolated workspace for aut
 so an agent can work without touching the files you have open in your editor. This is the item
 most likely to produce a surprise, so verify it explicitly.
 
-Run these three commands in your project repo (inside your dev home):
+Run these three commands in the repo you'll build in — your nested project repo, or your fork on the
+sample plan (inside your dev home):
 
 ```
 git worktree add ../preflight-test HEAD

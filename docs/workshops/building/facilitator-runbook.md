@@ -10,7 +10,7 @@ content; this runbook tells you how to hold the room and what to do when runs go
 ## Before the session
 
 This session picks up from the kickoff. In the kickoff's follow-along demo, participants forked
-lab-os and stood up their workspace inside it — their development home, with the rules linked,
+lab-os and stood up their workspace inside it — their development home, with the rules native,
 plugins installed, and a first git worktree created — and watched one Build → Verify → Review
 pass on the sample plan. This session is where they run that loop for real, on their own plan,
 in that workspace. The [kickoff deck](./kickoff-deck.md) is the talk and demo that precedes it.
@@ -25,10 +25,11 @@ Confirm participants have:
    [pre-flight](../../../site/docs/workshops/building/pre-flight.md) is the readiness check). The
    kickoff's bootstrap demo stands this up; setup gaps are the session-killer — a participant
    whose workspace is not ready consumes everyone else's time.
-3. **Their project + plan are re-homed in the fork** — nested as its own git repo inside their dev
-   home (the kickoff's bootstrap does this), so the agent acts on the plan with the lab's rules
-   loaded. A participant whose plan is still outside their fork isn't set up — fix it before the
-   exercises, not during them.
+3. **Their plan is re-homed at the fork's `_plans/`, project code (if any) nested** — the kickoff's
+   bootstrap does this: the plan tracks in the fork itself, and a brought-along codebase nests as its
+   own git repo inside the dev home, so the agent acts on the plan with the lab's rules loaded. A
+   participant whose plan is still outside their fork isn't set up — fix it before the exercises, not
+   during them.
 4. **A verification command in mind** — ideally named in the kickoff's quality-gate beat or the
    pre-flight. If they do not have one, they define it as the first task in the session
    (Exercise 1 / quality-gate worksheet).

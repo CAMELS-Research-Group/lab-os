@@ -259,8 +259,9 @@ inspected before any autonomous output is accepted.
 **Notes:** Review is load-bearing — it's the step that catches what the gate structurally can't, so
 it's not a nicety you skip under time pressure. And it's iterative: a pass surfaces findings, you
 resolve each — fix it now, or route it to an issue with a reason, recording findings and their
-resolution on the PR — then review again until the merge bar is clear. A second set of eyes makes it stronger: a teammate, or the lab's automated reviewer that
-posts an outside read on open PRs but never merges. You'll run exactly this loop in the demo.
+resolution on the PR — then review again until the merge bar is clear. A second set of eyes makes
+it stronger: a teammate, or the lab's automated reviewer that posts an outside read on open PRs but
+never merges. You'll run exactly this loop in the demo.
 
 ---
 
@@ -361,7 +362,7 @@ own machines.
 2. Paste the one bootstrap prompt — it runs the rest, confirming each step
 3. → Claude forks lab-os to your account + clones your fork as your dev home (clone is the fallback)
 4. → personalizes your global config + seeds the dev-home one (rules are native — no junction)
-5. → cleans the fork: fresh project log, drops lab-os's own history + the handbook site
+5. → cleans the fork: fresh project log, drops lab-os's own design history + the handbook site
 6. → re-homes your plan into the fork's `_plans/` (tracked at the dev-home level), then installs the two plugins
 7. → verifies: rules resolve at your dev home, remotes right, no placeholders
 8. Then your first `git worktree` in the project — your autonomous-run work surface

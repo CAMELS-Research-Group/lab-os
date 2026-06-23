@@ -66,8 +66,8 @@ passes on a spec you have no stake in).
 **Development home is a fork of lab-os.** The participant's dev home is their own fork of lab-os,
 stood up in the kickoff (see Getting Started). Their project *code* is nested inside that fork as its
 own gitignored git repo — so the fork is the home and rules source, never the thing they build, and
-bring-your-own-project is unchanged. Methodology artifacts — the plan, project log, backlog — track in
-the fork itself (`_plans/`); only the code nests, so a dev-home session sees all the plans while build
+bring-your-own-project is unchanged. Methodology artifacts — the plan and project log — track in the
+fork itself (`_plans/`); only the code nests, so a dev-home session sees all the plans while build
 history stays out of `git pull upstream`. (Running a *pre-baked* plan against the fork itself stays the
 facilitator-only fallback for participants who arrive without a plan — project log, #42.) The prior
 junction-based, multi-repo dev-root is kept as the documented power-user alternative, not the
