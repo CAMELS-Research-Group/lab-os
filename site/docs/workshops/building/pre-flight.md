@@ -39,7 +39,8 @@ Your project lives as its own git repo nested inside your dev home (e.g. `<DEV_R
 gitignored by the fork so its history stays separate. The Building exercises use git to isolate
 work and review changes, so you need a branch that is safe to experiment on.
 
-- [ ] Your project repo exists inside your dev home and holds your execution-ready plan
+- [ ] Your project repo (your code) exists inside your dev home — your plan lives separately, at the
+      fork's `_plans/` (see §4)
 - [ ] You have created or checked out an experiment branch in it (not `main` or `master`)
 - [ ] `git status` reports **nothing to commit, working tree clean** on that branch
 
@@ -52,7 +53,8 @@ If your working tree is not clean, stash or commit the in-progress work before t
 The Building part works from the execution-ready plan you produced in Part 1 — Planning. You
 will need it open during the exercises.
 
-- [ ] Your plan file (the decomposed task list) is re-homed in your project repo and openable
+- [ ] Your plan file (the decomposed task list) is re-homed in your dev home's `_plans/` (tracked by
+      the fork) and openable
 - [ ] You can open it in a text editor or view it in the terminal
 - [ ] The plan passes the [Planning completion checklist](../planning/completion-checklist.md) —
       every item is checked (the plan is execution-ready)

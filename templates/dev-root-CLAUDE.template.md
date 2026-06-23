@@ -42,9 +42,10 @@ List every repo a session at `<DEV_ROOT>` might touch. Columns: **Repo** (name a
 | `<your-secondary-repo>` | `<what it does>` | Active — `<phase>` |
 | `<your-earlier-prototype>` | `<what it was; why it's kept>` | Foundational; reference for design decisions |
 
-Nested project repos: list the project repos you've nested inside your dev home (each its own git
-repo, gitignored from the fork). Foundational or reference repos are added on demand when a question
-sends you upstream.
+Nested project repos: list the project *code* repos you've nested inside your dev home (each its own
+git repo, gitignored from the fork). Your plans and backlog are not nested here — they track in the
+fork itself (see Logs and tracking). Foundational or reference repos are added on demand when a
+question sends you upstream.
 
 ## Tooling
 
@@ -65,6 +66,7 @@ sees the whole workspace.
 
 ## Logs and tracking
 
+- **Plans / backlog:** `<DEV_ROOT>/_plans/` — tracked by the fork, alongside the rules and log
 - **Per-repo logs:** `<repo>/project_log.md`
 - **Workspace-level decisions** (cross-repo tooling, infra, workspace-wide conventions): `<DEV_ROOT>/project_log.md`
 - **Cost tracking** (inference spend, infra): `<DEV_ROOT>/cost-tracking.md`

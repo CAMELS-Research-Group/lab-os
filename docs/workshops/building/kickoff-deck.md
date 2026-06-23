@@ -82,12 +82,12 @@ verify.
 - Lifecycle: Brainstorm → Specify → Plan → **Build → Verify → Review** → Close
 - Build executes the plan; Verify is the automated checkpoint; Review is the human one
 - Those three — Build, Verify, Review — are exactly what this session drills
-- **You can't learn this alone: you have to watch the agent be confidently wrong, then catch it**
+- **You can't learn this from slides: you have to watch the agent be confidently wrong, then catch what the gate didn't**
 
 **Notes:** The lifecycle has seven stages. Today we live in the middle three: Build executes the plan,
 Verify is the automated checkpoint, and Review is the human checkpoint. Those three are the loop this
-session drills. It's the part you can't learn alone — the lesson is catching the agent the moment it's
-confidently wrong, and you have to see that happen.
+session drills. It's the part you can't learn from slides — the lesson is catching what the gate can't,
+the moment the agent is confidently wrong, and you have to see that happen.
 
 ---
 
@@ -103,7 +103,7 @@ safety rail. Verify and Review (the next two acts) are how you earn the trust to
 ### S7 · The meta-skill
 
 **On-slide:**
-- *Delegating well means handing off cleanly and checking the result — not hovering, not blind trust.*
+- *Delegating well: hand off cleanly, then check — stay across the work without burning your own context window on every step.*
 - Micromanaging: correcting every step — you never actually delegated
 - Blind trust: taking the agent's word and shipping its mistakes
 - The middle path: hand off, let it run, then verify with something that can't lie
@@ -119,14 +119,15 @@ next two stages, Verify and Review, are how you earn the trust to let go.
 **On-slide:**
 - *You move from close supervision to full delegation as you earn trust in your gate.*
 - Monitored sequential — one task at a time, you check each result (how you learn what good looks like)
-- Autonomous — hand off a whole task, don't intervene, verify when it's done
-- Multi-agent — hand off a batch in parallel, verify each result
-- **You don't start in third gear — you earn it by proving verification works**
+- Autonomous — hand off a whole task, don't intervene; you verify the one result when it's done
+- Multi-agent — hand off a batch in parallel; the coordinating agent verifies each, you own the gate it clears
+- **You don't start in third gear — you earn it by proving your gate holds**
 
-**Notes:** Three gears; you shift up as you earn trust. Monitored: one task at a time, check each
+**Notes:** Three gears; you shift up as you earn trust. Monitored: one task at a time, you check each
 result — how you learn what good output looks like. Autonomous: hand off a whole task, don't
-intervene, verify when it's done. Multi-agent: hand off a batch in parallel, verify each. You don't
-start in third gear — you earn it by proving your verification actually works.
+intervene, then you verify the one result. Multi-agent: hand off a batch in parallel and the
+coordinating agent verifies each — your job shifts to owning the gate it clears and sampling the diffs.
+You don't start in third gear — you earn it by proving your gate holds.
 
 ### S9 · Worktree isolation
 
@@ -175,16 +176,17 @@ the gate; Review, next, clears what green can't speak to.
 ### S12 · Verify, don't trust
 
 **On-slide:**
-- *Re-run the gate yourself and read the real diff — the agent's report isn't evidence.*
-- Run the gate yourself; don't accept 'I ran the tests, they pass'
-- Run it unpiped — piping can swallow the exit code and make red look green
-- Read `git diff HEAD`, not the agent's summary of it
+- *Let the coordinating agent re-verify at scale — but the gate result is the evidence, never the agent's word.*
+- Have the coordinating agent re-verify every sub-agent result — reports turn optimistic across context boundaries
+- The gate runs unpiped — piping swallows the exit code and makes red look green
+- You still read `git diff HEAD` on what matters, not the agent's summary of it
 - **Scope creep hides in the diff; it's invisible in the summary**
 
-**Notes:** Concretely: run the gate yourself; don't accept "I ran the tests, they pass." Run it
-unpiped — piping can hide the exit code so a red gate reads green (I did exactly that setting this up,
-caught it, re-ran clean). Then read the actual diff, not the agent's prose summary — scope creep lives
-in the diff and is invisible in the summary.
+**Notes:** The honest division of labor: the coordinating agent runs the gate on every task — nobody's
+checking all of them by hand. Your job is that it runs unpiped (piping hides the exit code, so a red
+gate reads green — I did exactly that setting this up, caught it, re-ran clean) and that you still read
+the actual diff on what matters, not the agent's prose summary. Scope creep lives in the diff and is
+invisible in the summary.
 
 ### S13 · The failure-mode catalogue
 
@@ -230,34 +232,34 @@ review.
 ### S16 · Review like an outsider
 
 **On-slide:**
-- *Review's power is reading what's actually there — as an outsider would — not the intent you
-  remember.*
-- Read the code as written; don't let your memory of the plan fill the gaps
-- Outsider's eye: if it needs context a reader lacks, that's a finding
-- Authored it yourself — or your agent did? Say so and review harder
+- *Review reads what's actually there, as an outsider would — so run it in a context that never saw
+  the work being built.*
+- Have Claude review in a fresh context — implementation intent can't color a reviewer that never built the thing
+- If understanding the change needs context only the author's session holds, that's a finding
+- Self-review runs softer — hold work you (or your agent) produced to a higher bar, and declare authorship
 - **Write a review standard: what you inspect before you trust the output**
 
-**Notes:** Review is the human checkpoint, and its value is the outsider's eye. Read what the code
-says, not what you intended when you or the agent wrote it — memory papers over real gaps. If a reader
-would need context they don't have, that's a finding, not a free pass. And authorship softens scrutiny
-exactly when you need it most, so if you or your agent wrote it, declare that and review harder. The
-session has you write a review standard — the specific things you inspect before accepting autonomous
-output.
+**Notes:** Review is the human checkpoint — but you can run it in a fresh Claude context that never
+built the work, so implementation intent can't color it. Read what the code says, not what was
+intended — memory papers over real gaps. If a reader would need context they don't have, that's a
+finding, not a free pass. Authorship softens scrutiny exactly when you need it most, so work you or
+your agent produced gets the higher bar — declare it. You own the review standard: the specific things
+inspected before any autonomous output is accepted.
 
 ### S17 · Review is load-bearing
 
 **On-slide:**
 - *Pre-merge review isn't optional, and it isn't one pass — it's a loop until nothing load-bearing is
   open.*
-- Each pass surfaces findings; fix them, or route them to issues with a reason
-- Re-review until the bar is clear — findings resolved, not silently deferred
-- A second perspective helps: a teammate, or an automated reviewer's outside read
+- Each pass surfaces findings — fix them now, or route to a tracked issue; never silently defer
+- Re-review until the bar is clear, and record findings and their resolution on the PR
+- A second perspective hardens it — a teammate, or the lab's automated reviewer's outside read
 - **You'll run this loop today: review → fix → re-check, then merge**
 
 **Notes:** Review is load-bearing — it's the step that catches what the gate structurally can't, so
 it's not a nicety you skip under time pressure. And it's iterative: a pass surfaces findings, you
-resolve each — fix it now, or route it to an issue with a reason — then review again until the merge
-bar is clear. A second set of eyes makes it stronger: a teammate, or the lab's automated reviewer that
+resolve each — fix it now, or route it to an issue with a reason, recording findings and their
+resolution on the PR — then review again until the merge bar is clear. A second set of eyes makes it stronger: a teammate, or the lab's automated reviewer that
 posts an outside read on open PRs but never merges. You'll run exactly this loop in the demo.
 
 ---
@@ -354,12 +356,13 @@ own machines.
 ### S25 · Bootstrap — run of show
 
 **On-slide** (source of truth: the handbook's Getting Started page):
+- *You paste one prompt; it forks lab-os and configures everything, confirming each step. The fork is the prompt's own first job — you don't set it up beforehand.*
 1. Prereq check: `claude` / `git` / `gh --version`; confirm you're logged in
 2. Paste the one bootstrap prompt — it runs the rest, confirming each step
 3. → Claude forks lab-os to your account + clones your fork as your dev home (clone is the fallback)
 4. → personalizes your global config + seeds the dev-home one (rules are native — no junction)
 5. → cleans the fork: fresh project log, drops lab-os's own history + the handbook site
-6. → re-homes your plan as its own nested repo, then installs the two plugins
+6. → re-homes your plan into the fork's `_plans/` (tracked at the dev-home level), then installs the two plugins
 7. → verifies: rules resolve at your dev home, remotes right, no placeholders
 8. Then your first `git worktree` in the project — your autonomous-run work surface
 

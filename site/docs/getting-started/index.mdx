@@ -99,12 +99,15 @@ Then do the following, in order, confirming each step with me:
      like the sample plan are used locally, and those stay.
    - Stage this cleanup on a branch and note I can open it as my first PR.
 
-5. Re-home my project plan as its own repo inside my dev home — confirm
+5. Re-home my plan, and nest my project code if I brought any — confirm
    before moving:
-   - Create <DEV_ROOT>/<project>/, initialize it as its own git repo, and
-     move my plan there from the location I gave in the interview.
-   - Add /<project>/ to <DEV_ROOT>/.gitignore so my project keeps its own git
-     history and never tangles with `git pull upstream`.
+   - Move my plan from the location I gave in the interview into
+     <DEV_ROOT>/_plans/. It is tracked by the fork itself, alongside the rules
+     and project log, so a session opened at my dev home sees all my plans.
+   - If I brought an existing codebase, nest it as its own git repo at
+     <DEV_ROOT>/<project>/ and add /<project>/ to <DEV_ROOT>/.gitignore, so the
+     code keeps its own history and never tangles with `git pull upstream`.
+     (No code yet? Skip this — create the project repo when I start building.)
 
 6. Install the plugins: run `/plugin marketplace add WatsonWBlair/lab-claude-plugins`
    then `/plugin install pr-review-loop@lab-claude-plugins`. Also install
@@ -120,8 +123,8 @@ Then do the following, in order, confirming each step with me:
    - ~/.claude/CLAUDE.md exists with no remaining <...> placeholders
    - <DEV_ROOT>/.claude/CLAUDE.md exists; project_log.md is the fresh stub;
      site/ and docs/superpowers/specs/ are gone
-   - <DEV_ROOT>/<project>/ is its own git repo, gitignored by the fork, and
-     holds my plan
+   - my plan is at <DEV_ROOT>/_plans/, tracked by the fork; any codebase I
+     brought is nested at <DEV_ROOT>/<project>/ as its own gitignored repo
    - the plugins are listed by /plugin
    Then tell me to start a fresh session at <DEV_ROOT> (my dev home — where I
    root my work; rules load natively here) and ask "what are the lab's

@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
 - 2026-06-19 05:58 — Workshop Program supersedes onboarding-project and one-day Building · #39
@@ -17,6 +18,21 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-06-23 07:51 — Plans track at the fork level; only project code nests
+
+**Decision:** Refines the plan/project homing of #43. Methodology artifacts — the plan, project log,
+backlog — track in the fork itself (`_plans/`, at the dev-home level). Only the project *code* is
+re-homed as a separate gitignored nested repo. #43 homed "the plan/project" together in the nested
+repo, conflating two artifacts with different needs.
+**Why:** The fork is the methodology/coordination home, and plans are methodology — matching how the
+lab already works (the dev root tracks the backlog and plan packets, not per-project). #43's
+anti-coupling reason — don't couple `git pull upstream` with project history — bites for a full
+codebase, not a handful of plan files in a new path upstream never touches. Splitting keeps that
+benefit for the code while a dev-home session sees every plan.
+**Refs:** #44, site/docs/getting-started/index.mdx, site/docs/workshops/building/pre-flight.md, docs/workshops/program/design.md
 
 ---
 
