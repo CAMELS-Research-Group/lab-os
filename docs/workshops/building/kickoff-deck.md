@@ -56,7 +56,7 @@ GitHub CLI, and Claude Code. If you're missing one, flag it now or pair with a n
 
 ### S3 · Divider — Act 1 · Development Foundations
 
-**On-slide:** Act 1 · Development Foundations — *Why Building · ~5 min*
+**On-slide:** Act 1 · Development Foundations — *Why Building*
 
 **Notes (cue):** Frame the half-hour: before we touch a terminal, two ideas — what changed, and where
 today sits in the lifecycle.
@@ -95,7 +95,7 @@ the moment the agent is confidently wrong, and you have to see that happen.
 
 ### S6 · Divider — Act 2 · Build
 
-**On-slide:** Act 2 · Build — *Hand the work off · ~6 min*
+**On-slide:** Act 2 · Build — *Hand the work off*
 
 **Notes (cue):** This act is the hand-off — how you delegate cleanly, in which mode, and inside what
 safety rail. Verify and Review (the next two acts) are how you earn the trust to let go.
@@ -149,7 +149,7 @@ actually let go.
 
 ### S10 · Divider — Act 3 · Verify
 
-**On-slide:** Act 3 · Verify — *Prove it yourself · ~7 min*
+**On-slide:** Act 3 · Verify — *Prove it yourself*
 
 **Notes (cue):** The automated checkpoint. What a gate is, why green isn't enough, how to verify for
 yourself, and the predictable ways runs fail.
@@ -195,7 +195,9 @@ invisible in the summary.
   embarrassment.*
 - Scope creep — does more than you asked
 - Claims-done-but-isn't — reports done, the gate says no (the headline lesson)
-- Won't-let-go (you, hovering) · environment stalls · task-too-big to verify
+- Won't-let-go (you, hovering) 
+- Environment Stalls
+- Verification Errors
 - **A caught failure is the system working — the worst outcome is an uncaught one**
 
 **Notes:** Five ways runs go wrong — you'll meet some today. Scope creep: does more than you asked.
@@ -209,7 +211,7 @@ a caught failure is the system working as designed — the worst outcome is an u
 
 ### S14 · Divider — Act 4 · Review
 
-**On-slide:** Act 4 · Review — *Read it as an outsider · ~5 min*
+**On-slide:** Act 4 · Review — *Read it as an outsider*
 
 **Notes (cue):** The human checkpoint — what the gate structurally can't see, how to read it, and why
 it's not optional.
@@ -269,7 +271,7 @@ never merges. You'll run exactly this loop in the demo.
 
 ### S18 · Divider — Act 5 · Project Setup
 
-**On-slide:** Act 5 · Project Setup — *Your workspace + the rules · ~5 min*
+**On-slide:** Act 5 · Project Setup — *Your workspace + the rules*
 
 **Notes (cue):** Shift from concepts to the thing they're about to stand up: the working surface, the
 rules it loads, and the fact that the lab runs those rules on itself.
@@ -360,12 +362,12 @@ own machines.
 - *You paste one prompt; it forks lab-os and configures everything, confirming each step. The fork is the prompt's own first job — you don't set it up beforehand.*
 1. Prereq check: `claude` / `git` / `gh --version`; confirm you're logged in
 2. Paste the one bootstrap prompt — it runs the rest, confirming each step
-3. → Claude forks lab-os to your account + clones your fork as your dev home (clone is the fallback)
-4. → personalizes your global config + seeds the dev-home one (rules are native — no junction)
-5. → cleans the fork: fresh project log, drops lab-os's own design history + the handbook site
-6. → re-homes your plan into the fork's `_plans/` (tracked at the dev-home level), then installs the two plugins
-7. → verifies: rules resolve at your dev home, remotes right, no placeholders
-8. Then your first `git worktree` in the project — your autonomous-run work surface
+3. → forks lab-os to your account + clones the fork as your dev home (clone = fallback)
+4. → personalizes global config + seeds the dev-home one (rules native, no junction)
+5. → cleans the fork: fresh project log, drops the design history + the site
+6. → re-homes your plan to the fork's `_plans/`, then installs the two plugins
+7. → verifies: rules resolve, remotes right, no placeholders
+8. Then your first `git worktree` in the project — your autonomous-run surface
 
 **Notes:** Source of truth is the handbook's Getting Started page. The point participants miss: they
 paste ONE prompt and Claude forks + clones lab-os itself (step 3) and reads the templates from that
