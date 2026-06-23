@@ -9,20 +9,33 @@ content; this runbook tells you how to hold the room and what to do when runs go
 
 ## Before the session
 
+This session picks up from the kickoff. In the kickoff's follow-along demo, participants forked
+lab-os and stood up their workspace inside it — their development home, with the rules linked,
+plugins installed, and a first git worktree created — and watched one Build → Verify → Review
+pass on the sample plan. This session is where they run that loop for real, on their own plan,
+in that workspace. The [kickoff deck](./kickoff-deck.md) is the talk and demo that precedes it.
+
 Confirm participants have:
 
 1. **Completed the Planning part** — they have an execution-ready plan (PRD + ordered,
    individually-verifiable task list) with a verification note on each task. Anyone without a
    plan cannot run Exercise 4.
-2. **Completed the pre-flight worksheet** — Claude Code installed and authenticated, Git working,
-   project cloned on a branch they can experiment on, git worktrees confirmed working. The
-   pre-flight is the session-killer if skipped: setup problems during the session consume everyone
-   else's time.
-3. **A verification command in mind** — ideally named in the pre-flight. If they do not have one,
-   they need to define it as the first task in the session (Exercise 1 / quality-gate worksheet).
+2. **A working lab-os fork from the kickoff** — cloned into their `<DEV_ROOT>`, rules resolving,
+   plugins installed, and git worktrees confirmed working against that fork (the participant
+   [pre-flight](../../../site/docs/workshops/building/pre-flight.md) is the readiness check). The
+   kickoff's bootstrap demo stands this up; setup gaps are the session-killer — a participant
+   whose workspace is not ready consumes everyone else's time.
+3. **Moved their plan into the workspace** — the Planning artifact (and the project it targets)
+   lives in the fork, so the agent acts on it with the lab's rules loaded. A participant whose
+   plan is still outside the workspace spends Exercise 1 relocating it instead of practicing.
+4. **A verification command in mind** — ideally named in the kickoff's quality-gate beat or the
+   pre-flight. If they do not have one, they define it as the first task in the session
+   (Exercise 1 / quality-gate worksheet).
 
 Have the following open for reference:
 
+- [Kickoff deck + speaker notes](./kickoff-deck.md) — the 30-min talk and bootstrap demo this
+  session builds directly on
 - [Exercises page](../../../site/docs/workshops/building/exercises.md)
 - [Quality-gate worksheet](../../../site/docs/workshops/building/quality-gates-worksheet.md)
 - [Execution and verification worksheet](../../../site/docs/workshops/building/execution-verification-worksheet.md)
