@@ -281,7 +281,7 @@ rules it loads, and the fact that the lab runs those rules on itself.
 **On-slide:**
 - *Your workspace is your lab-os fork — layered context files plus the lab's rules, loaded every session.*
 - Three `CLAUDE.md` layers: global (you) → dev-home/fork (workspace) → project (nested repo) — specific wins
-- The rules live in your fork; `git pull upstream` keeps them current (junction stays as the multi-repo power-user path)
+- The rules live in your fork; `git pull upstream` keeps them current
 - Two plugins add capabilities: superpowers and pr-review-loop
 - **This is the surface you'll stand up in the demo**
 
