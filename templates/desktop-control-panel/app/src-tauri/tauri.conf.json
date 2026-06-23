@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "P3 Platform",
+  "productName": "[DEFAULT]",
   "version": "0.2.5",
-  "identifier": "dev.p3platform.app",
+  "identifier": "com.example.default",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Reading Practice",
+        "title": "[DEFAULT]",
         "width": 1100,
         "height": 760,
         "minWidth": 880,

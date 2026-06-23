@@ -1,7 +1,8 @@
 [package]
-name = "app"
+# `default-app` is a placeholder crate name — rename after forking.
+name = "default-app"
 version = "0.2.5"
-description = "A Tauri App"
+description = "Desktop control-panel starter. Rename after forking."
 authors = ["you"]
 license = ""
 repository = ""

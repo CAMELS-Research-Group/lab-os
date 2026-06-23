@@ -57,8 +57,9 @@ export default function AppShell() {
   return (
     <div className="appshell">
       <nav className="rail" aria-label="Primary">
+        {/* [DEFAULT]: brand glyph derived from the app name — replace after forking. */}
         <Link to="/home" className="rail-mark" aria-label="Home">
-          P
+          [D]
         </Link>
         {NAV_ITEMS.map((item) => (
           <RailLink key={item.to} item={item} pathname={pathname} />

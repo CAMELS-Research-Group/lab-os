@@ -1,7 +1,7 @@
 {
-  "name": "p3-platform",
+  "name": "default-app",
   "version": "0.2.5",
-  "description": "ESL read-aloud pronunciation-practice client.",
+  "description": "Desktop control-panel starter. Rename after forking.",
   "private": true,
   "type": "module",
   "scripts": {

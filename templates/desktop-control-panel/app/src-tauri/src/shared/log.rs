@@ -25,7 +25,7 @@
 //!   what the caller intended).
 //! - The plugin appends the `.log` extension to the file basename
 //!   automatically (`RotatingFile` joins `<dir>/<basename>.log`), so we pass
-//!   `"ias"` and get `<app_log_dir>/ias.log`.
+//!   `"app"` and get `<app_log_dir>/app.log`.
 //! - We rely on the plugin's default desktop format
 //!   (`[YYYY-MM-DD][HH:MM:SS][target][level] message`) which already includes
 //!   timestamp, module path (= log target), level, and message per the
@@ -48,7 +48,9 @@ const MAX_LOG_SIZE_BYTES: u128 = 5 * 1024 * 1024;
 const MAX_LOG_FILES: usize = 5;
 
 /// Basename of the log file. The plugin appends `.log` automatically.
-const LOG_FILE_BASENAME: &str = "ias";
+/// Placeholder name — rename after forking if a product-specific log filename
+/// is preferred (cosmetic; nothing external depends on it).
+const LOG_FILE_BASENAME: &str = "app";
 
 /// One-shot record of the path passed to [`init`]. Process-wide.
 static INIT_GUARD: OnceLock<PathBuf> = OnceLock::new();

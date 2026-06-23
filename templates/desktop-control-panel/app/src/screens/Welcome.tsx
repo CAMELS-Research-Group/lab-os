@@ -25,7 +25,8 @@ export default function Welcome() {
 
   return (
     <div className="screen welcome-screen">
-      <p className="welcome-kicker">P3 Platform</p>
+      {/* [DEFAULT]: replace with the app display name after forking. */}
+      <p className="welcome-kicker">[DEFAULT]</p>
       <h1>Welcome</h1>
       <p className="lede">
         A private, on-device app. Here's exactly what it does — and does not —

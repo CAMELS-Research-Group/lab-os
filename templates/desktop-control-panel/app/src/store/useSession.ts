@@ -24,7 +24,8 @@ export const useSession = create<SessionState>()(
       resetAll: () => set({ hasCompletedFirstRun: false }),
     }),
     {
-      name: "p3-platform:session",
+      // Local-storage key namespace — rename after forking (machine identifier).
+      name: "default-app:session",
       // Persist only the first-run flag so a relaunch lands on the right gate.
       partialize: (s) => ({
         hasCompletedFirstRun: s.hasCompletedFirstRun,
