@@ -63,6 +63,14 @@ framing is "bring a low-stakes real project." A project with no stakes and no au
 undermines the verification discipline Building teaches (it is much harder to care whether a gate
 passes on a spec you have no stake in).
 
+**Development home is a fork of lab-os.** The participant's dev home is their own fork of lab-os,
+stood up in the kickoff (see Getting Started). Their project is nested inside that fork as its own
+gitignored git repo — so the fork is the home and rules source, never the thing they build, and
+bring-your-own-project is unchanged. (Running a *pre-baked* plan against the fork itself stays the
+facilitator-only fallback for participants who arrive without a plan — project log, #42.) The prior
+junction-based, multi-repo dev-root is kept as the documented power-user alternative, not the
+default.
+
 **Rejected alternatives:**
 
 - **Fixed sample/starter repository** — the retired sandbox used a fixed capability checklist

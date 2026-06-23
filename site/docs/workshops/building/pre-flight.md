@@ -28,17 +28,19 @@ when those checks pass.
 ## 2 — Git is working
 
 - [ ] `git --version` prints a version number without error
-- [ ] You have a local clone of the project you are bringing to the session
+- [ ] You have set up your dev home — a clone of your **lab-os fork** (Getting Started / the kickoff
+      bootstrap), or the clone fallback if you didn't fork
 
 ---
 
-## 3 — Your project is on a branch you can experiment on
+## 3 — Your project repo is nested in your dev home, on an experiment branch
 
-The Building exercises use git to isolate work and review changes. You need a branch that is
-safe to experiment on — one where you can make commits, create worktrees, and discard work
-without affecting your main line.
+Your project lives as its own git repo nested inside your dev home (e.g. `<DEV_ROOT>/<project>/`),
+gitignored by the fork so its history stays separate. The Building exercises use git to isolate
+work and review changes, so you need a branch that is safe to experiment on.
 
-- [ ] You have created or checked out an experiment branch (not `main` or `master`)
+- [ ] Your project repo exists inside your dev home and holds your execution-ready plan
+- [ ] You have created or checked out an experiment branch in it (not `main` or `master`)
 - [ ] `git status` reports **nothing to commit, working tree clean** on that branch
 
 If your working tree is not clean, stash or commit the in-progress work before the session.
@@ -50,7 +52,7 @@ If your working tree is not clean, stash or commit the in-progress work before t
 The Building part works from the execution-ready plan you produced in Part 1 — Planning. You
 will need it open during the exercises.
 
-- [ ] You have the plan file (your decomposed task list) accessible on your machine
+- [ ] Your plan file (the decomposed task list) is re-homed in your project repo and openable
 - [ ] You can open it in a text editor or view it in the terminal
 - [ ] The plan passes the [Planning completion checklist](../planning/completion-checklist.md) —
       every item is checked (the plan is execution-ready)
@@ -66,7 +68,7 @@ The Building exercises use git worktrees to create an isolated workspace for aut
 so an agent can work without touching the files you have open in your editor. This is the item
 most likely to produce a surprise, so verify it explicitly.
 
-Run these three commands in your project's repository:
+Run these three commands in your project repo (inside your dev home):
 
 ```
 git worktree add ../preflight-test HEAD

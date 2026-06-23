@@ -25,9 +25,10 @@ Confirm participants have:
    [pre-flight](../../../site/docs/workshops/building/pre-flight.md) is the readiness check). The
    kickoff's bootstrap demo stands this up; setup gaps are the session-killer — a participant
    whose workspace is not ready consumes everyone else's time.
-3. **Moved their plan into the workspace** — the Planning artifact (and the project it targets)
-   lives in the fork, so the agent acts on it with the lab's rules loaded. A participant whose
-   plan is still outside the workspace spends Exercise 1 relocating it instead of practicing.
+3. **Their project + plan are re-homed in the fork** — nested as its own git repo inside their dev
+   home (the kickoff's bootstrap does this), so the agent acts on the plan with the lab's rules
+   loaded. A participant whose plan is still outside their fork isn't set up — fix it before the
+   exercises, not during them.
 4. **A verification command in mind** — ideally named in the kickoff's quality-gate beat or the
    pre-flight. If they do not have one, they define it as the first task in the session
    (Exercise 1 / quality-gate worksheet).

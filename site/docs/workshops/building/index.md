@@ -11,7 +11,8 @@ toward autonomous delegation. Along the way, you will define hard quality gates,
 verify-don't-trust discipline, and learn what a gate can and cannot catch.
 
 The project you bring is the project you build. There is no prescribed sample; the exercises run
-against your own plan from Part 1.
+against your own plan from Part 1 — nested as its own repo inside your lab-os fork (your dev home,
+set up in [Getting Started](/docs/getting-started)).
 
 ## Prerequisites
 
@@ -21,9 +22,9 @@ Before starting, confirm:
   out-of-scope, decomposed into an ordered, individually-verifiable task list. Use the
   [Planning completion checklist](../planning/completion-checklist.md) to confirm before you begin.
   If the plan isn't execution-ready yet, return to Part 1.
-- **Your environment is verified** — Claude Code installed and authenticated, Git working, your
-  project cloned on an experimentable branch, and git worktrees confirmed working on your machine.
-  The [pre-flight worksheet](./pre-flight.md) walks every check.
+- **Your environment is verified** — Claude Code installed and authenticated, your lab-os fork set
+  up as your dev home with your project nested inside it on an experimentable branch, and git
+  worktrees confirmed working. The [pre-flight worksheet](./pre-flight.md) walks every check.
 
 ## What you will produce
 

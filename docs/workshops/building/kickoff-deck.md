@@ -258,7 +258,7 @@ output.
 it's not a nicety you skip under time pressure. And it's iterative: a pass surfaces findings, you
 resolve each — fix it now, or route it to an issue with a reason — then review again until the merge
 bar is clear. A second set of eyes makes it stronger: a teammate, or the lab's automated reviewer that
-posts an outside read on every PR but never merges. You'll run exactly this loop in the demo.
+posts an outside read on open PRs but never merges. You'll run exactly this loop in the demo.
 
 ---
 
@@ -274,16 +274,18 @@ rules it loads, and the fact that the lab runs those rules on itself.
 ### S19 · Your working surface
 
 **On-slide:**
-- *Your workspace is layered context files plus the lab's shared rules, loaded every session.*
-- Three `CLAUDE.md` layers: global (you) → dev-root (workspace) → repo (project) — specific wins
-- The lab's rules are linked, not copied — a `git pull` keeps you current
+- *Your workspace is your lab-os fork — layered context files plus the lab's rules, loaded every session.*
+- Three `CLAUDE.md` layers: global (you) → dev-home/fork (workspace) → project (nested repo) — specific wins
+- The rules live in your fork; `git pull upstream` keeps them current (junction stays as the multi-repo power-user path)
 - Two plugins add capabilities: superpowers and pr-review-loop
 - **This is the surface you'll stand up in the demo**
 
-**Notes:** This is what you're about to set up. Three layers of context files Claude reads every
-session: who you are (global), your workspace map (dev-root), each project (repo) — most specific wins.
-The lab's rules link into every session — linked, so a `git pull` keeps you current. Plus two plugins.
-This is the surface; in a minute you stand it up.
+**Notes:** This is what you're about to set up — your own fork of lab-os as your dev home. Three
+layers of context files Claude reads every session: who you are (global), your dev-home/fork
+(workspace), each nested project (repo) — most specific wins. The rules live natively in your fork;
+`git pull upstream` keeps them current. (If you'd rather run many repos under one home, the junction
+model is the power-user alternative.) Plus two plugins. This is the surface; in a minute you stand it
+up.
 
 ### S20 · The four rules
 
@@ -302,17 +304,17 @@ has one owning document. You don't memorise these — they load and the agent ap
 ### S21 · We run it on ourselves
 
 **On-slide:**
-- *The lab enforces these rules on its own repo — including the review step you just saw.*
-- Three CI checks run on every PR: log-lint, docs-budget, merge-bar-check
-- An automated reviewer posts an outside-perspective read on PRs — but never merges
+- *The lab runs these rules on its own repo — including the review step you just saw.*
+- Three CI checks lint every PR: log-lint, docs-budget, merge-bar-check
+- An automated reviewer posts an outside-perspective read on open PRs — but never merges
 - Lab tooling ships through a public plugin marketplace
 - **The way we teach you to work is the way the lab actually works**
 
 **Notes:** Credibility, briefly — this matters most to anyone evaluating how the lab works. The
-handbook repo enforces its own rules in CI, three checks on every PR. An automated reviewer posts an
-outside-perspective read on every PR — the Review step, automated — but never approves or merges; a
-human owns that. And lab tooling ships through a public marketplace. The way we teach you to work is
-the way the lab actually works.
+handbook repo runs its own rules in CI — three checks that lint every PR. A separate automated
+reviewer posts an outside-perspective read on open PRs — the Review step, automated — but never
+approves or merges; a human owns that. And lab tooling ships through a public marketplace. The way
+we teach you to work is the way the lab actually works.
 
 ---
 
@@ -354,17 +356,19 @@ own machines.
 **On-slide** (source of truth: the handbook's Getting Started page):
 1. Prereq check: `claude` / `git` / `gh --version`; confirm you're logged in
 2. Paste the one bootstrap prompt — it runs the rest, confirming each step
-3. → Claude clones lab-os into your workspace (your fork)
-4. → personalizes your global config + seeds the dev-root one
-5. → links the rules (junction / symlink) — linked, not copied
-6. → installs the two plugins (pr-review-loop, superpowers)
-7. → verifies: rules resolve, no placeholders, answers the commit-rules question
-8. Then create a repo + your first `git worktree` — your work surface
+3. → Claude forks lab-os to your account + clones your fork as your dev home (clone is the fallback)
+4. → personalizes your global config + seeds the dev-home one (rules are native — no junction)
+5. → cleans the fork: fresh project log, drops lab-os's own history + the handbook site
+6. → re-homes your plan as its own nested repo, then installs the two plugins
+7. → verifies: rules resolve (incl. from the nested project), remotes right, no placeholders
+8. Then your first `git worktree` in the project — your autonomous-run work surface
 
 **Notes:** Source of truth is the handbook's Getting Started page. The point participants miss: they
-paste ONE prompt and Claude clones lab-os itself (step 3) and reads the templates from that clone —
-nobody clones it by hand first. Confirm before every file write. The verify pass proves the setup took
-— a fresh session answers "what are the lab's commit-message rules?" from `01-workflow.md`.
+paste ONE prompt and Claude forks + clones lab-os itself (step 3) and reads the templates from that
+fork — nobody sets it up by hand first. Confirm before every fork/clone/delete/move. `git pull
+upstream` is how the fork stays current — no junction to manage. The verify pass proves it took — a
+fresh session, even inside the nested project, answers "what are the lab's commit-message rules?"
+from `01-workflow.md`.
 
 ### S26 · The payoff — run the loop
 

@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
 - 2026-06-19 05:58 — Workshop Program supersedes onboarding-project and one-day Building · #39
 - 2026-06-13 15:00 — Handbook content rework gates tester launch · #25
@@ -16,6 +17,23 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home
+
+**Decision:** Onboarding now forks lab-os (clone fallback) and uses that fork as the participant's
+primary dev home, replacing the clone-as-rules-subdir + junction model. Rules live natively in the
+fork; `git pull upstream main` keeps them current. A light cleanup makes the fork their own (reset
+project log, drop lab-os's own design history + handbook site). Bring-your-own-project is preserved:
+the plan/project is re-homed as its own gitignored repo nested in the fork, keeping a clean history
+and inheriting the rules. The junction model is retained as the documented multi-repo power-user path.
+**Why:** A fork gives a personal, push-able copy (real PR target, upstream-syncable rules) and drops
+the most failure-prone bootstrap step. Nesting the project as a separate gitignored repo recovers the
+junction's one benefit — lab tooling kept separate from project work — without it.
+**Alternatives:** Junction/multi-repo dev-root — retained as the power-user path, not the default.
+Commit the project into the fork (monorepo) — rejected, couples upstream pulls with project history.
+**Refs:** #43; #42 (sample plan remains the facilitator-only fallback, unchanged by this)
 
 ---
 

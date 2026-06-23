@@ -1,22 +1,21 @@
 ---
 sidebar_position: 1
 title: Getting Started
-description: Set up your agentic workspace — Claude Code, persistent context files, linked rules, and plugins — guided by Claude itself in one paste.
+description: Set up your agentic workspace — Claude Code, persistent context files, your lab-os fork as your development home, and plugins — guided by Claude itself in one paste.
 ---
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 # Getting Started
 
 This exercise onboards you to agentic development — working with an AI that carries out tasks,
 not just answers questions. You'll set up an agentic workspace — Claude Code (Anthropic's AI
-coding assistant), persistent context files (`CLAUDE.md` layers), a link that loads the
-lab-os rules into every session, and two plugins (add-on capabilities for Claude Code). The setup itself is Claude-guided: you
-paste one prompt, Claude interviews you and performs the steps — your first agentic collaboration.
+coding assistant), persistent context files (`CLAUDE.md` layers), your own **fork of the lab-os
+handbook as your development home** (its rules load into every session), and two plugins (add-on
+capabilities for Claude Code). The setup itself is Claude-guided: you paste one prompt, Claude
+interviews you and performs the steps — your first agentic collaboration.
 
-`<DEV_ROOT>` is the single directory your workspace lives in. Pick one and use it consistently —
-**Windows:** `C:\Users\<you>\Development` · **macOS / Linux:** `~/Development`.
+`<DEV_ROOT>` is your development home — the local clone of your lab-os fork. Pick a path and use it
+consistently — **Windows:** `C:\Users\<you>\Development\lab-os` · **macOS / Linux:**
+`~/Development/lab-os`. Your own projects live in their own repos nested inside it.
 
 > **Reading the commands:** blocks titled **Terminal** run in your OS terminal;
 > blocks titled **Claude session** are typed into an active Claude Code session.
@@ -29,7 +28,10 @@ New to terminals? → [Terminal basics](./terminal-basics)
 |---|---|---|---|
 | **Claude subscription (Pro or Max)** | Agentic sessions use a lot of model time; a flat-rate subscription beats pay-per-use API billing | [claude.ai](https://claude.ai) | — |
 | **Git** | Copy ("clone") repositories to your machine and track changes | [git-scm.com](https://git-scm.com) | [→ Install Git](./install-git) |
-| **GitHub CLI (`gh`)** | The pull-request (PR) workflow you'll practice in the sandbox project | [cli.github.com](https://cli.github.com) | [→ Install GitHub CLI](./install-github-cli) |
+| **GitHub CLI (`gh`)** | Fork the handbook and run the pull-request (PR) workflow you'll practice | [cli.github.com](https://cli.github.com) | [→ Install GitHub CLI](./install-github-cli) |
+
+A GitHub account is needed to fork; if you don't have one (or prefer not to fork), the prompt has a
+clone fallback.
 
 ## Step 1 — Install Claude Code
 
@@ -38,78 +40,108 @@ confirm with `claude --version`, then run `claude` once and log in with your Cla
 
 ## Step 2 — Paste the bootstrap prompt
 
-Start a session with `claude` in your home directory and paste the entire block below. Claude
-interviews you first, then performs the setup, confirming before every step that creates,
-overwrites, or links files. The templates in
+Start a session with `claude` in the folder that will hold your dev home (e.g. `~/Development`) and
+paste the entire block below. Claude interviews you first, then performs the setup, confirming
+before every step that forks, clones, deletes, moves, or overwrites files. The templates in
 [lab-os/templates/](https://github.com/WatsonWBlair/lab-os/tree/main/templates) stay the source of
-truth — the prompt has Claude clone the repo and read them from there.
+truth — the prompt has Claude read them from your cloned fork.
 
 ```text title="Claude session"
-I'm setting up an agentic development workspace following the lab-os
+I'm setting up my primary agentic development home as a fork of the lab-os
 handbook. Walk me through setup interactively. Rules for the whole session:
 
-- Interview me BEFORE writing anything: my name, career stage / background,
+- Interview me BEFORE doing anything: my name, career stage / background,
   what I'll be working on, my stack and primary shell, my working style, my
-  OS (Windows / macOS / Linux), my time zone, and where I want my workspace
-  directory (<DEV_ROOT> — default C:\Users\<me>\Development on Windows,
-  ~/Development on macOS/Linux).
-- Confirm with me before any step that creates, overwrites, or links files.
-  If a target file already exists (especially ~/.claude/CLAUDE.md), show me
-  a merge plan and get my OK — never silently overwrite.
-- The lab-os templates are the source of truth. Read them from the cloned
-  repo and follow their embedded instructions; do not improvise their
-  content from memory.
+  OS (Windows / macOS / Linux), my time zone, where I want my dev home
+  (<DEV_ROOT> — default ~/Development/lab-os, or
+  C:\Users\<me>\Development\lab-os on Windows), and where my current project
+  plan lives (a path or repo URL — I produced it in the Planning workshop).
+- Confirm with me before any step that creates a fork, clones, deletes,
+  moves, overwrites, or links files. If a target file already exists
+  (especially ~/.claude/CLAUDE.md), show me a merge plan and get my OK —
+  never silently overwrite.
+- The lab-os templates are the source of truth. Read them from my cloned
+  fork and follow their embedded instructions; do not improvise from memory.
 
 Then do the following, in order, confirming each step with me:
 
-1. Create my workspace directory <DEV_ROOT> if it doesn't exist.
-2. Clone https://github.com/WatsonWBlair/lab-os.git into <DEV_ROOT> — the
-   setup templates and the rules live there.
-3. Personalize <DEV_ROOT>/lab-os/templates/global-CLAUDE.template.md into
-   my personal global config at ~/.claude/CLAUDE.md (Windows:
-   C:\Users\<me>\.claude\CLAUDE.md). Fill the About Me block from the
-   interview; adapt the sections below About Me to my context; remove the
-   template's instructional blockquote. If I already have a global
-   CLAUDE.md, merge instead of overwriting — keep my About Me, fold in the
-   adapted sections.
-4. Seed <DEV_ROOT>/.claude/CLAUDE.md from
-   <DEV_ROOT>/lab-os/templates/dev-root-CLAUDE.template.md, adjusting paths
-   to my machine and removing the instructional blockquote.
-5. Link the rules so sessions at <DEV_ROOT> load them — link, don't copy,
-   so a git pull of lab-os keeps me current. First create
-   <DEV_ROOT>/.claude if it doesn't exist, then:
-   - Windows (PowerShell, no admin needed):
-     cmd /c mklink /J "<DEV_ROOT>\.claude\rules" "<DEV_ROOT>\lab-os\.claude\rules"
-   - macOS / Linux:
-     ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
+1. Fork the handbook to my GitHub account and clone the fork to <DEV_ROOT>,
+   keeping an `upstream` remote pointed at the source for rule updates:
+     gh repo fork WatsonWBlair/lab-os --clone
+   Confirm `origin` -> my fork and `upstream` -> WatsonWBlair/lab-os. If I
+   have no GitHub account or decline to fork, fall back to:
+     git clone https://github.com/WatsonWBlair/lab-os.git <DEV_ROOT>
+     git -C <DEV_ROOT> remote add upstream https://github.com/WatsonWBlair/lab-os.git
+
+2. Personalize <DEV_ROOT>/templates/global-CLAUDE.template.md into my global
+   config at ~/.claude/CLAUDE.md (Windows: C:\Users\<me>\.claude\CLAUDE.md).
+   Fill the About Me block from the interview; adapt the sections below About
+   Me to my context; remove the template's instructional blockquote. If I
+   already have a global CLAUDE.md, merge instead of overwriting — keep my
+   About Me, fold in the adapted sections.
+
+3. Seed <DEV_ROOT>/.claude/CLAUDE.md from
+   <DEV_ROOT>/templates/dev-root-CLAUDE.template.md, adjusting paths to my
+   machine and removing the instructional blockquote. (The lab rules already
+   live natively at <DEV_ROOT>/.claude/rules — this is a fork, so there is NO
+   junction to create; `git pull upstream main` is how I keep them current.)
+
+4. Make this fork mine, not a copy of lab-os — confirm before deleting:
+   - Reset <DEV_ROOT>/project_log.md (and project_log_archive.md if present)
+     to a fresh, empty log from <DEV_ROOT>/templates/project_log.template.md.
+   - Remove <DEV_ROOT>/docs/superpowers/specs/ (lab-os's own design history)
+     and replace <DEV_ROOT>/README.md with a short one naming this as my dev
+     home, keeping a one-line pointer to the upstream handbook.
+   - Remove <DEV_ROOT>/site/ (the published handbook stays live upstream and
+     I can read it there).
+   - Stage this cleanup on a branch and note I can open it as my first PR.
+
+5. Re-home my project plan as its own repo inside my dev home — confirm
+   before moving:
+   - Create <DEV_ROOT>/<project>/, initialize it as its own git repo, and
+     move my plan there from the location I gave in the interview.
+   - Add /<project>/ to <DEV_ROOT>/.gitignore so my project keeps its own git
+     history and never tangles with `git pull upstream`.
+
 6. Install the plugins: run `/plugin marketplace add WatsonWBlair/lab-claude-plugins`
    then `/plugin install pr-review-loop@lab-claude-plugins`. Also install
    `/plugin install superpowers@claude-plugins-official` (superpowers is on
    the official marketplace that ships with Claude Code — no marketplace add
    needed). (These are slash commands I run in Claude Code myself — walk me
    through them rather than running them for me.)
+
 7. Run a verification pass and show me the results:
-   - <DEV_ROOT>/.claude/rules resolves to lab-os/.claude/rules and lists
-     the rule files (01-workflow.md, 02-data-protection.md, ...)
+   - <DEV_ROOT>/.claude/rules lists the rule files (01-workflow.md,
+     02-data-protection.md, ...)
+   - git -C <DEV_ROOT> remote -v shows origin = my fork, upstream = the source
    - ~/.claude/CLAUDE.md exists with no remaining <...> placeholders
-   - <DEV_ROOT>/.claude/CLAUDE.md exists
+   - <DEV_ROOT>/.claude/CLAUDE.md exists; project_log.md is the fresh stub;
+     site/ and docs/superpowers/specs/ are gone
+   - <DEV_ROOT>/<project>/ is its own git repo, gitignored by the fork, and
+     holds my plan
    - the plugins are listed by /plugin
-   Then tell me to start a fresh session at <DEV_ROOT> and ask it "what are
-   the lab's commit-message rules?" — the answer should come from
-   01-workflow.md.
+   Then tell me to start a fresh session at <DEV_ROOT> and ask "what are the
+   lab's commit-message rules?" (the answer should come from 01-workflow.md),
+   and a fresh session inside <DEV_ROOT>/<project>/ and ask the same —
+   confirming my nested project inherits the lab rules.
 
 If anything fails, stop and explain before moving on. When everything
 passes, summarize what was set up and where.
 ```
 
 <details>
-<summary>New to this? What the junction/symlink does</summary>
+<summary>New to this? How your fork stays current with the lab rules</summary>
 
-A junction (Windows) or symlink (macOS/Linux) is a folder that is really just a signpost pointing
-at another folder. Here, `<DEV_ROOT>/.claude/rules` doesn't hold its own copy of the rules —
-it points at the copy inside the `lab-os` repo on your machine. When the rules update and
-you run `git pull` in `lab-os`, the signpost automatically shows the new version, with nothing to
-re-copy. That's why the prompt says "link, don't copy."
+Your dev home is a *fork* of lab-os, so the rules at `<DEV_ROOT>/.claude/rules` are really yours —
+no copy, no link to manage. To pull in rule updates from the upstream handbook later, run
+`git pull upstream main` in `<DEV_ROOT>`. (The fork keeps an `upstream` remote pointing at
+`WatsonWBlair/lab-os` for exactly this.)
+
+**Power user — many repos under one home?** If you'd rather keep several project repos side by side
+under a neutral `<DEV_ROOT>` and share one rules source between them, clone lab-os as a
+subdirectory and *link* its rules up to the dev root with a junction (Windows) or symlink
+(macOS/Linux): `<DEV_ROOT>/.claude/rules` → `<DEV_ROOT>/lab-os/.claude/rules`. That's the lab's own
+multi-repo setup; the fork-as-home flow above is the simpler default.
 
 </details>
 
@@ -118,36 +150,22 @@ re-copy. That's why the prompt says "link, don't copy."
 
 `CLAUDE.md` files are instruction notes that Claude reads automatically at the start of every
 session. The setup uses three, stacked from general to specific: your **global** file (who you are
-and how you like to work — applies everywhere), the **dev-root** file (a map of your workspace —
+and how you like to work — applies everywhere), the **dev-root** file (a map of your dev home —
 applies when you work in `<DEV_ROOT>`), and a **per-repo** file (details of one project — applies
 inside that project). Claude reads every layer that applies to where you opened the session, and
-when two disagree, the most specific one wins. The bootstrap prompt installs the first two; each
-repo ships its own third.
+when two disagree, the most specific one wins. The bootstrap prompt sets up the first two (global +
+your dev-home fork); each project you nest inside your home brings its own third.
 
 </details>
 
 ## Verify your setup
 
-<Tabs groupId="os">
-<TabItem value="windows" label="Windows (PowerShell)">
-
 ```bash title="Terminal"
-Get-Item "$HOME\Development\.claude\rules" | Select-Object LinkType, Target
+git -C <DEV_ROOT> remote -v
 ```
 
-Expected: `LinkType` = Junction; `Target` ends in `lab-os\.claude\rules`.
-
-</TabItem>
-<TabItem value="mac-linux" label="macOS / Linux">
-
-```bash title="Terminal"
-ls -l ~/Development/.claude/rules
-```
-
-Expected: arrow pointing to `lab-os/.claude/rules`.
-
-</TabItem>
-</Tabs>
+Expected: `origin` points at your fork; `upstream` points at `WatsonWBlair/lab-os`. Your rules live
+in `<DEV_ROOT>/.claude/rules` directly (no junction to check).
 
 Then, in an active Claude Code session:
 
@@ -163,15 +181,17 @@ Start a fresh session at `<DEV_ROOT>` and ask:
 what are the lab's commit-message rules?
 ```
 
-Expected: answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject).
+Expected: answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject). Repeat from
+inside your nested project (`<DEV_ROOT>/<project>/`) — the same answer confirms your project
+inherits the lab rules.
 
 Also confirm your global `~/.claude/CLAUDE.md` has no `<...>` placeholders left — About Me should
 reflect you.
 
-**If a check fails:** junction/symlink check fails → re-run the prompt's link step (step 5), or use
-the manual commands in the [lab-os README](https://github.com/WatsonWBlair/lab-os#how-repos-consume-it).
-Rules question goes unanswered → confirm the session was opened AT `<DEV_ROOT>`, not a subdirectory.
-Placeholders still showing → finish personalizing the global file.
+**If a check fails:** remotes wrong → re-run the prompt's fork/clone step (step 1), or use the
+manual commands in the [lab-os README](https://github.com/WatsonWBlair/lab-os#how-repos-consume-it).
+Rules question goes unanswered → confirm the session was opened within `<DEV_ROOT>` (your fork
+root). Placeholders still showing → finish personalizing the global file.
 
 ## Next steps
 
