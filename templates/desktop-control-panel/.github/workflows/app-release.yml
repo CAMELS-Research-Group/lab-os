@@ -1,5 +1,12 @@
 name: App release
 
+# ⚠ WHITE-LABEL TODO (T13): this release workflow is GP/IAS-derived and is NOT yet
+# white-labelled. It hardcodes a specific release target (Pace-IAS/IAS), per-platform
+# manifest URLs, and ESL model vars (IAS_MODEL_*) that no longer apply after the strip.
+# It is INERT in this template (a nested .github is not run by the parent repo); a
+# forker must configure or replace it post-fork. Tracked for T13 (templatize the
+# CI/release workflows + EXTENSION-POINTS).
+#
 # CI-6 / CI-11 + #98 — workflow_dispatch multi-platform build + gated publish.
 #   Design: documentation/engineering/planning/2026-06-09-ci6-release-workflow-design.md
 #   Plan:   documentation/engineering/planning/2026-06-09-ci6-release-workflow-plan.md
