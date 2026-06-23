@@ -11,8 +11,9 @@ toward autonomous delegation. Along the way, you will define hard quality gates,
 verify-don't-trust discipline, and learn what a gate can and cannot catch.
 
 The project you bring is the project you build. There is no prescribed sample; the exercises run
-against your own plan from Part 1 — nested as its own repo inside your lab-os fork (your dev home,
-set up in [Getting Started](/docs/getting-started)).
+against your own plan from Part 1 — which lives at your lab-os fork's `_plans/`, with your project
+code (if any) nested as its own repo inside the fork (your dev home, set up in
+[Getting Started](/docs/getting-started)).
 
 ## Prerequisites
 
