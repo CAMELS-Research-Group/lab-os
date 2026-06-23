@@ -4,8 +4,9 @@
 **Audience:** Facilitator running the Building session. Reference solution for **Task 3** of
 [`../sample-plan.md`](../sample-plan.md) (add a planning surface).
 
-These three files are what a participant **produces** in Task 3. They live here as a reference so you
-can show the target shape during the demo, or paste a known-good version if a run stalls.
+The three files below are what a participant **produces** in Task 3 (this README stays here as the
+guide). They live here as a reference so you can show the target shape during the demo, or paste a
+known-good version if a run stalls.
 
 > **Do not commit these to the live paths in the upstream.** Task 3 asks participants to *create*
 > `templates/backlog-item.template.md`, `site/docs/planning/backlog.md`, and a root `BACKLOG.md` in
