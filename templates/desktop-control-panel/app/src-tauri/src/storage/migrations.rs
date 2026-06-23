@@ -15,10 +15,8 @@ use crate::storage::error::StorageError;
 
 const INIT_SQL: &str = include_str!("migrations/001_init.sql");
 const UPDATE_CHECKS_SQL: &str = include_str!("migrations/002_update_checks.sql");
-const FEEDBACK_SQL: &str = include_str!("migrations/003_feedback.sql");
 
-const MIGRATIONS: &[(i32, &str)] =
-    &[(1, INIT_SQL), (2, UPDATE_CHECKS_SQL), (3, FEEDBACK_SQL)];
+const MIGRATIONS: &[(i32, &str)] = &[(1, INIT_SQL), (2, UPDATE_CHECKS_SQL)];
 
 /// Reads the current `PRAGMA user_version` from the connection. Returns `0`
 /// for a freshly-created database that has not had any migrations applied.
@@ -64,10 +62,10 @@ mod tests {
     fn migrations_run_idempotent() {
         let mut conn = RusqliteConnection::open_in_memory().unwrap();
         let first = run(&mut conn).unwrap();
-        assert_eq!(first, 3);
+        assert_eq!(first, 2);
         // Second invocation should be a no-op and return the same version.
         let second = run(&mut conn).unwrap();
-        assert_eq!(second, 3);
-        assert_eq!(current_version(&conn).unwrap(), 3);
+        assert_eq!(second, 2);
+        assert_eq!(current_version(&conn).unwrap(), 2);
     }
 }

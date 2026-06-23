@@ -24,7 +24,8 @@ impl Connection {
     ///
     /// - `journal_mode = WAL` — better concurrency for the read-heavy
     ///   reporting paths.
-    /// - `foreign_keys = ON` — enforces the `upload_queue.session_id` FK.
+    /// - `foreign_keys = ON` — enforces any FKs a downstream app's domain
+    ///   migrations add (the spine schema itself has none).
     /// - `synchronous = NORMAL` — durability/perf tradeoff appropriate for
     ///   WAL-mode user databases.
     ///
@@ -85,54 +86,13 @@ impl Connection {
 mod tests {
     use super::*;
     use crate::storage::migrations;
-    use rusqlite::params;
     use tempfile::TempDir;
 
     fn open_tmp() -> (TempDir, Connection) {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("ias.db");
+        let path = dir.path().join("app.db");
         let conn = Connection::new(&path).unwrap();
         (dir, conn)
-    }
-
-    /// Insert helper: writes a session row with the minimum NOT NULL columns
-    /// satisfied by anonymous synthetic values (per repo data-protection
-    /// rule). `session_id` parameterised so callers can disambiguate.
-    fn insert_session(conn: &RusqliteConnection, session_id: &str) {
-        conn.execute(
-            "INSERT INTO sessions (
-                session_id, started_at, ended_at, duration_seconds,
-                l1_at_session, regional_variety_at_session, phoneme_attempts_json,
-                difficulty_level, difficulty_thresholds_json, threshold_table_version,
-                reattempt_counts_json, cumulative_session_count,
-                app_version, model_version, os_family, os_major
-            ) VALUES (
-                ?1, ?2, ?3, ?4,
-                ?5, ?6, ?7,
-                ?8, ?9, ?10,
-                ?11, ?12,
-                ?13, ?14, ?15, ?16
-            )",
-            params![
-                session_id,
-                "2026-06-01T00:00:00Z",
-                "2026-06-01T00:05:00Z",
-                300_i64,
-                "es",
-                None::<&str>,
-                "[]",
-                "gentle",
-                r#"{"/r/":0.5}"#,
-                3_i64,
-                "{}",
-                1_i64,
-                "0.1.0",
-                "model-v1",
-                "linux",
-                "6",
-            ],
-        )
-        .unwrap();
     }
 
     // -----------------------------------------------------------------
@@ -156,27 +116,21 @@ mod tests {
             .collect();
         assert_eq!(
             names,
-            vec![
-                "feedback".to_string(),
-                "install_identity".to_string(),
-                "sessions".to_string(),
-                "settings".to_string(),
-                "upload_queue".to_string(),
-            ]
+            vec!["install_identity".to_string(), "settings".to_string(),]
         );
     }
 
     #[test]
     fn connection_new_is_idempotent() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("ias.db");
+        let path = dir.path().join("app.db");
 
         let conn = Connection::new(&path).unwrap();
-        assert_eq!(migrations::current_version(conn.as_inner()).unwrap(), 3);
+        assert_eq!(migrations::current_version(conn.as_inner()).unwrap(), 2);
         drop(conn);
 
         let conn = Connection::new(&path).unwrap();
-        assert_eq!(migrations::current_version(conn.as_inner()).unwrap(), 3);
+        assert_eq!(migrations::current_version(conn.as_inner()).unwrap(), 2);
     }
 
     #[test]
@@ -211,21 +165,19 @@ mod tests {
         {
             let tx = conn.transaction().unwrap();
             tx.execute(
-                "INSERT INTO settings (id, l1, difficulty) VALUES (1, 'es', 'standard')",
+                "INSERT INTO settings (id, theme) VALUES (1, 'dark')",
                 [],
             )
             .unwrap();
             tx.commit().unwrap();
         }
-        let difficulty: String = conn
+        let theme: String = conn
             .as_inner()
-            .query_row(
-                "SELECT difficulty FROM settings WHERE id = 1",
-                [],
-                |row| row.get(0),
-            )
+            .query_row("SELECT theme FROM settings WHERE id = 1", [], |row| {
+                row.get(0)
+            })
             .unwrap();
-        assert_eq!(difficulty, "standard");
+        assert_eq!(theme, "dark");
     }
 
     #[test]
@@ -234,7 +186,7 @@ mod tests {
         {
             let tx = conn.transaction().unwrap();
             tx.execute(
-                "INSERT INTO settings (id, l1, difficulty) VALUES (1, 'es', 'strict')",
+                "INSERT INTO settings (id, theme) VALUES (1, 'light')",
                 [],
             )
             .unwrap();
@@ -248,50 +200,8 @@ mod tests {
     }
 
     // -----------------------------------------------------------------
-    // V0.4 session columns + constraints
+    // Settings singleton constraint
     // -----------------------------------------------------------------
-
-    #[test]
-    fn session_row_roundtrip_with_v04_fields() {
-        let (_dir, conn) = open_tmp();
-        insert_session(conn.as_inner(), "test-session-1");
-
-        let (level, thresholds, version): (String, String, i32) = conn
-            .as_inner()
-            .query_row(
-                "SELECT difficulty_level, difficulty_thresholds_json, threshold_table_version \
-                 FROM sessions WHERE session_id = ?1",
-                params!["test-session-1"],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-            )
-            .unwrap();
-        assert_eq!(level, "gentle");
-        assert_eq!(thresholds, r#"{"/r/":0.5}"#);
-        assert_eq!(version, 3);
-    }
-
-    #[test]
-    fn settings_difficulty_check_constraint_rejects_invalid_level() {
-        let (_dir, conn) = open_tmp();
-        let err = conn
-            .as_inner()
-            .execute(
-                "INSERT INTO settings (id, l1, difficulty) VALUES (1, '', 'extreme')",
-                [],
-            )
-            .unwrap_err();
-        match err {
-            rusqlite::Error::SqliteFailure(e, _) => {
-                assert_eq!(
-                    e.extended_code,
-                    rusqlite::ffi::SQLITE_CONSTRAINT_CHECK,
-                    "expected SQLITE_CONSTRAINT_CHECK (275), got extended_code={}",
-                    e.extended_code
-                );
-            }
-            other => panic!("expected SqliteFailure(CHECK), got {other:?}"),
-        }
-    }
 
     #[test]
     fn settings_singleton_constraint() {
@@ -299,7 +209,7 @@ mod tests {
         let err = conn
             .as_inner()
             .execute(
-                "INSERT INTO settings (id, l1, difficulty) VALUES (2, '', 'gentle')",
+                "INSERT INTO settings (id, theme) VALUES (2, 'system')",
                 [],
             )
             .unwrap_err();
@@ -314,38 +224,5 @@ mod tests {
             }
             other => panic!("expected SqliteFailure(CHECK), got {other:?}"),
         }
-    }
-
-    #[test]
-    fn upload_queue_fk_cascades_on_session_delete() {
-        let (_dir, conn) = open_tmp();
-        insert_session(conn.as_inner(), "test-session-cascade");
-        conn.as_inner()
-            .execute(
-                "INSERT INTO upload_queue (
-                    session_id, payload_kind, payload_json, queued_at, attempt_count
-                 ) VALUES (?1, 'session_report', '{}', '2026-06-01T00:00:00Z', 0)",
-                params!["test-session-cascade"],
-            )
-            .unwrap();
-
-        let before: i64 = conn
-            .as_inner()
-            .query_row("SELECT COUNT(*) FROM upload_queue", [], |row| row.get(0))
-            .unwrap();
-        assert_eq!(before, 1);
-
-        conn.as_inner()
-            .execute(
-                "DELETE FROM sessions WHERE session_id = ?1",
-                params!["test-session-cascade"],
-            )
-            .unwrap();
-
-        let after: i64 = conn
-            .as_inner()
-            .query_row("SELECT COUNT(*) FROM upload_queue", [], |row| row.get(0))
-            .unwrap();
-        assert_eq!(after, 0, "FK ON DELETE CASCADE should have removed the queue row");
     }
 }

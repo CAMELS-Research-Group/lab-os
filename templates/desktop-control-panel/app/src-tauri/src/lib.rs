@@ -56,16 +56,13 @@ pub fn run() {
     })
     .invoke_handler(tauri::generate_handler![
       settings::commands::get_settings,
-      settings::commands::set_l1,
-      settings::commands::set_difficulty,
+      settings::commands::set_theme,
       settings::commands::set_report_uploads_enabled,
       settings::commands::set_update_checks_enabled,
       update::commands::check_for_update,
       update::commands::apply_update,
       update::commands::get_app_version,
-      storage::commands::clear_session_data,
-      storage::commands::get_session_history,
-      storage::commands::get_phoneme_trends,
+      storage::commands::clear_app_data,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
