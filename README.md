@@ -9,7 +9,7 @@ by agents and CI.
 
 ## What's here
 
-- `.claude/rules/` — markdown files defining lab-wide conventions. Consumed by Cowork locally (via a junction/symlink at `<DEV_ROOT>\.claude\rules\`) and by the PR-review GitHub Action at review time.
+- `.claude/rules/` — markdown files defining lab-wide conventions. Consumed by Cowork locally (natively in a lab-os fork, or via a junction/symlink in the multi-repo setup) and by the PR-review GitHub Action at review time.
   - [`01-workflow.md`](.claude/rules/01-workflow.md) — commit format, PR workflow, merge bar, doc-update triggers
   - [`02-data-protection.md`](.claude/rules/02-data-protection.md) — gated-dataset, PII, and binary/secret protection
   - [`03-logging.md`](.claude/rules/03-logging.md) — project-log standard (altitudes, entry triggers, format, immutability, overflow)
@@ -32,7 +32,7 @@ by agents and CI.
 
 ## How repos consume it
 
-**Locally (Cowork)**: clone this repo into your lab workspace (`<DEV_ROOT>`) and link its rules so Cowork sees them at the workspace root. The handbook's Getting Started page is the full walkthrough; the short form:
+**Locally (Cowork)**: the default onboarding path forks lab-os as your dev home, where the rules live natively (`git pull upstream` to stay current) — see the handbook's [Getting Started](https://watsonwblair.github.io/lab-os/docs/getting-started). The multi-repo power-user pattern instead clones lab-os under a neutral `<DEV_ROOT>` and links its rules up with a junction/symlink:
 
 ```powershell
 # Windows (PowerShell) — junction, no admin required

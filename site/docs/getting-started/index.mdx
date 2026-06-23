@@ -40,9 +40,9 @@ confirm with `claude --version`, then run `claude` once and log in with your Cla
 
 ## Step 2 — Paste the bootstrap prompt
 
-Start a session with `claude` in the folder that will hold your dev home (e.g. `~/Development`) and
-paste the entire block below. Claude interviews you first, then performs the setup, confirming
-before every step that forks, clones, deletes, moves, or overwrites files. The templates in
+Start a session with `claude` and paste the entire block below. Claude interviews you first, then
+performs the setup, confirming before every step that forks, clones, deletes, moves, or overwrites
+files. The templates in
 [lab-os/templates/](https://github.com/WatsonWBlair/lab-os/tree/main/templates) stay the source of
 truth — the prompt has Claude read them from your cloned fork.
 
@@ -65,11 +65,13 @@ handbook. Walk me through setup interactively. Rules for the whole session:
 
 Then do the following, in order, confirming each step with me:
 
-1. Fork the handbook to my GitHub account and clone the fork to <DEV_ROOT>,
-   keeping an `upstream` remote pointed at the source for rule updates:
-     gh repo fork WatsonWBlair/lab-os --clone
-   Confirm `origin` -> my fork and `upstream` -> WatsonWBlair/lab-os. If I
-   have no GitHub account or decline to fork, fall back to:
+1. Fork the handbook to my GitHub account and clone the fork into <DEV_ROOT>
+   (the trailing path makes the clone land there directly), keeping an
+   `upstream` remote pointed at the source for rule updates:
+     gh repo fork WatsonWBlair/lab-os --clone -- <DEV_ROOT>
+   This sets origin -> my fork and upstream -> WatsonWBlair/lab-os; confirm
+   with `git -C <DEV_ROOT> remote -v`. If I have no GitHub account or decline
+   to fork, fall back to:
      git clone https://github.com/WatsonWBlair/lab-os.git <DEV_ROOT>
      git -C <DEV_ROOT> remote add upstream https://github.com/WatsonWBlair/lab-os.git
 
@@ -92,8 +94,9 @@ Then do the following, in order, confirming each step with me:
    - Remove <DEV_ROOT>/docs/superpowers/specs/ (lab-os's own design history)
      and replace <DEV_ROOT>/README.md with a short one naming this as my dev
      home, keeping a one-line pointer to the upstream handbook.
-   - Remove <DEV_ROOT>/site/ (the published handbook stays live upstream and
-     I can read it there).
+   - Remove <DEV_ROOT>/site/ — the published handbook (workshop pages, guides)
+     stays live upstream and I read it in the browser; only docs/-tier files
+     like the sample plan are used locally, and those stay.
    - Stage this cleanup on a branch and note I can open it as my first PR.
 
 5. Re-home my project plan as its own repo inside my dev home — confirm
@@ -120,10 +123,9 @@ Then do the following, in order, confirming each step with me:
    - <DEV_ROOT>/<project>/ is its own git repo, gitignored by the fork, and
      holds my plan
    - the plugins are listed by /plugin
-   Then tell me to start a fresh session at <DEV_ROOT> and ask "what are the
-   lab's commit-message rules?" (the answer should come from 01-workflow.md),
-   and a fresh session inside <DEV_ROOT>/<project>/ and ask the same —
-   confirming my nested project inherits the lab rules.
+   Then tell me to start a fresh session at <DEV_ROOT> (my dev home — where I
+   root my work; rules load natively here) and ask "what are the lab's
+   commit-message rules?" — the answer should come from 01-workflow.md.
 
 If anything fails, stop and explain before moving on. When everything
 passes, summarize what was set up and where.
@@ -181,17 +183,16 @@ Start a fresh session at `<DEV_ROOT>` and ask:
 what are the lab's commit-message rules?
 ```
 
-Expected: answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject). Repeat from
-inside your nested project (`<DEV_ROOT>/<project>/`) — the same answer confirms your project
-inherits the lab rules.
+Expected: answers from `01-workflow.md` (e.g. `feat:`, `fix:`, lowercase subject). Root your work
+sessions at `<DEV_ROOT>` (your dev home), where the rules load natively; your nested project is a
+subdirectory you work on from there.
 
 Also confirm your global `~/.claude/CLAUDE.md` has no `<...>` placeholders left — About Me should
 reflect you.
 
-**If a check fails:** remotes wrong → re-run the prompt's fork/clone step (step 1), or use the
-manual commands in the [lab-os README](https://github.com/WatsonWBlair/lab-os#how-repos-consume-it).
-Rules question goes unanswered → confirm the session was opened within `<DEV_ROOT>` (your fork
-root). Placeholders still showing → finish personalizing the global file.
+**If a check fails:** remotes wrong → re-run the prompt's fork/clone step (step 1). Rules question
+goes unanswered → confirm the session was opened within `<DEV_ROOT>` (your fork root). Placeholders
+still showing → finish personalizing the global file.
 
 ## Next steps
 

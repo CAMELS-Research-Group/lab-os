@@ -360,15 +360,15 @@ own machines.
 4. → personalizes your global config + seeds the dev-home one (rules are native — no junction)
 5. → cleans the fork: fresh project log, drops lab-os's own history + the handbook site
 6. → re-homes your plan as its own nested repo, then installs the two plugins
-7. → verifies: rules resolve (incl. from the nested project), remotes right, no placeholders
+7. → verifies: rules resolve at your dev home, remotes right, no placeholders
 8. Then your first `git worktree` in the project — your autonomous-run work surface
 
 **Notes:** Source of truth is the handbook's Getting Started page. The point participants miss: they
 paste ONE prompt and Claude forks + clones lab-os itself (step 3) and reads the templates from that
 fork — nobody sets it up by hand first. Confirm before every fork/clone/delete/move. `git pull
-upstream` is how the fork stays current — no junction to manage. The verify pass proves it took — a
-fresh session, even inside the nested project, answers "what are the lab's commit-message rules?"
-from `01-workflow.md`.
+upstream` is how the fork stays current — no junction to manage. You root your work at the dev home
+(the fork); the verify pass proves it took — a fresh session there answers "what are the lab's
+commit-message rules?" from `01-workflow.md`.
 
 ### S26 · The payoff — run the loop
 

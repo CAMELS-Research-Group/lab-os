@@ -1,9 +1,10 @@
 # Development root — <your team / project> workspace orientation
 
-> **Template.** Copy this to the `.claude/CLAUDE.md` at the root of your local workspace (the
-> directory you clone all your repos into — referred to below as `<DEV_ROOT>`):
-> - **Windows:** `<DEV_ROOT>\.claude\CLAUDE.md` (e.g. `C:\Users\<you>\Development\.claude\CLAUDE.md`)
-> - **macOS / Linux:** `<DEV_ROOT>/.claude/CLAUDE.md` (e.g. `~/Development/.claude/CLAUDE.md`)
+> **Template.** Copy this to the `.claude/CLAUDE.md` at the root of your dev home — your local clone
+> of your lab-os fork (referred to below as `<DEV_ROOT>`); your own projects nest inside it as their
+> own repos:
+> - **Windows:** `<DEV_ROOT>\.claude\CLAUDE.md` (e.g. `C:\Users\<you>\Development\lab-os\.claude\CLAUDE.md`)
+> - **macOS / Linux:** `<DEV_ROOT>/.claude/CLAUDE.md` (e.g. `~/Development/lab-os/.claude/CLAUDE.md`)
 >
 > This file gives Cowork workspace-wide orientation when you open a session at `<DEV_ROOT>` (not just
 > inside a single repo). Your personal persona / approval gates / model defaults live in your global
@@ -41,18 +42,19 @@ List every repo a session at `<DEV_ROOT>` might touch. Columns: **Repo** (name a
 | `<your-secondary-repo>` | `<what it does>` | Active — `<phase>` |
 | `<your-earlier-prototype>` | `<what it was; why it's kept>` | Foundational; reference for design decisions |
 
-Core bootstrap clone set: list the repos a new contributor must clone to start working (typically your
-active repos plus the tooling repos below). Foundational and paused repos are cloned on demand when a
-question sends you upstream.
+Nested project repos: list the project repos you've nested inside your dev home (each its own git
+repo, gitignored from the fork). Foundational or reference repos are added on demand when a question
+sends you upstream.
 
 ## Tooling
 
 The shared tooling your workspace relies on — wired in during setup:
 
-- **`lab-os`** — the spec-driven-development conventions you cloned for this exercise. Its
-  `.claude/rules/` are consumed via a junction/symlink at `<DEV_ROOT>/.claude/rules/`, so a `git pull`
-  in `lab-os` keeps you current. Treat these as your **starting standards** — adapt or extend them as
-  your project's needs diverge. Source-of-truth: github.com/WatsonWBlair/lab-os.
+- **`lab-os`** — the spec-driven-development conventions. This dev home **is** your fork of lab-os, so
+  its `.claude/rules/` live here natively; `git pull upstream main` pulls rule updates from the source.
+  Treat these as your **starting standards** — adapt or extend them as your project's needs diverge.
+  (Prefer many repos under one neutral workspace? The junction/symlink consumption pattern is the
+  power-user alternative — see the handbook's Getting Started.) Source-of-truth: github.com/WatsonWBlair/lab-os.
 - **`lab-claude-plugins`** — the Claude Code plugins installed during setup (e.g. `pr-review-loop`),
   via the plugin marketplace. Source-of-truth: github.com/WatsonWBlair/lab-claude-plugins.
 - **`superpowers`** — workflow plugins from the official Claude Code marketplace (brainstorming,
