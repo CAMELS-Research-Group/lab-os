@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { clearSessionData, getSettings, setL1 as persistL1, setUpdateChecksEnabled } from "../ipc/commands";
+import {
+  clearAppData,
+  getSettings,
+  setTheme as persistTheme,
+  setUpdateChecksEnabled,
+} from "../ipc/commands";
+import type { Theme } from "../ipc/types";
 import { useSession } from "../store/useSession";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ErrorNotice from "../components/ErrorNotice";
-import LanguageSelect from "../components/LanguageSelect";
 import "./Settings.css";
 
 type DataConfirm = "reset-ui" | "clear-data" | null;
@@ -15,24 +20,17 @@ type DataConfirm = "reset-ui" | "clear-data" | null;
 // Settings.css so the teardown lands as the screen finishes darkening.
 const RESET_FADE_MS = 350;
 
+const THEMES: Theme[] = ["system", "light", "dark"];
+
 export default function Settings() {
   const nav = useNavigate();
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [theme, setThemeState] = useState<Theme | null>(null);
   // Error kinds (not raw strings) so the shared ErrorNotice copy map drives
   // the user-facing text. null = no error.
   const [settingsErrorKind, setSettingsErrorKind] = useState<string | null>(null);
 
   const resetAll = useSession((s) => s.resetAll);
-  const clearSessions = useSession((s) => s.clearSessions);
-  const sessionCount = useSession((s) => s.sessions.length);
-  const setL1 = useSession((s) => s.setL1);
-  const storeL1 = useSession((s) => s.l1);
-  const storeVariety = useSession((s) => s.regionalVariety);
-
-  // Language section — local draft state, written to the store only on Save.
-  const [l1Draft, setL1Draft] = useState(storeL1);
-  const [varietyDraft, setVarietyDraft] = useState(storeVariety);
-  const [l1Saved, setL1Saved] = useState(false);
 
   const [confirm, setConfirm] = useState<DataConfirm>(null);
   const [dataErrorKind, setDataErrorKind] = useState<string | null>(null);
@@ -41,7 +39,10 @@ export default function Settings() {
 
   useEffect(() => {
     getSettings()
-      .then((s) => setEnabled(s.update_checks_enabled))
+      .then((s) => {
+        setEnabled(s.update_checks_enabled);
+        setThemeState(s.theme);
+      })
       .catch(() => setSettingsErrorKind("settings_load_failed"));
   }, []);
 
@@ -49,15 +50,28 @@ export default function Settings() {
     if (enabled === null) return;
     const next = !enabled;
     setSettingsErrorKind(null);
-    // Don't leave a stale "Cleared N sessions" / data-error banner sitting on
-    // the screen while an unrelated action runs.
     setClearedNote(null);
     setDataErrorKind(null);
     try {
       await setUpdateChecksEnabled(next);
       setEnabled(next);
     } catch {
-      // Leave prior value; surface a transient error.
+      setSettingsErrorKind("settings_save_failed");
+    }
+  }
+
+  async function handleThemeChange(next: Theme) {
+    if (theme === null) return;
+    const prev = theme;
+    setSettingsErrorKind(null);
+    setClearedNote(null);
+    setDataErrorKind(null);
+    // Optimistic: reflect the choice immediately, roll back on failure.
+    setThemeState(next);
+    try {
+      await persistTheme(next);
+    } catch {
+      setThemeState(prev);
       setSettingsErrorKind("settings_save_failed");
     }
   }
@@ -87,15 +101,14 @@ export default function Settings() {
     setDataErrorKind(null);
     setClearedNote(null);
     try {
-      const deleted = await clearSessionData();
-      clearSessions();
+      const deleted = await clearAppData();
       setClearedNote(
         deleted === 0
-          ? "No saved sessions to clear."
-          : `Cleared ${deleted} saved ${deleted === 1 ? "session" : "sessions"}.`
+          ? "No saved data to clear."
+          : `Cleared ${deleted} saved ${deleted === 1 ? "item" : "items"}.`
       );
     } catch {
-      setDataErrorKind("session_clear_failed");
+      setDataErrorKind("data_clear_failed");
     }
   }
 
@@ -109,45 +122,7 @@ export default function Settings() {
       <p className="lede">App preferences. Additional settings will appear here in future releases.</p>
 
       <div className="card">
-        <div className="settings-section-label">Language</div>
-
-        {l1Saved && (
-          <p className="settings-note" role="status">Saved.</p>
-        )}
-
-        <LanguageSelect
-          l1={l1Draft}
-          variety={varietyDraft}
-          onL1Change={(v) => { setL1Draft(v); setL1Saved(false); }}
-          onVarietyChange={(v) => { setVarietyDraft(v); setL1Saved(false); }}
-          idPrefix="settings"
-        />
-
-        <div className="actions">
-          <button
-            className="primary"
-            disabled={l1Draft.trim().length === 0}
-            onClick={() => {
-              const l1 = l1Draft.trim();
-              const variety = varietyDraft.trim();
-              setL1(l1, variety);
-              setL1Saved(true);
-              // Also persist to the SQLite settings row via the Rust IPC so the
-              // eval pipeline (which reads settings.l1 and stamps l1_at_session)
-              // sees the change — not just the local store. Don't block the
-              // "Saved." confirmation on it; swallow the rejection so a
-              // no-backend build (React-dev / tests) doesn't throw an unhandled
-              // promise rejection (same offline-tolerant pattern as getSettings).
-              persistL1(l1, variety).catch(() => {});
-            }}
-          >
-            Save
-          </button>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="settings-section-label">Updates</div>
+        <div className="settings-section-label">Appearance</div>
 
         {settingsErrorKind && (
           <ErrorNotice kind={settingsErrorKind} variant="inline" />
@@ -155,13 +130,39 @@ export default function Settings() {
 
         <div className="settings-row">
           <div className="settings-row-text">
+            <span className="settings-row-title">Theme</span>
+            <span className="settings-row-desc">
+              Choose the app's color theme, or follow your system setting.
+            </span>
+          </div>
+          <select
+            className="settings-theme-select"
+            aria-label="Theme"
+            value={theme ?? "system"}
+            disabled={theme === null}
+            onChange={(e) => handleThemeChange(e.target.value as Theme)}
+          >
+            {THEMES.map((t) => (
+              <option key={t} value={t}>
+                {t === "system" ? "System" : t === "light" ? "Light" : "Dark"}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="settings-section-label">Updates</div>
+
+        <div className="settings-row">
+          <div className="settings-row-text">
             <span className="settings-row-title">Check for updates</span>
             <span className="settings-row-desc">
               Off by default — this is an opt-in feature. When enabled, the app
-              contacts the public GitHub releases feed over the network to check
-              for a newer version. No identifying information is sent: the
-              request carries only the standard HTTP headers a browser would send
-              to a public URL.
+              contacts the public releases feed over the network to check for a
+              newer version. No identifying information is sent: the request
+              carries only the standard HTTP headers a browser would send to a
+              public URL.
             </span>
           </div>
 
@@ -186,11 +187,10 @@ export default function Settings() {
 
         <div className="settings-row">
           <div className="settings-row-text">
-            <span className="settings-row-title">Clear session data</span>
+            <span className="settings-row-title">Clear app data</span>
             <span className="settings-row-desc">
-              Permanently deletes your saved practice history on this device
-              {sessionCount > 0 ? ` (${sessionCount} saved)` : ""}. Your
-              language preferences and settings are kept.
+              Permanently deletes the saved app data on this device. Your
+              settings are kept.
             </span>
           </div>
           <button
@@ -205,11 +205,9 @@ export default function Settings() {
           <div className="settings-row-text">
             <span className="settings-row-title">Reset app</span>
             <span className="settings-row-desc">
-              Start over from first-run setup — useful if you want to practice
-              with a different first language, or hand the device to a new
-              learner. This clears your language profile but does
-              <strong> not</strong> delete your saved session history; use
-              “Clear session data” for that.
+              Start over from first-run setup. This clears local UI state but
+              does <strong>not</strong> delete saved app data; use “Clear app
+              data” for that.
             </span>
           </div>
           <button
@@ -223,16 +221,15 @@ export default function Settings() {
 
       <ConfirmDialog
         open={confirm === "clear-data"}
-        title="Clear session data?"
+        title="Clear app data?"
         destructive
         confirmLabel="Clear data"
         onClose={() => setConfirm(null)}
         onConfirm={handleClearData}
         body={
           <p>
-            This permanently deletes your saved practice history on this
-            device. Your language preferences and settings are kept. This can’t
-            be undone.
+            This permanently deletes the saved app data on this device. Your
+            settings are kept. This can’t be undone.
           </p>
         }
       />
@@ -246,10 +243,8 @@ export default function Settings() {
         onConfirm={handleResetUi}
         body={
           <p>
-            This clears your language profile and returns the app to first-run
-            setup — use it to start fresh with a different first language or to
-            hand the device to a new learner. Your saved session history is{" "}
-            <strong>not</strong> deleted.
+            This returns the app to first-run setup and clears local UI state.
+            Your saved app data is <strong>not</strong> deleted.
           </p>
         }
       />

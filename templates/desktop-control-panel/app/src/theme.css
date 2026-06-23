@@ -37,9 +37,8 @@
   --radius: 16px;
   --radius-sm: 12px;
 
-  /* Editorial type system. Fraunces (variable serif) for display and passages;
-     Inria Sans for UI chrome; Charis SIL for IPA. The passage is the product —
-     it should read like real prose, not UI text. */
+  /* Editorial type system. Fraunces (variable serif) for display; Inria Sans
+     for UI chrome. Display text should read like real prose, not UI text. */
   --font-display: "Fraunces", "Charter", "Iowan Old Style", "Georgia", serif;
   --font-body: "Inria Sans", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --font-ipa: "Charis SIL", "Doulos SIL", "Lucida Sans Unicode", "Segoe UI", serif;

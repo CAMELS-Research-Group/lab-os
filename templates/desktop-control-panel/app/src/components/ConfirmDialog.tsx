@@ -17,10 +17,9 @@ type Props = {
 };
 
 /**
- * Reusable confirmation dialog. Portal + backdrop pattern shared with
- * `ShareModal`, generalized so any flow needing a "are you sure?" gate can
- * reuse it. Nothing happens until the user picks Confirm; backdrop click and
- * Cancel both dismiss without acting.
+ * Reusable confirmation dialog. Portal + backdrop pattern, generalized so any
+ * flow needing a "are you sure?" gate can reuse it. Nothing happens until the
+ * user picks Confirm; backdrop click and Cancel both dismiss without acting.
  */
 export default function ConfirmDialog({
   open,

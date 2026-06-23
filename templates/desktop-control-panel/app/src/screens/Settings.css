@@ -60,27 +60,11 @@
   max-width: 52ch;
 }
 
-/* Language control (LanguageSelect) — the L1Setup `.field-label` / `.text-input`
-   styles are scoped under `.l1-setup`, so the Settings language card restates
-   the equivalent look here using theme tokens. */
-.settings-screen .field-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  margin-top: 0.6rem;
-}
-
-.settings-screen .field-label.optional {
-  margin-top: 1.5rem;
-  color: var(--ink-soft);
-  font-weight: 500;
-}
-
-.language-select,
-.language-text-input {
-  width: 100%;
+/* Theme picker — a compact select styled with theme tokens. */
+.settings-theme-select {
+  flex-shrink: 0;
   font-size: 1rem;
-  padding: 0.65rem 0.85rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -88,11 +72,15 @@
   font-family: inherit;
 }
 
-.language-select:focus,
-.language-text-input:focus {
+.settings-theme-select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.settings-theme-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* Toggle switch */
