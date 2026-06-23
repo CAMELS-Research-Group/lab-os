@@ -10,3 +10,8 @@ site/.docusaurus/
 
 # Playwright MCP scratch (snapshots, screenshots)
 .playwright-mcp/
+
+# Generated kickoff-deck renders (build from docs/workshops/building/kickoff-deck.md
+# with tools/build_deck.py; binaries are never committed)
+*.pptx
+*.odp
