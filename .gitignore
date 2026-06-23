@@ -1,5 +1,8 @@
 .claude/.pr-review-loop.state.json
 
+# Nested project repos (own git history; never absorbed by this fork)
+/job-curator/
+
 # Docusaurus site artifacts
 site/node_modules/
 site/build/
