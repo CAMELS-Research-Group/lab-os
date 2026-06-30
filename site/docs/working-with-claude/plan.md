@@ -28,6 +28,6 @@ only code-blocks allowed are short shell commands in `**Verification:**` lines.
 Code-heavy plans rot faster and discourage the implementer from owning their tests;
 contract-and-behavior plans survive re-runs. This **overrides** `superpowers:writing-plans`'
 show-code default. Source of truth:
-[`04-docs.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/04-docs.md).
+[`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md).
 
 → Back to the [lifecycle overview](./index.md).

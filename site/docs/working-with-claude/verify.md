@@ -12,7 +12,7 @@ is the evidence the narration isn't.
 
 - **Beware the optimistic narrator.** Agents report success they didn't achieve. Re-run the gate
   yourself (the repo's designated verification command — source of truth:
-  [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md),
+  [`01-workflow.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/01-workflow.md),
   Merge Bar); don't trust the agent's summary.
 - **Green ≠ reviewed.** A passing gate proves "tests pass," not that the claimed guarantees are
   tested — when the same agent wrote both code and tests, coverage is self-referential. (Catching
