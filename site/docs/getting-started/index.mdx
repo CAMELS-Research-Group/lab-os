@@ -43,7 +43,7 @@ confirm with `claude --version`, then run `claude` once and log in with your Cla
 Start a session with `claude` and paste the entire block below. Claude interviews you first, then
 performs the setup, confirming before every step that forks, clones, deletes, moves, or overwrites
 files. The templates in
-[lab-os/templates/](https://github.com/WatsonWBlair/lab-os/tree/main/templates) stay the source of
+[lab-os/templates/](https://github.com/CAMELS-Research-Group/lab-os/tree/main/templates) stay the source of
 truth — the prompt has Claude read them from your cloned fork.
 
 ```text title="Claude session"
@@ -68,12 +68,12 @@ Then do the following, in order, confirming each step with me:
 1. Fork the handbook to my GitHub account and clone the fork into <DEV_ROOT>
    (the trailing path makes the clone land there directly), keeping an
    `upstream` remote pointed at the source for rule updates:
-     gh repo fork WatsonWBlair/lab-os --clone -- <DEV_ROOT>
-   This sets origin -> my fork and upstream -> WatsonWBlair/lab-os; confirm
+     gh repo fork CAMELS-Research-Group/lab-os --clone -- <DEV_ROOT>
+   This sets origin -> my fork and upstream -> CAMELS-Research-Group/lab-os; confirm
    with `git -C <DEV_ROOT> remote -v`. If I have no GitHub account or decline
    to fork, fall back to:
-     git clone https://github.com/WatsonWBlair/lab-os.git <DEV_ROOT>
-     git -C <DEV_ROOT> remote add upstream https://github.com/WatsonWBlair/lab-os.git
+     git clone https://github.com/CAMELS-Research-Group/lab-os.git <DEV_ROOT>
+     git -C <DEV_ROOT> remote add upstream https://github.com/CAMELS-Research-Group/lab-os.git
 
 2. Personalize <DEV_ROOT>/templates/global-CLAUDE.template.md into my global
    config at ~/.claude/CLAUDE.md (Windows: C:\Users\<me>\.claude\CLAUDE.md).
@@ -140,7 +140,7 @@ passes, summarize what was set up and where.
 Your dev home is a *fork* of lab-os, so the rules at `<DEV_ROOT>/.claude/rules` are really yours —
 no copy, no link to manage. To pull in rule updates from the upstream handbook later, run
 `git pull upstream main` in `<DEV_ROOT>`. (The fork keeps an `upstream` remote pointing at
-`WatsonWBlair/lab-os` for exactly this.)
+`CAMELS-Research-Group/lab-os` for exactly this.)
 
 **Power user — many repos under one home?** If you'd rather keep several project repos side by side
 under a neutral `<DEV_ROOT>` and share one rules source between them, clone lab-os as a
@@ -169,7 +169,7 @@ your dev-home fork); each project you nest inside your home brings its own third
 git -C <DEV_ROOT> remote -v
 ```
 
-Expected: `origin` points at your fork; `upstream` points at `WatsonWBlair/lab-os`. Your rules live
+Expected: `origin` points at your fork; `upstream` points at `CAMELS-Research-Group/lab-os`. Your rules live
 in `<DEV_ROOT>/.claude/rules` directly (no junction to check).
 
 Then, in an active Claude Code session:
