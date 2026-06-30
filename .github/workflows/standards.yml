@@ -50,19 +50,19 @@ jobs:
 #
 # jobs:
 #   log-lint:
-#     uses: WatsonWBlair/lab-os/.github/workflows/log-lint.yml@main
+#     uses: CAMELS-Research-Group/lab-os/.github/workflows/log-lint.yml@main
 #     # with:
 #     #   log-path: project_log.md        # default; override if your repo differs
 #     #   archive-path: project_log_archive.md
 #
 #   docs-budget:
-#     uses: WatsonWBlair/lab-os/.github/workflows/docs-budget.yml@main
+#     uses: CAMELS-Research-Group/lab-os/.github/workflows/docs-budget.yml@main
 #     with:
 #       # enforce: false — warn-only until this repo's first green run (§7.2)
 #       enforce: false
 #
 #   merge-bar-check:
-#     uses: WatsonWBlair/lab-os/.github/workflows/merge-bar-check.yml@main
+#     uses: CAMELS-Research-Group/lab-os/.github/workflows/merge-bar-check.yml@main
 #     # with:
 #     #   exclude-globs: "*.md,docs/**,.github/**"  # default; override if needed
 # ---------------------------------------------------------------------------

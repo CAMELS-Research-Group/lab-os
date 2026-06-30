@@ -27,7 +27,7 @@
 #     pull_request:
 #   jobs:
 #     log-lint:
-#       uses: WatsonWBlair/lab-os/.github/workflows/log-lint.yml@main
+#       uses: CAMELS-Research-Group/lab-os/.github/workflows/log-lint.yml@main
 
 name: log-lint
 
@@ -61,7 +61,7 @@ jobs:
       - name: Check out lab-os (script source)
         uses: actions/checkout@v4
         with:
-          repository: WatsonWBlair/lab-os
+          repository: CAMELS-Research-Group/lab-os
           path: .lab-os
 
       - name: Require an override reason when the label is set
@@ -118,7 +118,7 @@ jobs:
           # repo name, not file existence, so a downstream repo's same-named script can't shadow
           # the canonical one.
           SCRIPT=".lab-os/scripts/log_lint.py"
-          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-os" ]; then SCRIPT="scripts/log_lint.py"; fi
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/log_lint.py"; fi
           python3 "$SCRIPT" \
             --changed "$LOG_PATH" \
             --baseline "$baseline" \
