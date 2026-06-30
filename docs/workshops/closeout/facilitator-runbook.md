@@ -6,6 +6,10 @@ participant pages under `site/docs/workshops/closeout/`. Participant materials c
 content; this runbook tells you how to hold the room, structure the ceremony, and keep presentations
 brief and supportive.
 
+> **Optional collective close:** for a live cohort that wants the close to produce shared, written
+> conventions, run the [Cohort Retrospective](./retrospective-facilitator-runbook.md) after the
+> presentations.
+
 ---
 
 ## Before the session

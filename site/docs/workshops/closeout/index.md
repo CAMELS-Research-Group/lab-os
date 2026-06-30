@@ -122,6 +122,16 @@ treat it as a record of this project's close, not a performance for an audience.
 
 ---
 
+## Optional — Cohort retrospective (live cohorts)
+
+The four movements close the project for each participant individually. Live cohorts that want the
+close to change how the **team** works — not just each person's next project — can add a
+[cohort retrospective](./cohort-retrospective.md): a single ~90-minute session that turns the group's
+shared learnings into written conventions (a rule in `.claude/rules/`, a note in a `CLAUDE.md`, a
+`project_log.md` entry). It complements the individual carry-forward; it does not replace it.
+
+---
+
 ## Worksheets and materials
 
 | Material | When to use it |
@@ -129,6 +139,7 @@ treat it as a record of this project's close, not a performance for an audience.
 | [Pre-work worksheet](./pre-work.md) | Before this part — assemble what you built and draft your ceremony contribution |
 | [Learnings-capture and carry-forward worksheet](./learnings-carry-forward-worksheet.md) | During Movements 2 and 3 — capture patterns, dead ends, reflections, and produce the carry-forward artifact |
 | [Presentation worksheet](./presentation-worksheet.md) | During Movement 4 — structure your brief results presentation |
+| [Cohort retrospective](./cohort-retrospective.md) | Optional, live cohorts — a collective session turning the group's shared learnings into written team conventions |
 | [Completion checklist](./completion-checklist.md) | After all four movements — self-attest before finishing the program |
 
 ---
