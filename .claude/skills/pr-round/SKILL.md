@@ -166,7 +166,8 @@ the comment thread rather than pre-empting the maintainer's triage.
 - Reviewing **your own** PR as its sole maintainer — the review lane fires only on PRs authored by
   someone else, and the remediate lane ingests *existing* feedback rather than generating a review, so
   a solo-maintained PR with no reviewer gets no review here (the round runs as a remediate no-op). Use
-  `pr-review-loop <N>` for a fresh outsider review today. Once a review-bot identity is provisioned
+  `pr-review-loop <N>` for a fresh outsider review today (not yet carried in lab-os — see the
+  Availability note above). Once a review-bot identity is provisioned
   (per the lab's agent-runtime rule, where adopted), running `/pr-round` from it routes your PRs into
   the review lane — and that identity is what makes the formal verdict postable, since GitHub forbids
   self-approval.
