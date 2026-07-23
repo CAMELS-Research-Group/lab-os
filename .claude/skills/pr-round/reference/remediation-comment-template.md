@@ -1,6 +1,6 @@
 # Remediation handoff comment template
 
-The shape of the **single** comment a remediation round posts on your own pull request, at Step 5c,
+The shape of the **single** comment a remediation round posts on your own pull request, at Step 9,
 once the whole round is complete — mechanical fixes applied, decisions made and applied, gate run.
 
 The marker literal is owned by `review-comment-template.md` § Machine marker and is **never spelled
@@ -70,7 +70,7 @@ that is a real and useful outcome, and the comment should say so plainly rather 
 - **Head** — the short sha the round **ended** on, after decisions were applied. Required whenever
   anything was pushed, so every claim below is checkable against `git log`. Nothing pushed →
   `unchanged — no commit`.
-- **Gate** — the verification's real result **and which rung produced it** (`PROMPT.md` § 4.3 step 5
+- **Gate** — the verification's real result **and which rung produced it** (`PROMPT.md` § 5.3 step 5
   owns the ladder). Never omit it; never imply green by silence. A gate reported green must have been
   run unpiped — a piped gate swallows the exit code and a red one reads as green.
 
@@ -119,11 +119,12 @@ Items that remain: a decision deliberately deferred, work too large for this rou
 on an external answer. Each says why it is open and what would close it. Deferred is a legitimate
 outcome; silently dropping is not.
 
-This section also carries **out-of-band follow-ups** — resolutions whose action lies outside what this
-skill does (`PROMPT.md` § 4.3 step 8): an issue to file, a review thread to reply to, a collaborator
-to ask, a repo setting to change. The skill posts one comment per PR and files nothing, so each entry
-names the action and who takes it. Recording a follow-up here is not performing it, and the entry
-should not read as though it were.
+This section also carries **out-of-band follow-ups** — resolutions whose action lies outside what a
+remediation agent does (`PROMPT.md` § 5.3 step 8): a review thread to reply to, a collaborator to
+ask, a repo setting to change, work too large for the round. Where Step 7 filed a follow-up issue
+for the item (own PRs, consent permitting), the entry cites it — `tracked as #<N>`. Where no issue
+was filed, the entry names the action and who takes it; recording a follow-up is not performing it,
+and the entry should not read as though it were.
 
 ### Not actioned
 
@@ -160,9 +161,9 @@ nowhere reads as missed.
 1. `pipeline.py` module size — deferred. It sits near the budget and this PR removes lines from it,
    so the split is not urgent, but the next feature that adds to it will cross. Closing it means
    choosing a seam, which is a bigger change than this PR should carry.
-2. **Out-of-band — operator to action.** The reviewer's second comment asks for the streaming variant to
-   be tracked rather than built here. This round does not file issues, so nothing was filed: the
-   follow-up is to open one against `client.py` referencing decision 1 above.
+2. **Out-of-band — tracked as #87.** The reviewer's second comment asks for the streaming variant to
+   be tracked rather than built here; this round filed the follow-up issue against `client.py`,
+   referencing decision 1 above.
 
 ### Not actioned
 
@@ -176,11 +177,11 @@ nowhere reads as missed.
 |---|---|
 | Posting mid-round, before decisions are applied | Stale on arrival; leaves resolved items reading as open |
 | More than one comment per round | The handoff stops being a single artifact; the reviewer has to reconstruct order |
-| An "awaiting your decision" section | Decisions are resolved at 5a — anything left is deferred, and belongs in `### Still open` |
+| An "awaiting your decision" section | Decisions are resolved at Step 6 — anything left is deferred, and belongs in `### Still open` |
 | Omitting the Head sha after pushing | The round becomes unverifiable |
 | `### Addressed` populated with nothing pushed | Claims work that does not exist on the branch |
 | Reporting the gate green without running it unpiped | A piped gate swallows the exit code; the claim is unfounded |
 | Writing a scoped (rung-2) gate as plain `green` | Converts a partial check into a full-verification claim — the exact thing disclosure exists to prevent |
-| An out-of-band follow-up phrased as though the round did it | The skill files nothing and replies to no thread; the reader assumes it was handled |
+| An out-of-band follow-up phrased as though the round did it | The round replies to no thread and performs no action beyond Step 7's issue filing; an unfiled item that reads as handled is a dropped item |
 | A decision entry with no reasoning | The section's whole value is the *why*; the *what* is already in `### Addressed` |
 | Findings appearing in no section | Reads as missed rather than considered |

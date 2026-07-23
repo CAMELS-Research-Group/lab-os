@@ -39,6 +39,10 @@ merge-ready → `pr-review-loop`. A common sequence is `pr-round` to triage the 
 
 `pr-round` has **no runtime dependency on `pr-review-loop`.** Deleting it does not break this skill.
 
+**Availability note:** lab-os does not (yet) carry `pr-review-loop` — it is maintained in the lab's
+workspace forks. The redirects above and in *When NOT to use* describe the shape of work to reach
+for; until the sibling is ported here, run it from a dev home that carries it.
+
 ## The composed rubric
 
 The review standard assembles from **three tiers**, so the skill works in any repository, not just
@@ -61,12 +65,13 @@ Subagents cannot call `AskUserQuestion`. So a design-pin found during remediatio
 *returned*, decided in the main loop, and applied by a second dispatch:
 
 ```
-Step 4  fan out #1  → review (returns comment + verdict) | remediate (fixes, returns pins)
-Step 5a decide      → batched questions, each with a Defer option
-Step 5b fan out #2  → apply decisions, reusing the Step-4 worktree
-Step 5c comment     → ONE handoff comment per remediated PR
-Step 5d comment     → review comment + formal verdict per reviewed PR
-Step 6  summary + cleanup (must run last)
+Step 5  fan out #1  → review (returns comment + verdict) | remediate (fixes, returns pins)
+Step 6  decide      → batched questions, each with a Defer option
+Step 7  file issues → follow-up issues for deferred + out-of-band items (own PRs, consent-gated)
+Step 8  fan out #2  → apply decisions, reusing the Step-5 worktree
+Step 9  comment     → ONE handoff comment per remediated PR
+Step 10 comment     → review comment + formal verdict per reviewed PR
+Step 11 summary + cleanup (must run last)
 ```
 
 **One comment per remediated PR, posted when the round is done.** It is the handoff artifact from
@@ -77,25 +82,25 @@ comment written before decisions are applied is stale on arrival.
 **Every post happens in the main loop — no subagent posts under your identity.** Consent is
 main-loop state and a subagent cannot ask for it, so a subagent asked to decide whether to post has
 no way to know; both defaults it could pick are wrong, and one of them is irreversible. The review
-lane composes its comment and verdict and returns them; 5d posts them.
+lane composes its comment and verdict and returns them; Step 10 posts them.
 
 ## Interrupt model
 
 | Finding | Behavior |
 |---|---|
 | Mechanical, on your PR | Auto-fixed via `Edit`, committed, pushed. No interrupt. |
-| Design-pin, on your PR | Returned from the subagent, asked at 5a with 2–3 options + `Defer`, applied at 5b. |
+| Design-pin, on your PR | Returned from the subagent, asked at Step 6 with 2–3 options + `Defer`, applied at Step 8. |
 | Anything on someone else's PR | Reported in the review comment. Never edited — it is their PR. |
 | Roster over 8 PRs | One cost-guard question before dispatch, offering repo- and lane-scoped cuts before a bare count cap. |
 | Red gate, or a gate that cannot run at all | No push. The commit survives; worktree preserved, path named in the roster. |
-| A resolution the skill cannot perform | Returned as an out-of-band follow-up — recorded in the comment and the roster, never performed. |
+| A resolution the skill cannot perform | Returned as an out-of-band follow-up — on your own PRs, filed as a follow-up issue at Step 7 (consent-gated); otherwise recorded in the comment and the roster for manual action. |
 
 ## Verification: the gate ladder
 
 Nothing is pushed on unverified work, but "the repo's full gate" is not always runnable — a heavy or
 environment-fragile gate is normal, and a skill that pretends otherwise gets a quietly-improvised
 substitute reported as green. So the fallback is **sanctioned and disclosed** rather than left to
-improvisation. `PROMPT.md` § 4.3 step 5 owns the ladder:
+improvisation. `PROMPT.md` § 5.3 step 5 owns the ladder:
 
 | Rung | Ran | Pushes? |
 |---|---|---|
@@ -131,8 +136,8 @@ since this skill's last comment so a re-run costs one API call instead of a mode
 
 ## Consent
 
-**One question per run**, at Step 2.5, before any dispatch — fired whenever the run will post
-anything, on your own PRs included. `PROMPT.md` § Step 2.5 is the owning definition; this is a
+**One question per run**, at Step 3, before any dispatch — fired whenever the run will post
+anything, on your own PRs included. `PROMPT.md` § Step 3 is the owning definition; this is a
 summary.
 
 **This skill deliberately claims no standing no-ask permission.** If your global `CLAUDE.md`
@@ -141,17 +146,21 @@ that skill's own actions, so extending it here would be a self-granted exception
 inherited one. Widening it is an amendment to your own operating instructions — an operator's change
 to make deliberately, not a default this skill assumes.
 
+**The one ask covers every identity post the round makes:** review comments and verdicts, handoff
+comments, and the follow-up issues Step 7 files on your own repositories for items that don't fit
+their PR (deferred design-pins, out-of-band follow-ups).
+
 **Declining does not stop the run.** Reviews still run and your own branches still get their fixes;
-every identity post is withheld and listed at the end for manual action. The review lane never files
-issues on someone else's repository — findings stay in the comment thread rather than pre-empting the
-maintainer's triage.
+every identity post — comments, verdicts, and issues alike — is withheld and listed at the end for
+manual action. The review lane never files issues on someone else's repository — findings stay in
+the comment thread rather than pre-empting the maintainer's triage.
 
 ## When NOT to use
 
 - Driving a single PR to a merge bar — that is `pr-review-loop`.
 - A PR still moving in draft; scope is not stable enough for a useful review.
 - Fork PRs you cannot push to (the remediate lane skips them with a reason).
-- A PR in a repository not checked out under your dev home — Step 3.1 maps only the dev home and its
+- A PR in a repository not checked out under your dev home — Step 4.1 maps only the dev home and its
   `projects/` children, so anything else skips with `no local checkout mapped`. Clone-on-demand is a
   tracked follow-up, not built.
 - Reviewing **your own** PR as its sole maintainer — the review lane fires only on PRs authored by
@@ -161,13 +170,15 @@ maintainer's triage.
   (per the lab's agent-runtime rule, where adopted), running `/pr-round` from it routes your PRs into
   the review lane — and that identity is what makes the formal verdict postable, since GitHub forbids
   self-approval.
-- Filing issues, replying to a specific review thread, or any other out-of-band action. It posts
-  exactly one comment per PR and files nothing; anything else is returned as a follow-up for you.
+- Replying to a specific review thread, or out-of-band actions beyond issue filing. It posts exactly
+  one comment per PR; on **your own** PRs it additionally files follow-up issues for items that don't
+  fit the PR (Step 7, consent-gated), and on anyone else's repository it files nothing — anything
+  else is returned as a follow-up for you.
 - Merging. `pr-round` never calls `gh pr merge`.
 
 ## Claiming compliance
 
-Reporting that you "ran `pr-round`" is truthful only if Steps 0–6 actually executed — real subagent
+Reporting that you "ran `pr-round`" is truthful only if Steps 0–11 actually executed — real subagent
 dispatch, real posted comments, a real roster. If any step was approximated, skipped, or hand-rolled,
 enumerate every deviation **up front**, in the same message, before any claim about what the round
 accomplished. This is `.claude/rules/01-workflow.md` § Claiming compliance applied to this skill;
@@ -182,7 +193,7 @@ own root blocks the `.claude/` walk-up to the dev home.
 
 ## See also
 
-- [PROMPT.md](PROMPT.md) — the executable body, Steps 0–6
+- [PROMPT.md](PROMPT.md) — the executable body, Steps 0–11
 - [reference/rubric-layering.md](reference/rubric-layering.md) — tier discovery, precedence, cold-start
 - [reference/rubric-universal.md](reference/rubric-universal.md) — tier 1, the always-present standard
 - [reference/classify-blockers.md](reference/classify-blockers.md) — mechanical vs design-pin

@@ -16,7 +16,9 @@ are defined.
 dereference the skill root's symlink and strip the trailing `.claude/skills/pr-round` — and is the
 only place that derivation is defined. It is **not** reachable under `~/.claude/`, which carries no
 `reference/` directory; a `DEV_ROOT` that cannot be derived makes tier 2 absent, and the degradation
-rule below applies. `<repo>` is the local checkout of
+rule below applies. With a derived `DEV_ROOT`, tier 2's two homes resolve **independently** (owning
+procedure: `PROMPT.md` Step 0.1): a dev home carrying `.claude/rules/` but no taxonomy still
+contributes its rules, with the missing half recorded absent. `<repo>` is the local checkout of
 the repository the PR under review belongs to, **not** the session's working directory: reviewing a
 PR in a nested project repo must read that repo's tier 3, not the dev home's.
 

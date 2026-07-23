@@ -15,8 +15,8 @@ the staleness filter greps for the `pr-round:v1` prefix to find this skill's own
 <!-- pr-round:v1 lane=review head=<sha7> -->
 ```
 
-- `lane` is `review` or `remediate` — the only two comments this skill posts. Step 5a asks questions
-  and Step 5b posts nothing, so no third value is ever emitted.
+- `lane` is `review` or `remediate` — the only two comments this skill posts. Step 6 asks questions
+  and Step 8 posts nothing, so no third value is ever emitted.
 - `head` is the short sha actually reviewed — not the branch tip at posting time, which may have
   moved.
 - HTML comments do not render, so the marker is invisible to readers and reliable for tooling.
