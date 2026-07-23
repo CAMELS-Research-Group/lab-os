@@ -272,7 +272,7 @@ model pass and the operator is cost-conscious:
   almost always asking about one of them — so stating the breakdown in the question and offering the
   scoped cuts saves the follow-up round-trip that a bare `all / 5 / abort` forces.
 
-Under `--dry-run`, report the roster and **stop here**. Steps 4–6 do not run; there is nothing to
+Under `--dry-run`, report the roster and **stop here**. Steps 5–11 do not run; there is nothing to
 report that the roster does not already contain.
 
 ## Step 5: Fan out — one subagent per PR
