@@ -8,11 +8,13 @@ All lab repos. Rationale: `PR-LIFECYCLE.md`. Doc tiers, budgets, single-source: 
 |---|---|---|
 | Lab | `<DEV_ROOT>/project_log.md` | Cross-repo: tooling, infra, conventions, lab formation |
 | Project | `<repo>/project_log.md` | Decisions outliving any one plan; irreversible/external events; direction changes |
-| Plan-execution | `## Execution Log` in plan doc | Plan deviations, implementation calls, gate evidence; archives with the plan |
+| Spec-log | `_specs/<repo>/<DATE>-<handle>/log.md` | Bundle's single log: load-bearing decisions, discarded alternatives, and in-flight deviations/gate evidence the plan would otherwise discard |
 
-Test: matters after the plan ships? → project. Only how the plan ran? → plan-execution. Cross-repo? → lab.
+The planning bundle is `_specs/<repo>/<DATE>-<handle>/{prd,plan,log}.md` — `<DATE>` is the plan's `Date:` header, `<handle>` a short kebab-case slug. The plan carries no Execution Log; `log.md` absorbs it.
 
-Closure: a plan-execution log closes with the PR that ships it — post-merge evidence (deploy green, runtime checks, branch cleanup) goes to a comment on that PR, never a trailing entry held for a future PR; anything bigger routes per Entry triggers.
+Test: matters after the plan ships? → project. Bundle-scoped (decisions, alternatives, deviations, gate evidence)? → spec-log. Cross-repo? → lab.
+
+Closure: post-merge evidence (deploy green, runtime checks, branch cleanup) goes to a comment on that PR, never a trailing entry in any log. Anything bigger routes per Entry triggers.
 
 Lab caveat: no git/CI; honor-system — immutability begins once a newer entry exists; Refs = absolute paths/URLs, not PR#; archive when adding over cap.
 
@@ -28,7 +30,7 @@ Else routes:
 
 | Information | Home |
 |---|---|
-| Deviation from approved plan | Plan doc `## Execution Log` |
+| Deviation from approved plan | Bundle `log.md` (spec-log) |
 | Expensive finding/gotcha | `TROUBLESHOOTING.md` or GitHub issue |
 | Open work, follow-ups, review findings | GitHub issues (trigger-meeting findings also logged) |
 | Bare status ("merged, smoke passed") | PR comment |
@@ -58,6 +60,8 @@ Entries immutable once the PR merges. Reversal/revision = new entry with `Supers
 
 ## File structure & overflow
 
-`templates/project_log.template.md` is normative (`log-lint` parses it): title + pointer to this standard; Standing Decisions index — one line per still-binding decision, hot window and archive alike (the "what is still true" surface, read first), date+subject match the entry header verbatim, created in the entry's PR (events: no index line); entries reverse-chron, top-insert, each preceded by `---` + blank line (conflict: keep both blocks, reorder by header timestamp).
+`templates/docs/project_log.template.md` is normative (`log-lint` parses it): title + pointer to this standard; Standing Decisions index — one line per still-binding decision, hot window and archive alike (the "what is still true" surface, read first), date+subject match the entry header verbatim, created in the entry's PR (events: no index line); entries reverse-chron, top-insert, each preceded by `---` + blank line (conflict: keep both blocks, reorder by header timestamp).
 
 Cap: 15 KB whole file. Entry over cap → CI warns (never blocks); a dedicated `chore: archive log overflow` PR moves oldest entries to `project_log_archive.md` — prepended as a block, order preserved, byte-identical modulo EOL. Archive: grep-only, cap-exempt; still-binding archived decisions keep index lines, re-pointed.
+
+**Spec-log overflow:** `_specs/<repo>/<DATE>-<handle>/log.md` has no Standing Decisions index and no cap enforcement; it is grep-only from the start. Spec-log entries append chronologically (oldest-first, bottom-insert — contrast project-log entries, which are reverse-chron, top-insert). The Entry format applies, but the `Refs: #PR` requirement is relaxed: spec-log entries are often written before a PR exists, so Refs may carry a bundle-relative path or be omitted until the PR lands. When a `log.md` grows unwieldy, overflow oldest entries to `_specs/<repo>/<DATE>-<handle>/log_archive.md` co-located in the same bundle — same block-prepend, byte-identical rule as project-log overflow. Spec-logs do not feed the project-log index.

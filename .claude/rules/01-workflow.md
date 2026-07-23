@@ -33,6 +33,16 @@ Format: `<type>[(<scope>)]: <subject>`
 - Pass the filled template as `--body` via HEREDOC to `gh pr create`
 - Scope each PR to a single concern — split if it spans multiple phases
 
+## Claiming compliance
+
+Claiming to have **run a named skill or loop** (`pr-review-loop`, `pr-finalize`, …)
+or to have **met the merge bar** is truthful only if you actually invoked it. If any
+step was approximated, skipped, or hand-rolled, enumerate every deviation **up
+front** — in the same message, before the claim, not when asked. Reporting an
+approximation as the procedure, or "merge bar met" without walking it, is a
+violation, not a shortcut. When unsure a step ran as specified, say so rather than
+imply it did.
+
 ## Merge Bar
 
 All of the following, verified at merge time:
@@ -41,8 +51,9 @@ All of the following, verified at merge time:
 2. PR template complete; checklist items ticked only where true
 3. Review findings resolved, or routed to issues (a finding meeting an entry trigger in `03-logging.md` additionally gets a log entry)
 4. **Log cleanup done** (entry rules: `03-logging.md`): this PR's loggable events have entries; entries verified against the final diff; compressed to budget; refs filled (PR#); no edits to pre-existing entries; Standing Decisions index updated — line added per new standing decision, superseded lines removed; log over cap → overflow chore PR filed
-5. Doc-sync triggers checked (Documentation Update Triggers below)
-6. Single concern; bundle archival rides only when the owner declares the slice done
+5. **Log maintenance — spec-log current and overflow archived** (`03-logging.md` spec-log altitude): the bundle's `log.md` captures this slice's decisions, discarded detail, and execution log (deviations, gate evidence); any bundle `log.md` overflow archived to `log_archive.md` co-located in the bundle
+6. Doc-sync triggers checked (Documentation Update Triggers below)
+7. Single concern; on slice done the owner flips the bundle's PRD `Status` to a terminal state (`complete`) in place (bundle lifecycle: `04-docs.md`) — bundles are retained dated under `_specs/`, never moved or deleted
 
 ## Documentation Update Triggers
 
