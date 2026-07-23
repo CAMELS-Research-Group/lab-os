@@ -541,8 +541,8 @@ The brief is a **narrowed** 5.3: same worktree, same gate discipline, same commi
 including the explicit `HEAD:refs/heads/<head-ref>` refspec. State only the differences:
 
 - **Reuse the existing worktree** at the path Step 5.1 recorded for this PR — the default
-  `<repo-root>/.claude/worktrees/pr-round-<N>`, or under `PR_ROUND_WORKTREE_ROOT` when that override
-  is set. It already exists, already on its `pr-round-<N>` branch tracking `origin/<head-ref>`,
+  `<repo-root>/.claude/worktrees/pr-round-<N>`, or `<PR_ROUND_WORKTREE_ROOT>/<repo-name>/pr-round-<N>`
+  when that override is set. It already exists, already on its `pr-round-<N>` branch tracking `origin/<head-ref>`,
   carrying Step 5's commit. Do not create a new worktree and do not create a new branch.
 - Apply exactly the chosen options — no scope beyond them.
 - **Verify the decided option against the code before applying it.** The operator decided the
