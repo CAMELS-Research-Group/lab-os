@@ -139,6 +139,11 @@ direct instruction and must not be filtered by activity or draft state.
 Dedupe by `<owner>/<repo>#<number>`. A PR both authored by you and review-requested of you resolves
 to the **remediate** lane — you cannot review your own PR, and GitHub will not accept the verdict.
 
+**`--review-requested=@me` is a pending-request search, not a history.** GitHub clears the request
+once you submit a verdict, so a PR you already reviewed does not re-enter the roster when new commits
+land — the Step 2.3 staleness filter never gets to judge it. A follow-up round on such a PR needs
+either a fresh review request from the author or an explicit PR ref on the command line.
+
 Apply `--limit N` here, keeping the most recently updated. When it truncates, record how many were
 dropped; Step 11 reports it. A silent cap reads as full coverage.
 
@@ -225,7 +230,8 @@ operator's global `CLAUDE.md` pre-authorizes identity posts for some *other* ski
 narrowing themselves ("any other identity-posting action still needs per-action confirmation") — so a
 no-ask path here would be an extension the operator has not made, not a gap in one. Extending it is
 an amendment to that document: a separate, operator-made change, not something this skill grants
-itself. Until then the dev home's `.claude/CLAUDE.md` § Approval gates governs, and it is
+itself. Until then the operator's own approval-gate instructions govern — the dev-root `CLAUDE.md`
+instantiated from `templates/dev-root-CLAUDE.template.md` § Approval gates — and they are
 unambiguous: anything under your name is gated.
 
 **Fire the ask iff the surviving roster contains at least one PR this run would post to.** Nothing to

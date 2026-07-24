@@ -211,8 +211,9 @@ the comment thread rather than pre-empting the maintainer's triage.
 Reporting that you "ran `pr-round`" is truthful only if Steps 0–11 actually executed — real subagent
 dispatch, real posted comments, a real roster. If any step was approximated, skipped, or hand-rolled,
 enumerate every deviation **up front**, in the same message, before any claim about what the round
-accomplished. This is `.claude/rules/01-workflow.md` § Claiming compliance applied to this skill;
-that clause is the owning rule.
+accomplished. The rule above is **self-owned here**: lab-os's `.claude/rules/01-workflow.md` carries
+no § Claiming compliance clause yet — it arrives with the rules-parity sync (#58). Once it lands, this
+section becomes a derivation of it rather than the owning statement.
 
 ## Deployment
 

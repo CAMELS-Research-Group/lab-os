@@ -1,33 +1,25 @@
 #!/usr/bin/env bash
-# Link this dev home's lab Claude assets (skills, commands, workflows) into the
-# per-machine global ~/.claude, so they are available in every Claude Code session
-# regardless of the working directory.
+# Symlink this dev home's lab Claude assets (skills, commands, workflows) into the
+# per-machine ~/.claude, so they load in every session regardless of the working
+# directory. Project .claude/ assets are auto-discovered only up to the enclosing git
+# repo root, and a nested project repo's own root blocks the walk-up to the dev home.
+# Symlinks (not copies) keep this repo the single source of truth — edit here, live
+# everywhere. Idempotent: refreshes stale links, never clobbers a real file or dir.
 #
-# Why: project-level .claude/ assets are auto-discovered only up to the enclosing
-# git repo root. Code repos nested under projects/ are their own repos, so a session
-# opened inside one never sees this dev home's .claude/ assets via the walk-up.
-# Symlinking them into ~/.claude makes them global. Symlinks (not copies) keep this
-# repo the single source of truth — edit here, live everywhere; no copy drift.
-#
-# Windows precondition: MSYS/Git-Bash only emits real native symlinks when
+# Windows precondition: MSYS/Git-Bash emits real native symlinks only when
 # MSYS=winsymlinks:nativestrict is set (done below) AND the shell holds the symlink
-# privilege — i.e. Windows Developer Mode is enabled or the shell runs elevated.
-# Without that privilege `ln -s` would deep-copy and exit 0, silently breaking the
-# single-source contract; so this script probes the capability once up front and
-# aborts with actionable guidance rather than leaving a stale copy. macOS/Linux are
-# unaffected (the env var is a no-op and symlinks need no extra privilege there).
-#
-# Idempotent: safe to re-run. Refreshes stale symlinks; never clobbers a real file
-# or directory already present at the target (those are reported and skipped).
+# privilege (Developer Mode enabled, or an elevated shell). Without it `ln -s` would
+# deep-copy and exit 0, silently breaking the single-source contract — so the script
+# probes the capability once up front and aborts with actionable guidance. macOS and
+# Linux are unaffected.
 #
 # Usage:
 #   bash .claude/scripts/link-lab-assets.sh             # link into ~/.claude
 #   bash .claude/scripts/link-lab-assets.sh --dry-run   # show what would change
 #   CLAUDE_HOME=/custom/.claude bash .claude/scripts/link-lab-assets.sh
 #
-# Run this on each peer machine (see CROSS-PLATFORM.md) — ~/.claude is per-machine
-# and not committed, so the links must be created locally on every clone. The links
-# take effect in the next Claude Code session (asset lists load at startup).
+# Run this on every machine you clone to — ~/.claude is per-machine and not committed.
+# The links take effect in the next Claude Code session (asset lists load at startup).
 
 set -euo pipefail
 
@@ -180,6 +172,6 @@ if (( skipped > 0 )); then
       printf '  mv %q %q\n' "$t" \
         "$DEST/_pre-symlink-backups/$(basename "$(dirname "$t")")--$(basename "$t")"
     done
-    printf '  bash %q\n' "$0"
+    printf '  bash %q\n' "$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
   } >&2
 fi

@@ -1,7 +1,7 @@
 ---
 description: "Push every connected PR through one round — review others', remediate your own"
 argument-hint: "[<PR ref>…] [--limit N] [--no-skip] [--review-only] [--remediate-only] [--dry-run] [--concurrency N]"
-allowed-tools: ["Agent", "AskUserQuestion", "Bash", "Read", "Write", "Edit", "Glob", "Grep"]
+allowed-tools: ["Agent", "AskUserQuestion", "Bash", "Read", "Write", "Edit", "Glob", "Grep", "EnterWorktree"]
 ---
 
 # /pr-round
@@ -9,8 +9,9 @@ allowed-tools: ["Agent", "AskUserQuestion", "Bash", "Read", "Write", "Edit", "Gl
 Run the pr-round skill starting at Step 0 with `$ARGUMENTS`.
 
 Resolve the skill root first — `~/.claude/skills/pr-round/` if present, otherwise
-`<DEV_ROOT>/.claude/skills/pr-round/` — because this command runs from arbitrary repositories,
-including nested project repos whose own root blocks the `.claude/` walk-up to the dev home.
+`.claude/skills/pr-round/` under the current repository — because this command runs from arbitrary
+repositories, including nested project repos whose own root blocks the `.claude/` walk-up to the dev
+home. (`<DEV_ROOT>` is derived *from* the skill root at Step 0.1, so it cannot name the fallback.)
 
 Read `<SKILL_ROOT>/SKILL.md` for an overview, then execute `<SKILL_ROOT>/PROMPT.md` from Step 0.
 Pass `$ARGUMENTS` as the arguments to parse in Step 0: zero or more PR references

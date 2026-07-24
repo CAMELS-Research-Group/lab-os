@@ -5,6 +5,10 @@ here as project assets (`.claude/skills/`, `.claude/commands/`, `.claude/scripts
 fork of this repo is self-contained — no marketplace install required. Deploy them user-scope with
 `bash .claude/scripts/link-lab-assets.sh` (see each skill's Deployment section).
 
+**Review rigor on `.claude/skills/**` is the security boundary.** These assets deploy user-scope, so
+anything merged here later executes as instructions under every member's identity, in every session,
+on every machine that has run the link script. A skills PR is not a docs PR: read it as code.
+
 This file records third-party and cross-skill provenance for content vendored into skills. Each
 carrier file also preserves the attribution in its own header.
 
