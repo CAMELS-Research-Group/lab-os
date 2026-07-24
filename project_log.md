@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-24 12:40 — Specialist panel ports to lab-os; the taxonomy stays fork-owned · #61
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -18,6 +19,23 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-24 12:40 — Specialist panel ports to lab-os; the taxonomy stays fork-owned
+
+**Decision:** The four vendored specialist review agents and their dispatch contract
+(`reference/specialist-dispatch.md`) are carried here, so a bare clone resolves the panel the review
+skills dispatch. `reference/code-quality-taxonomy.md` is **not** ported — it stays byte-owned by the
+workspace fork per `04-docs.md` § Rules numbering. Where it does not resolve, the finding schema's
+taxonomy citation is absent and merge dedup falls back to the specialist's dimension.
+**Why:** The agents were unreachable from a lab-os-rooted dev home. The taxonomy is manifest-synced
+into five member repos under a header naming the fork as byte source, so moving it would create two
+masters for a vendored file.
+**Alternatives:** Port the taxonomy too — rejected on scope, not merits: it needs an `04-docs.md`
+amendment, a `rules_sync.py` header change, and a five-repo re-sync. Omit the agents entirely —
+rejected: runtime `DEV_ROOT` resolution already makes them optional.
+**Refs:** #61, #59
 
 ---
 
