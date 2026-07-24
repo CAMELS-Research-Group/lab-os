@@ -7,13 +7,13 @@
 > Step 1  resolve roster
 > Step 2  classify by ownership + filter
 > Step 3  resolve consent              (needs Step 2's authors + permissions)
-> Step 4  map repo -> local checkout + resolve rubric tiers -> cost guard
-> Step 5  FAN OUT #1: review lane | remediate lane   (neither posts)
+> Step 4  map repo -> local checkout + resolve rubric tiers + specialist dispatch ref -> cost guard
+> Step 5  FAN OUT #1: review lane (+ specialist panel, 5.2a) | remediate lane   (none of them post)
 > Step 6  decide returned design-pins       (main loop)
 > Step 7  file follow-up issues             (main loop; own PRs only, consent-gated)
 > Step 8  FAN OUT #2: apply decisions       (reuses Step-5 worktrees)
 > Step 9  post one handoff comment per remediated PR   (main loop)
-> Step 10 post review comment + verdict per reviewed PR  (main loop)
+> Step 10 merge specialist findings, post review comment + verdict per reviewed PR  (main loop)
 > Step 11 roster summary + worktree cleanup  (MUST run after Steps 8-10)
 >
 > Every `gh` post is a main-loop step. No subagent posts under the operator's identity.
@@ -102,6 +102,7 @@ Unparseable ref → abort naming the ref and listing all four forms. Do not gues
 | `--remediate-only` | off | Drop the review lane |
 | `--dry-run` | off | Resolve and report the roster; make **no** write call of any kind |
 | `--concurrency N` | 5 | Wave size — how many subagents run at once (Step 5, Step 8) |
+| `--no-specialists` | off | Drop the specialist panel (Step 5.2a) — review-lane PRs get the composed rubric only; each review comment states specialists were disabled by flag |
 
 Unknown flag → abort: `❌ Unknown flag: <flag>`. `--review-only` with `--remediate-only` → abort;
 they are mutually exclusive.
@@ -148,7 +149,14 @@ timeline:
 
 ```
 gh pr view <N> --repo <R> --json author,isDraft,headRefName,headRepositoryOwner,comments,reviews,commits
+gh api /repos/<R>/pulls/<N>/comments --paginate
 ```
+
+**Both calls are required — neither is a superset of the other.** `--json comments` returns *issue*
+comments (the Conversation tab) only, and `--json reviews` returns review **bodies**: a review that
+carries nothing but inline comments has an empty `body`, so its content is absent from both fields.
+Inline review comments exist only on `pulls/<N>/comments`. Omit the second call and the round is
+blind to every diff-anchored comment on the PR, including the operator's own.
 
 `headRefName` is `<head-ref>` — the value Steps 5.1, 5.3, Step 8, and 11.2 all consume. Resolve it here
 or those commands have no value to substitute.
@@ -174,17 +182,30 @@ Skipped when `--no-skip` is set, and never applied to explicit refs.
    `SKILL_ROOT/reference/review-comment-template.md` § Machine marker — the token is defined there
    and is not repeated here, so a version bump lands in one place. None → never processed;
    **keep it**.
-2. Compare that comment's timestamp against the newest of: last commit, last review submission
-   **not authored by `VIEWER`**, last non-marker comment.
+2. Compare that comment's timestamp against the newest of: last commit; last review submission
+   **not authored by `VIEWER`** (**review lane only** — see below); last non-marker issue comment;
+   **last inline review comment, whatever its author**.
 3. Nothing newer → **skip**, reason `no new activity since <ISO timestamp>`.
 
-**Excluding `VIEWER`'s own reviews is what makes the filter reachable at all.** Step 10 posts the
-marker comment and submits a formal `gh pr review` verdict, both under `VIEWER`, so the skill's own
-review is always newer than its own marker. Counting it would make the skip branch dead code on the review
-lane — every re-run would re-review every untouched third-party PR and post a second comment and a
-second verdict under the operator's identity. The comment class already carves the skill's output out
-("non-marker comment"); the review class has to as well. `VIEWER` cannot review their own PR, so this
-exclusion costs nothing on the remediate lane.
+**Excluding `VIEWER`'s own reviews is what makes the filter reachable — on the review lane.** Step 10
+posts the marker comment and submits a formal `gh pr review` verdict, both under `VIEWER`, so the
+skill's own review is always newer than its own marker. Counting it would make the skip branch dead
+code on the review lane — every re-run would re-review every untouched third-party PR and post a
+second comment and a second verdict under the operator's identity. The comment class already carves
+the skill's output out ("non-marker comment"); the review class has to as well.
+
+**That exclusion is scoped to the review lane, and must not be applied on the remediate lane.**
+GitHub forbids only `APPROVE` and `REQUEST_CHANGES` from a PR's own author — a `COMMENTED` review is
+accepted, and it is exactly how an author's inline comments on their own diff are recorded. So a
+`VIEWER`-authored review on a remediate-lane PR is real feedback, not this skill's output: the skill
+never reviews its own PR (Step 9 posts a comment there, and Step 10 runs on the review lane only).
+Excluding it would hide the operator's own inline notes and skip the PR as untouched — precisely the
+case the remediate lane exists to serve.
+
+**Inline review comments are their own activity class.** They are absent from `--json comments`, and
+a review carrying only inline comments has an empty `body`, so neither the comment class nor the
+review class detects them. Step 2's `pulls/<N>/comments` call supplies them; take the newest
+regardless of author.
 
 The point is that a re-run costs one `gh` call on an untouched PR instead of a full model pass.
 
@@ -251,6 +272,14 @@ the resolved set travels in the subagent brief and is reported in the review com
 
 A missing tier never fails the run. Collect the cold-start prompt from
 `SKILL_ROOT/reference/rubric-layering.md` for each missing tier and hand it to Step 11.
+
+**Specialist dispatch reference.** Alongside the tiers, resolve
+`DEV_ROOT/reference/specialist-dispatch.md` (unless `--no-specialists`). Resolved → the review
+lane gains the specialist panel (Step 5.2a); record the path. Absent — which includes a bare clone
+of this repository, any non-lab repo, and any run with no derivable `DEV_ROOT` — → degrade
+**exactly like a missing rubric tier**: the run proceeds specialist-less, the review comment names
+the absent specialist layer, and Step 11 reports it — one degradation pattern, not two. No
+cold-start prompt is emitted for it: the reference is lab-owned, not per-repo authored.
 
 ### 4.3 Cost guard
 
@@ -395,13 +424,49 @@ Every brief carries this, with only the lane section differing:
    (`review-comment-template.md` § Verdict vocabulary owns the trigger table); do not re-derive it
    here, and do not submit it.
 
+### 5.2a Specialist panel (review lane; dispatched by the main loop, same wave)
+
+Runs only when Step 4.2 resolved the dispatch reference and `--no-specialists` is off.
+**`DEV_ROOT/reference/specialist-dispatch.md` is the owning contract — apply its trigger table,
+per-pass cap, and model tier in place; restate nothing here.** A subagent cannot spawn agents, so
+the **main loop** dispatches the specialists as siblings of the review-lane agent:
+
+1. Per review-lane PR, evaluate the reference's trigger table against `gh pr diff <N> --repo <R>`
+   (deterministic predicates over names + hunks; capped per the reference).
+2. Dispatch each triggered specialist (`DEV_ROOT/.claude/agents/<name>.md`) in the **same wave**
+   as that PR's review agent — specialist agents count toward `--concurrency` like any other
+   wave member; fall back to `general-purpose` with the agent file's body as the brief if named
+   dispatch is unavailable (e.g. a session rooted where project agents are not registered).
+   Brief: PR ref, diff scope, the reviewed sha, report-only reminder; the agent body
+   owns its finding schema. Specialists return findings to the main loop; they post nothing and
+   edit nothing.
+3. A specialist that errors, times out, or returns schema-invalid output becomes a **named
+   not-run dimension** for that PR — carried to Step 10's comment and Step 11's summary. Never
+   re-dispatch, never fail the PR over it.
+4. Findings are merged at **Step 10**, before the comment and verdict post — not inside the review
+   agent, which has already returned its composed body by then.
+
 ### 5.3 Remediate lane
 
-1. **Ingest all existing feedback:** review bodies, inline review comments, issue comments, and
-   failing check output (`gh pr view`, `gh api .../comments`, `gh pr checks`). Count the sources —
-   Step 9 reports them as the coverage claim.
-2. Ignore this skill's own prior marker-carrying comments (same prefix 2.3 matches on) as *input*;
-   they are output, and treating them as feedback loops the skill onto itself.
+1. **Ingest all existing feedback** from all four sources, each by its own call — none of them
+   subsumes another:
+
+   ```
+   gh pr view <N> --repo <R> --json reviews          # review bodies
+   gh api /repos/<R>/issues/<N>/comments --paginate  # issue (Conversation-tab) comments
+   gh api /repos/<R>/pulls/<N>/comments --paginate   # inline review comments, anchored to the diff
+   gh pr checks <N> --repo <R>                       # failing check output
+   ```
+
+   **An empty review `body` does not mean an empty review.** A review submitted with only inline
+   comments carries no body text at all; its substance lives entirely on `pulls/<N>/comments`. Skip
+   that call and diff-anchored feedback is silently missed while the coverage claim still reports the
+   review as ingested. Count each source separately — Step 9 reports the counts as the coverage claim.
+2. **The PR author's own feedback counts, and only the marker is excluded.** On this lane the author
+   is `VIEWER`, and notes they left on their own diff arrive as `VIEWER`-authored `COMMENTED` reviews
+   (GitHub forbids only `APPROVE` and `REQUEST_CHANGES` from the author) — ingest them like any other
+   finding. The one exclusion: this skill's own prior marker-carrying comments (same prefix 2.3
+   matches on) are *output*, and treating them as feedback loops the skill onto itself.
 3. Classify each finding per `SKILL_ROOT/reference/classify-blockers.md`.
 4. **Auto-fix mechanical findings** with minimal `Edit`s — no adjacent refactoring, no opportunistic
    cleanup. Scope discipline is what makes the diff reviewable.
@@ -601,9 +666,18 @@ comment body and the verdict token without posting either; this is where they la
 **`CONSENT == false` → post nothing at all**, and hand every comment body and verdict to Step 11's
 withheld list so the operator can post them by hand. Withholding is not dropping.
 
+**Merge the specialist findings first, where the panel ran (Step 5.2a).** Dedup against the review
+agent's findings per the dispatch reference's merge rules, fold the survivors into the comment body
+under the composed rubric, then **re-derive the verdict token from the merged set** per
+`review-comment-template.md` § Verdict vocabulary — a specialist Blocker must be able to turn an
+`APPROVE` into a `REQUEST CHANGES`, which it cannot do if the token is taken as 5.2 returned it. Name
+any not-run dimension (a specialist that errored, timed out, or returned schema-invalid output) in
+the comment, and name the absent specialist layer where Step 4.2 did not resolve the reference or
+`--no-specialists` was set. Panel did not run at all → post exactly what 5.2 returned.
+
 Otherwise, per PR, in this order:
 
-1. `gh pr comment <N> --repo <R> --body-file <tmp>` — the comment body 5.2 returned, verbatim.
+1. `gh pr comment <N> --repo <R> --body-file <tmp>` — the merged comment body, verbatim.
 2. `gh pr review <N> --repo <R> <flag> --body "<one-line rationale>"`, mapping the returned token:
    `REQUEST CHANGES` → `--request-changes`, `APPROVE` → `--approve`, `COMMENT` → `--comment`.
    **`--body` is required on all three** — `gh pr review --comment` fails non-interactively without
@@ -644,6 +718,10 @@ Also report, each only when non-empty:
 - **Truncated by `--limit`** — how many PRs were dropped. A silent cap reads as full coverage.
 - **Missing rubric tiers** — per repository, with the cold-start prompt from
   `SKILL_ROOT/reference/rubric-layering.md`.
+- **Specialist panel absent or degraded** — whether the panel was off by `--no-specialists`, absent
+  because Step 4.2 did not resolve `DEV_ROOT/reference/specialist-dispatch.md`, or ran with named
+  not-run dimensions (5.2a step 3). A review that covered fewer dimensions than the full panel says
+  so here as well as in its comment; the round never reads as more thorough than it was.
 - **Preserved worktrees** — path, branch name, and why.
 
 ### 11.2 Cleanup

@@ -59,6 +59,35 @@ A missing tier **degrades and notifies**: the run proceeds, the comment states w
 and the roster prints a ready-to-paste prompt for generating the missing rubric. The skill never
 writes a rubric into a repo it was only asked to review.
 
+## The specialist panel (review lane only)
+
+Beside the composed rubric, the review lane dispatches the **specialist review agents** in
+`<DEV_ROOT>/.claude/agents/` (test coverage, silent failures, type design, comment rot) for
+dimensions the PR's diff triggers.
+**`<DEV_ROOT>/reference/specialist-dispatch.md` is the owning contract, consumed in place**: the
+diff-trigger table, per-pass cap, model tier, severity-ceiling knob, and merge rules all live
+there.
+
+- **Dispatched from the main loop, in the review-lane PR's wave** — a subagent cannot spawn
+  agents, so the specialists run as siblings of that PR's review agent, and their findings return
+  to the main loop.
+- **Composed before the verdict.** Step 10 merges specialist findings into the review comment
+  under the three-tier rubric (dedup on `file::symbol` + category; cross-category collisions get
+  a recorded same-defect judgment) and re-derives the verdict token from the merged findings per
+  the template's trigger table — the posted verdict reflects the full panel.
+- **Degrades like a missing rubric tier.** Where the dispatch reference does not resolve, the run
+  goes specialist-less and the posted comment names the absent layer — one degradation pattern,
+  not two. A specialist that errors or returns schema-invalid output is named in the comment as a
+  not-run dimension; the review never silently narrows.
+- **The remediate lane is untouched** — specialists review, they never remediate.
+- **`--no-specialists`** drops the panel for the whole round.
+
+**Availability note:** the agents and the dispatch reference are **not yet carried in lab-os** —
+they are maintained in the lab's workspace forks, and a bare clone of this repository resolves
+neither. Until they are ported, a run rooted here degrades to the composed rubric alone and says so;
+a run from a dev home that carries them gets the full panel, because both paths resolve against
+`DEV_ROOT` at runtime rather than against the repository the skill ships from.
+
 ## Two fan-outs, and why
 
 Subagents cannot call `AskUserQuestion`. So a design-pin found during remediation can only be
@@ -127,7 +156,7 @@ stops rather than shipping past it — the missing evidence is the point, and a 
 
 ```
 /pr-round [<PR ref>…] [--limit N] [--no-skip] [--review-only] [--remediate-only]
-          [--dry-run] [--concurrency N]
+          [--dry-run] [--concurrency N] [--no-specialists]
 ```
 
 `--dry-run` resolves and reports the roster and makes no write call of any kind — the safe first
@@ -197,6 +226,7 @@ own root blocks the `.claude/` walk-up to the dev home.
 - [PROMPT.md](PROMPT.md) — the executable body, Steps 0–11
 - [reference/rubric-layering.md](reference/rubric-layering.md) — tier discovery, precedence, cold-start
 - [reference/rubric-universal.md](reference/rubric-universal.md) — tier 1, the always-present standard
+- `<DEV_ROOT>/reference/specialist-dispatch.md` — specialist panel: triggers, cap, merge/verdict contract (consumed in place; not carried in lab-os — absent → degrade like a missing tier)
 - [reference/classify-blockers.md](reference/classify-blockers.md) — mechanical vs design-pin
 - [reference/review-comment-template.md](reference/review-comment-template.md) — review comment; owns the marker literal
 - [reference/remediation-comment-template.md](reference/remediation-comment-template.md) — the handoff comment
