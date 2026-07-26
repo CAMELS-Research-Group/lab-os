@@ -121,6 +121,7 @@ lane composes its comment and verdict and returns them; Step 10 posts them.
 | Design-pin, on your PR | Returned from the subagent, asked at Step 6 with 2–3 options + `Defer`, applied at Step 8. |
 | Anything on someone else's PR | Reported in the review comment. Never edited — it is their PR. |
 | Roster over 8 PRs | One cost-guard question before dispatch, offering repo- and lane-scoped cuts before a bare count cap. |
+| Your PR conflicts with its base | Remediate lane skips it, reason `merge conflict — manual`, named in the roster. Detected, never resolved — a semantic merge under your identity is not the skill's to guess. Review-lane PRs are unaffected. |
 | Red gate, or a gate that cannot run at all | No push. The commit survives; worktree preserved, path named in the roster. |
 | A resolution the skill cannot perform | Returned as an out-of-band follow-up — on your own PRs, filed as a follow-up issue at Step 7 (consent-gated); otherwise recorded in the comment and the roster for manual action. |
 
@@ -156,18 +157,35 @@ stops rather than shipping past it — the missing evidence is the point, and a 
 
 ```
 /pr-round [<PR ref>…] [--limit N] [--no-skip] [--review-only] [--remediate-only]
-          [--dry-run] [--concurrency N] [--no-specialists]
+          [--dry-run] [--concurrency N] [--no-specialists] [--comment-only] [--hand-back]
 ```
 
 `--dry-run` resolves and reports the roster and makes no write call of any kind — the safe first
 invocation. `--no-skip` disables the no-new-activity filter, which otherwise skips PRs untouched
 since this skill's last comment so a re-run costs one API call instead of a model pass.
+`--comment-only` posts every review as a `COMMENT` verdict whatever the Blocker count — for reviewing
+from an identity without merge authority (the findings still post in full; only the formal
+approve/request-changes claim is withheld). `--hand-back` re-requests review and clears draft after a
+successful remediation (off by default — see *When NOT to use*).
 
 ## Consent
 
-**One question per run**, at Step 3, before any dispatch — fired whenever the run will post
-anything, on your own PRs included. `PROMPT.md` § Step 3 is the owning definition; this is a
-summary.
+**Two asks, each authorizing what the other cannot** — both once per run, never once per PR.
+`PROMPT.md` § Step 3 and § Step 9.0 are the owning definitions; this is a summary.
+
+- **Step 3, before any dispatch — authorizes the *run*.** Reviews, and the commits and pushes the
+  remediate lane makes to your own branches. It has to come first, because those writes happen inside
+  the dispatch it gates. But it necessarily fires before any comment body, verdict, or final sha
+  exists, so it can only describe the posts to come — not show them.
+- **Step 9.0, before anything posts — authorizes the *posts*.** Once the round knows exactly what it
+  would say and where, it prints a per-PR summary (each PR's verdict or readiness, and what lands
+  where) and asks once. This is the ask that governs the identity comments, the formal verdicts, the
+  Step 7 follow-up issues, and — under `--hand-back` — the review re-requests and draft clearing,
+  each enumerated in the question rather than named by flag.
+
+A Step-3 decline withholds everything and makes Step 9.0 moot. A Step-9.0 *withhold* keeps the
+already-pushed commits but sends every post to the withheld list. Either way the round still reviews
+and still fixes your branches, and everything withheld is listed at the end for manual action.
 
 **This skill deliberately claims no standing no-ask permission.** If your global `CLAUDE.md`
 pre-authorizes identity posts for some *other* skill (e.g. `pr-review-loop`), that grant is scoped to
@@ -175,23 +193,19 @@ that skill's own actions, so extending it here would be a self-granted exception
 inherited one. Widening it is an amendment to your own operating instructions — an operator's change
 to make deliberately, not a default this skill assumes.
 
-**The one ask covers every identity post the round makes:** review comments and verdicts, handoff
-comments, and the follow-up issues Step 7 files on your own repositories for items that don't fit
-their PR (deferred design-pins, out-of-band follow-ups).
-
-**Declining does not stop the run.** Reviews still run and your own branches still get their fixes;
-every identity post — comments, verdicts, and issues alike — is withheld and listed at the end for
-manual action. The review lane never files issues on someone else's repository — findings stay in
-the comment thread rather than pre-empting the maintainer's triage.
+The review lane never files issues on someone else's repository — findings stay in the comment thread
+rather than pre-empting the maintainer's triage.
 
 ## When NOT to use
 
 - Driving a single PR to a merge bar — that is `pr-review-loop`.
 - A PR still moving in draft; scope is not stable enough for a useful review.
 - Fork PRs you cannot push to (the remediate lane skips them with a reason).
-- A PR in a repository not checked out under your dev home — Step 4.1 maps only the dev home and its
-  `projects/` children, so anything else skips with `no local checkout mapped`. Clone-on-demand is a
-  tracked follow-up, not built.
+- A PR in a repository not checked out under your dev home — Step 4.1 maps the dev home itself, its
+  `projects/<name>` children, and any repo sitting as a **direct child** of the dev home, taking the
+  first that is a git repo root (so a flat layout works, though `projects/` is the blessed one — see
+  *Deployment*). A repo that is under none of those still skips with `no local checkout mapped`;
+  clone-on-demand is a tracked follow-up, not built.
 - Reviewing **your own** PR as its sole maintainer — the review lane fires only on PRs authored by
   someone else, and the remediate lane ingests *existing* feedback rather than generating a review, so
   a solo-maintained PR with no reviewer gets no review here (the round runs as a remediate no-op). Use
@@ -204,6 +218,11 @@ the comment thread rather than pre-empting the maintainer's triage.
   one comment per PR; on **your own** PRs it additionally files follow-up issues for items that don't
   fit the PR (Step 7, consent-gated), and on anyone else's repository it files nothing — anything
   else is returned as a follow-up for you.
+- Taking a PR out of draft, or re-requesting review, **without `--hand-back`**. The skill never leaves
+  draft state on its own; `--hand-back` (Step 9.2, gated by the Step 9.0 posting consent) is the only
+  path that clears draft or re-requests review, and only on a PR the round actually advanced.
+- Resolving a merge conflict. A conflicting PR is detected and skipped `merge conflict — manual`, not
+  merged — resolving two people's intent under your identity is not the skill's call.
 - Merging. `pr-round` never calls `gh pr merge`.
 
 ## Claiming compliance
@@ -221,6 +240,12 @@ lab-os-owned, user-scope-deployed. Authored at `<DEV_ROOT>/.claude/skills/pr-rou
 `bash .claude/scripts/link-lab-assets.sh`, which symlinks it into `~/.claude/skills/`. Re-run it on
 each clone. Deployment matters here: the PRs in scope span repositories, and a nested project repo's
 own root blocks the `.claude/` walk-up to the dev home.
+
+**Blessed dev-home layout: project repos nest under `<DEV_ROOT>/projects/<name>`.** Step 4.1 resolves
+a PR's repo to `<DEV_ROOT>/projects/<name>` first, so a dev home that follows this convention is
+unambiguous. A repo sitting as a direct child `<DEV_ROOT>/<name>` also resolves — the `projects/`-first
+ordering states the preference without forbidding a flat checkout, so an existing flat dev home keeps
+working while a new one should prefer `projects/`.
 
 ## See also
 

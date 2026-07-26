@@ -59,17 +59,27 @@ review carries.>
 
 ## Verdict vocabulary
 
-Exactly three. The trigger is mechanical — the verdict follows the Blocker count, it is not a
-judgment call layered on top.
+Three tokens. The trigger is mechanical — the verdict follows the Blocker count, it is not a judgment
+call layered on top — with **one override**, stated in its own row below, that a caller sets
+deliberately and the skill never applies on its own.
 
 | Verdict | Emoji | Trigger |
 |---|---|---|
 | `REQUEST CHANGES` | 🔴 | One or more Blockers. |
 | `APPROVE` | ✅ | Zero Blockers **and** the reviewer read enough to say so — the scope paragraph must support it. |
 | `COMMENT` | 💬 | Zero Blockers but coverage was partial: a generated artifact, a stack the reviewer could not evaluate, or a diff too large to read end-to-end. Withholds approval without asserting a defect. |
+| `COMMENT` **(override)** | 💬 | `--comment-only` is set. Forces `COMMENT` regardless of Blocker count; the findings — Blockers included — still post in full, only the formal verdict is withheld. |
 
 `COMMENT` exists so incomplete coverage is never laundered into an approval. Reaching for it is
 correct when the honest answer is "I could not check the part that matters."
+
+**The `--comment-only` override exists because the mechanical derivation assumes the reviewer is the
+merge authority.** A formal `APPROVE` or `REQUEST CHANGES` is a merge-gating act on most repositories;
+a contributor without write access who posts one overstates their standing, however sound the
+findings. The flag lets them post the full review and withhold the verdict claim, rather than choosing
+between an overreaching verdict and no review at all. It is the only thing that decouples the token
+from the Blocker count, and it never fires unless the caller passes it — so the base rule stays purely
+mechanical for everyone else.
 
 ## Finding entries
 

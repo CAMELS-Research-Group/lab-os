@@ -35,18 +35,35 @@ applied would be stale by the time the round ends and would leave resolved items
 
 <numbered; each: finding -> file:line -> what changed. Or `None.`>
 
-### Decisions made
+<details><summary><b>Decisions made</b> — <n>, or none</summary>
 
 <numbered; each: the choice, the reasoning, what was applied. Or `None.`>
+</details>
 
-### Still open
+<details><summary><b>Still open</b> — <n>, or none</summary>
 
 <numbered; each: the item and why it is still open. Or `None.`>
+</details>
 
-### Not actioned
+<details><summary><b>Not actioned</b> — <n>, or none</summary>
 
 <numbered; each: the finding and the reason it was left. Or `None.`>
+</details>
 ```
+
+**Collapse is display-only; it drops nothing.** `### Decisions made`, `### Still open`, and
+`### Not actioned` open collapsed so a reader sees the verdict line, the header, and `### Addressed`
+first, then expands what they need — a handoff comment routinely runs long, and the reviewer's first
+question is "did it move and is it ready", which the open part answers. Every rule for those sections
+below is unchanged: a finding still appears in exactly one, `None.` is still written rather than the
+section omitted, and the § Section rules coverage guarantee ("a finding appearing nowhere reads as
+missed") still binds inside the collapsed block. What changed is the default scroll length, not what
+must be present.
+
+**`### Addressed` and the `##` header line stay open.** They are the ready-at-a-glance surface —
+whether the round moved the PR, and to what commit — so hiding them would defeat the point. The
+`<summary>` for each collapsed section carries a **count** (or "none"), so the reader decides whether
+to expand from the summary alone rather than having to open it to learn it is empty.
 
 ## Readiness verdict
 
@@ -148,15 +165,16 @@ nowhere reads as missed.
    config refactor.
 3. `client.py:88` — bounded the response read at 10 MB and made it fail closed past the cap.
 
-### Decisions made
+<details><summary><b>Decisions made</b> — 1</summary>
 
 1. **Unbounded `resp.read()` on a caller-supplied URL** (`client.py:88`) — capped at 10 MB and fail
    closed, rather than streaming into a bounded buffer. The cap matches the limit already enforced
    upstream at ingest, so the two agree and neither has to know about the other; streaming would
    have reshaped the return type and touched all three call sites for a payload size this client
    has never seen. If bulk responses become real, streaming is the follow-up.
+</details>
 
-### Still open
+<details><summary><b>Still open</b> — 2</summary>
 
 1. `pipeline.py` module size — deferred. It sits near the budget and this PR removes lines from it,
    so the split is not urgent, but the next feature that adds to it will cross. Closing it means
@@ -164,11 +182,13 @@ nowhere reads as missed.
 2. **Out-of-band — tracked as #87.** The reviewer's second comment asks for the streaming variant to
    be tracked rather than built here; this round filed the follow-up issue against `client.py`,
    referencing decision 1 above.
+</details>
 
-### Not actioned
+<details><summary><b>Not actioned</b> — 1</summary>
 
 1. `parser.py:88` — reviewer flagged the nested conditional as hard to follow. Pre-existing; this PR
    does not touch that function. Out of scope for this round.
+</details>
 ```
 
 ## Common deviations
@@ -185,3 +205,6 @@ nowhere reads as missed.
 | An out-of-band follow-up phrased as though the round did it | The round replies to no thread and performs no action beyond Step 7's issue filing; an unfiled item that reads as handled is a dropped item |
 | A decision entry with no reasoning | The section's whole value is the *why*; the *what* is already in `### Addressed` |
 | Findings appearing in no section | Reads as missed rather than considered |
+| Collapsing `### Addressed` or the `##` header line | They are the ready-at-a-glance surface; only the three lower sections collapse, and the reader must not have to expand anything to learn whether the round moved the PR |
+| Using collapse to omit a section rather than default-hide it | `<details>` changes default visibility, not presence; a section still reads `None.` when empty and still carries every finding it owns — a dropped finding is dropped whether or not it was behind a `<summary>` |
+| A `<summary>` without its count | The count is what lets a reader skip an empty section unopened; a bare section name forces them to expand it to find nothing |

@@ -12,11 +12,16 @@
 > Step 6  decide returned design-pins       (main loop)
 > Step 7  file follow-up issues             (main loop; own PRs only, consent-gated)
 > Step 8  FAN OUT #2: apply decisions       (reuses Step-5 worktrees)
-> Step 9  post one handoff comment per remediated PR   (main loop)
-> Step 10 merge specialist findings, post review comment + verdict per reviewed PR  (main loop)
+> Step 9  confirm the posts (9.0) -> handoff comment per remediated PR (9.1) -> hand back (9.2)
+> Step 10 post review comment + verdict per reviewed PR  (main loop; merge computed at 9.0)
 > Step 11 roster summary + worktree cleanup  (MUST run after Steps 8-10)
 >
 > Every `gh` post is a main-loop step. No subagent posts under the operator's identity.
+>
+> Two consent asks, each authorizing what the other cannot. Step 3 authorizes the RUN —
+> reviews, and the commits and pushes to your own branches — before anything dispatches.
+> Step 9.0 authorizes the identity POSTS, once the round knows what it would say and where.
+> Both are one ask for the whole run, never one per PR.
 > ```
 
 ## Step 0: Isolate, parse arguments, resolve paths, establish identity
@@ -103,6 +108,8 @@ Unparseable ref → abort naming the ref and listing all four forms. Do not gues
 | `--dry-run` | off | Resolve and report the roster; make **no** write call of any kind |
 | `--concurrency N` | 5 | Wave size — how many subagents run at once (Step 5, Step 8) |
 | `--no-specialists` | off | Drop the specialist panel (Step 5.2a) — review-lane PRs get the composed rubric only; each review comment states specialists were disabled by flag |
+| `--comment-only` | off | Force the `COMMENT` verdict on every review-lane PR, whatever the Blocker count. Findings still post in full; only the formal verdict changes. `SKILL_ROOT/reference/review-comment-template.md` § Verdict vocabulary owns the override row — applied where the verdict is derived (Step 9.0) |
+| `--hand-back` | off | After a successful remediation, re-request review from the reviewers this round answered and take a draft PR out of draft (Step 9.2). Both are identity writes, gated by 9.0 |
 
 Unknown flag → abort: `❌ Unknown flag: <flag>`. `--review-only` with `--remediate-only` → abort;
 they are mutually exclusive.
@@ -153,7 +160,7 @@ For each PR resolve `author`, `isDraft`, `headRefName`, `headRepositoryOwner`, a
 timeline:
 
 ```
-gh pr view <N> --repo <R> --json author,isDraft,headRefName,headRepositoryOwner,comments,reviews,commits
+gh pr view <N> --repo <R> --json author,isDraft,headRefName,headRepositoryOwner,comments,reviews,commits,mergeable,mergeStateStatus
 gh api /repos/<R>/pulls/<N>/comments --paginate
 ```
 
@@ -219,10 +226,41 @@ The point is that a re-run costs one `gh` call on an untouched PR instead of a f
 A remediate-lane PR whose head is a fork the viewer cannot push to → skip, reason
 `fork head not pushable`. Detect via `headRepositoryOwner` before dispatch, not by a failed push.
 
+### 2.5 Merge conflicts
+
+A **remediate-lane** PR whose `mergeable` reads `CONFLICTING` → skip the lane, reason
+`merge conflict — manual`. It travels into the Step 11 roster like any other skip reason, so the
+round ends naming the PR and what it needs.
+
+**Detect, never resolve.** Conflict resolution is a semantic merge of two people's intent; getting it
+wrong writes someone else's work out of the branch under the operator's name, and the failure is
+invisible until long after the round. That is why detection alone is the whole fix here — and it is a
+real fix, because without it the round proceeds: the agent branches from `origin/<head-ref>`, applies
+mechanical fixes, gates them green, and pushes a commit onto a branch GitHub still will not merge. The
+handoff comment then reads `READY FOR RE-REVIEW` on a PR that cannot land. A round that fixes nothing
+is a better outcome than a round that reports success on one.
+
+`mergeable` also returns `UNKNOWN` — GitHub computes mergeability asynchronously and has not finished.
+That is not a conflict: **do not skip on it**, and do not poll. A PR whose conflict is confirmed on the
+next round is one deferred round; a PR skipped on an unresolved `UNKNOWN` is a lane that goes dead
+whenever GitHub is slow.
+
+**Review-lane PRs are unaffected.** A conflict does not stop a review — the diff is still readable and
+the author still needs the findings. Nothing about the review lane consults this field.
+
 ## Step 3: Resolve consent (once, for the whole run)
 
 Runs here — after Step 2, before any dispatch — because the roster it describes to the operator is
 not known earlier. Skip entirely under `--dry-run`: it writes nothing, so it needs no permission.
+
+**What this ask authorizes: the run.** Reviews, and the commits and pushes the remediate lane makes to
+the operator's *own* branches — the writes that have to be authorized before Step 5 dispatches,
+because they happen inside it. It is deliberately **not** the authorization for the identity posts.
+Nothing it could describe about those posts exists yet: no comment body, no verdict, no readiness, no
+final sha. An operator answering here is approving content that has not been written, which is the
+one thing consent cannot meaningfully cover. **Step 9.0 is the second ask**, fired once the round
+knows exactly what it would post and where; the two together are the full authorization, and neither
+substitutes for the other.
 
 **This skill claims no standing permission.** Every run that will post anything asks, once. If the
 operator's global `CLAUDE.md` pre-authorizes identity posts for some *other* skill (e.g.
@@ -237,20 +275,23 @@ unambiguous: anything under your name is gated.
 **Fire the ask iff the surviving roster contains at least one PR this run would post to.** Nothing to
 post → no ask. Otherwise exactly one question for the whole run, never one per PR:
 
-- `question`: `This run will post under your GitHub identity: a review comment and a formal approve / request-changes verdict on each PR you do not own, one handoff comment on each of your own PRs it remediates, and a follow-up issue on your own repositories for each item that does not fit its PR (deferred decisions, out-of-band follow-ups). Approve?`
+- `question`: `This run will review, and will commit and push fixes to your own PR branches. It will then prepare identity posts: a review comment and a formal approve / request-changes verdict on each PR you do not own, one handoff comment on each of your own PRs it remediates, and a follow-up issue on your own repositories for each item that does not fit its PR (deferred decisions, out-of-band follow-ups). You confirm the comments and verdicts once more at Step 9.0, when they exist and can be summarized. Approve the run?`
 - `header`: `Run consent`
 - options: `Accept (Recommended)` → `CONSENT = true`; `Decline (no identity posts)` → `CONSENT = false`.
 
-**A post is authorized iff `CONSENT == true`.** That one rule governs every posting site — Steps 7,
-9, and 10 defer to it rather than restating it.
+**Every post requires `CONSENT == true`; the comments, verdicts, and hand-back additionally require
+`POST_OK == true` from Step 9.0.** Steps 9 and 10 defer to that conjunction rather than restating it.
+Step 7's issue filing is governed by `CONSENT` alone — it runs before Step 8 so that Step 9.1 can cite
+the issue numbers, which places it earlier in the round than a 9.0 summary could exist.
 
 **Declining does not stop the run.** Review and remediation both still execute; remediation still
-commits and pushes to your own branches, which running the skill already authorizes. Every withheld
-post is listed in the Step 11 summary so nothing is silently dropped.
+commits and pushes to your own branches, which this ask is what authorizes. Every withheld post is
+listed in the Step 11 summary so nothing is silently dropped. A decline here also makes Step 9.0
+moot — there is nothing left to confirm — so it does not fire.
 
 The review lane never files issues on someone else's repository — findings live in the comment
 thread. Filing there would pre-empt the maintainer's own triage. Issue filing exists only for **your
-own** PRs, at Step 7, and is governed by this same single consent — no second ask.
+own** PRs, at Step 7.
 
 Emit: `Consent: <granted | declined | not needed — nothing to post | n/a (dry-run)>`.
 
@@ -258,17 +299,31 @@ Emit: `Consent: <granted | declined | not needed — nothing to post | n/a (dry-
 
 ### 4.1 Local checkout
 
-Map each `<owner>/<repo>` to a local path:
+Map each `<owner>/<repo>` to a local path by trying these candidates **in order**, taking the first
+that verifies:
 
-- `DEV_ROOT` itself for the dev home's own repo.
-- `DEV_ROOT/projects/<name>` for a nested project repo.
+1. `DEV_ROOT` itself, when `<repo>` is the dev home's own repository.
+2. `DEV_ROOT/projects/<repo>` — a project repo nested under the blessed layout.
+3. `DEV_ROOT/<repo>` — a project repo sitting as a **direct child** of the dev home.
 
-Both need `DEV_ROOT` from Step 0.1. If it could not be derived, no repository maps and every PR
-skips with reason `no local checkout mapped` — report that as the derivation failure it is, not as
-a per-repo mapping gap.
+A candidate verifies when the path exists **and** `git -C <path> rev-parse --is-inside-work-tree` is
+true. That check is the whole guard: candidate 3 admits any direct child of `DEV_ROOT`, so an
+unrelated directory that happens to share a repository's name is rejected for not being a git repo
+root rather than by a name rule. Try candidates in order and stop at the first that verifies — where
+both 2 and 3 exist, `projects/` wins, so the ordering states the preference without forbidding the
+flat layout. Record which candidate matched; a mapping that silently resolved to the flat fallback is
+worth seeing in the Step 11 summary.
 
-Verify the path exists and `git -C <path> rev-parse --is-inside-work-tree` is true. Unmappable →
-skip with reason `no local checkout mapped`. Never silently.
+**Descending only to a direct child is deliberate.** A recursive search under `DEV_ROOT` would find
+nested worktrees, vendored copies, and this skill's own `pr-round-<N>` checkouts, and picking the
+wrong one means an agent commits to a detached clone of the right repository — a failure that looks
+like a successful round. One level, ordered, verified.
+
+All three candidates need `DEV_ROOT` from Step 0.1. If it could not be derived, no repository maps
+and every PR skips with reason `no local checkout mapped` — report that as the derivation failure it
+is, not as a per-repo mapping gap.
+
+No candidate verifies → skip with reason `no local checkout mapped`. Never silently.
 
 ### 4.2 Rubric tiers
 
@@ -635,7 +690,55 @@ including the explicit `HEAD:refs/heads/<head-ref>` refspec. State only the diff
 
 A Step 8 failure is per-PR and does not abort siblings, matching 5.4.
 
-## Step 9: Post the handoff comment
+## Step 9: Confirm the posts, then post the handoff comment
+
+### 9.0 Second confirmation — the posting gate (governs Steps 9.1, 9.2, and 10)
+
+Runs in the main loop, before anything in this step or Step 10 posts. Step 3 authorized the *run*;
+this authorizes the *posts*. The gap it closes is that Step 3 necessarily fires before the content
+exists — no comment body, no verdict, no readiness, no final sha — so an operator answering there
+approves a description of posts rather than the posts. Here the round knows all of it.
+
+**Fires iff `CONSENT == true` and at least one post remains.** A Step-3 decline already withheld
+everything, so there is nothing to confirm and this does not fire. Skipped under `--dry-run` with the
+rest of the posting path.
+
+**Finalize each review-lane verdict before building the summary.** For a review-lane PR whose panel
+ran (Step 5.2a), the token the operator approves here must be the **post-merge** one — merge the
+specialist findings and re-derive the verdict per Step 10's rule *now*, so a specialist Blocker that
+turns an `APPROVE` into a `REQUEST CHANGES` is visible in this summary rather than sprung after
+approval. Step 10 then posts that already-merged body and token rather than re-deriving them; this is
+the one place the merge is computed, and 9.0 is where it must be done because 9.0 is where it is shown.
+
+**One ask for the whole run, never one per PR.** Print the per-PR summary first — one line each,
+every PR that would be posted to, so the operator sees the shape of the round rather than a count:
+
+```
+<owner>/<repo>#<N>  review     🔴 REQUEST CHANGES     → review comment + formal verdict
+<owner>/<repo>#<N>  review     ✅ APPROVE             → review comment + formal verdict
+<owner>/<repo>#<N>  remediate  ⚠️ PARTIALLY ADDRESSED → handoff comment
+<owner>/<repo>#<N>  remediate  ✅ READY FOR RE-REVIEW → handoff comment · re-request <login> · mark ready
+```
+
+The third column is the verdict token (review lane) or the readiness verdict (remediate lane) that
+Step 9.1 and Step 10 are about to publish; the fourth is exactly what lands where. The hand-back
+clause appears only for PRs Step 9.2 would act on.
+
+Then ask:
+
+- `question`: `Post these under your GitHub identity? Review comments and a formal approve / request-changes verdict on the PRs you do not own, and one handoff comment on each of your own PRs this round remediated.` — and, **only when `--hand-back` is set**, append: ` Hand-back is also on: this will re-request review from the reviewers whose changes-requested this round answered, notifying them, and will take a draft PR out of draft.`
+- `header`: `Post now`
+- options: `Post (Recommended)` → `POST_OK = true`; `Withhold (keep the bodies)` → `POST_OK = false`.
+
+**The hand-back clause is enumerated, never abbreviated.** Both of its actions write to state other
+people see — one lands in a reviewer's notifications, the other changes the PR's own status — and a
+question that named only the flag would be asking the operator to approve a word.
+
+`POST_OK == false` → post nothing anywhere: every comment body, every verdict, and every hand-back
+action goes to Step 11's withheld list, exactly as a Step 3 decline does. Nothing else about the
+round changes; the commits are already pushed and stay pushed.
+
+### 9.1 Post the handoff comment
 
 Runs in the main loop, once per **remediated** PR — including PRs with no design-pins and PRs where
 Step 8 failed. A round that touched a PR never leaves it silent.
@@ -659,27 +762,69 @@ Review-lane PRs are posted by Step 10 and are skipped here.
    **out-of-band follow-up** returned per 5.3 step 8, go under `### Still open` — each citing the
    follow-up issue Step 7 filed for it (`#<N>`), or, where none was filed (consent declined, filing
    failed, or the item belongs to someone else's repo), naming the action and who takes it.
-6. Post `gh pr comment <N> --repo <R> --body-file <tmp>` **only when `CONSENT == true`** (Step 3);
-   otherwise skip and hand the body to Step 11's withheld list. Being your own PR is not an
-   authorization — this skill claims no standing permission (Step 3).
+6. Post `gh pr comment <N> --repo <R> --body-file <tmp>` **only when `CONSENT == true` (Step 3) and
+   `POST_OK == true` (Step 9.0)**; otherwise skip and hand the body to Step 11's withheld list. Being
+   your own PR is not an authorization — this skill claims no standing permission (Step 3), and a
+   pushed commit is not a posted comment.
+
+### 9.2 Hand back — re-request review and clear draft (only under `--hand-back`)
+
+Runs in the main loop, once per **remediated** PR, **only when `--hand-back` is set**. Without the
+flag this step does nothing and the round leaves review-request and draft state exactly as it found
+them — the default, because both actions below write to state other people see.
+
+Governed by the same `CONSENT == true` **and** `POST_OK == true` conjunction as 9.1, and 9.0's
+question enumerated both actions verbatim, so an operator who reached here approved them specifically,
+not a flag name. `POST_OK == false` → do neither; record both under Step 11's withheld list beside the
+comment bodies.
+
+Act only on a PR the round genuinely advanced — a non-`BLOCKED` readiness verdict (9.1). A `BLOCKED`
+PR (red gate, rung-3 no-push, or a failed Step 8) is **not** handed back: re-requesting review on work
+that did not land, or clearing draft on a PR that still fails its gate, hands the reviewer a false
+signal. Skip it and say so in the roster.
+
+Per qualifying PR, in this order:
+
+1. **Re-request review** from each reviewer whose `CHANGES_REQUESTED` this round answered — the
+   reviewers whose findings Step 5 ingested and Step 8 acted on, not every past reviewer.
+   `gh pr edit <N> --repo <R> --add-reviewer <login>` is the intended call, **but it is currently
+   broken against any repository that still carries classic-Projects data**: `gh` fetches
+   `repository.pullRequest.projectCards` as part of that command, GitHub now returns a deprecation
+   error for that field, and the error nulls the entire `pullRequest` object so the command exits
+   non-zero having done nothing (observed on `gh` 2.26.1). Prefer the REST call, which does not touch
+   that field: `gh api -X POST repos/<R>/pulls/<N>/requested_reviewers -f 'reviewers[]=<login>'`. A
+   recent `gh` fixes the `pr edit` path; until the host is upgraded, use REST. A re-request the API
+   rejects (the login cannot review, already requested) is a per-PR note, not a round failure (5.4).
+2. **Clear draft**, if the PR is a draft: `gh pr ready <N> --repo <R>`. This is the **only** place the
+   skill takes a PR out of draft, and it never does so without `--hand-back` — recorded in
+   `SKILL.md` § When NOT to use. A non-draft PR skips this sub-step silently.
+
+Record what was done per PR for the Step 11 roster: reviewers re-requested, draft cleared or n/a, and
+any API rejection.
 
 ## Step 10: Post the review comments and verdicts
 
 Runs in the main loop, once per **review-lane** PR that produced a review. Step 5.2 returned the
-comment body and the verdict token without posting either; this is where they land, because
-`CONSENT` lives here and nowhere else.
+comment body and the verdict token without posting either; this is where they land, gated by the same
+two consents Step 9 obeys.
 
-**`CONSENT == false` → post nothing at all**, and hand every comment body and verdict to Step 11's
-withheld list so the operator can post them by hand. Withholding is not dropping.
+**Post only when `CONSENT == true` (Step 3) and `POST_OK == true` (Step 9.0).** Either false → post
+nothing at all, and hand every comment body and verdict to Step 11's withheld list so the operator can
+post them by hand. Withholding is not dropping. `POST_OK` was decided against the merged verdict that
+9.0 computed and showed in its per-PR summary, so no re-confirmation is needed here — the token is
+already final.
 
-**Merge the specialist findings first, where the panel ran (Step 5.2a).** Dedup against the review
-agent's findings per the dispatch reference's merge rules, fold the survivors into the comment body
-under the composed rubric, then **re-derive the verdict token from the merged set** per
-`review-comment-template.md` § Verdict vocabulary — a specialist Blocker must be able to turn an
-`APPROVE` into a `REQUEST CHANGES`, which it cannot do if the token is taken as 5.2 returned it. Name
-any not-run dimension (a specialist that errored, timed out, or returned schema-invalid output) in
-the comment, and name the absent specialist layer where Step 4.2 did not resolve the reference or
-`--no-specialists` was set. Panel did not run at all → post exactly what 5.2 returned.
+**The specialist merge was already computed at Step 9.0**, where the merged verdict had to be shown
+before the operator approved it. That merge — dedup against the review agent's findings per the
+dispatch reference's rules, survivors folded into the comment body under the composed rubric, verdict
+token re-derived from the merged set per `review-comment-template.md` § Verdict vocabulary so a
+specialist Blocker can turn an `APPROVE` into a `REQUEST CHANGES` — is done once, at 9.0. Here you post
+its result. The merged comment still names any not-run dimension (a specialist that errored, timed
+out, or returned schema-invalid output) and names the absent specialist layer where Step 4.2 did not
+resolve the reference or `--no-specialists` was set. Panel did not run at all → post exactly what 5.2
+returned. **`--comment-only` (Step 0.2)** forces the verdict token to `COMMENT` at that same
+derivation regardless of Blocker count — the override row in § Verdict vocabulary — so the summary the
+operator approved and the verdict posted here already reflect it.
 
 Otherwise, per PR, in this order:
 
