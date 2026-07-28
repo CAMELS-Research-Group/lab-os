@@ -71,17 +71,7 @@ No literal code. The only code blocks allowed are short shell commands in **Veri
 
 ---
 
-## Execution Log
-
-<!-- Altitude: plan-execution (see .claude/rules/03-logging.md §altitudes).
-     What belongs here: deviations from the plan, implementation-altitude calls, gate evidence
-     (the verification output that proved a task done).
-     What does NOT belong here: load-bearing decisions (→ project_log.md), status updates
-     ("merged, smoke passed" → PR comment), session narrative (→ PR body).
-     This log closes when the shipping PR merges — post-merge evidence (deploy green,
-     branch cleanup) goes to a comment on that PR, not a trailing entry.
-
-     Entry grammar (one line each):
-     YYYY-MM-DD HH:MM · task N · <what happened / why / output> -->
-
-<!-- entries below — newest at top -->
+<!-- No Execution Log in the plan (see .claude/rules/03-logging.md §Log altitudes and
+     .claude/rules/04-docs.md §ENG document standards, Plan): deviations from the plan and
+     gate evidence live in the bundle's log.md, load-bearing decisions route per the
+     03-logging.md entry triggers, and post-merge status goes to a comment on the PR. -->

@@ -5,7 +5,7 @@
      Bundle lifecycle for individual slices: docs/work/YYYY-MM-DD-<slug>/ archived per
      lab-os docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5. -->
 
-**Status:** draft <!-- draft | active | paused | complete -->
+**Status:** draft <!-- draft | active | paused | complete | superseded | abandoned -->
 **Date:** YYYY-MM-DD · **Repo:** <repo>
 
 > **Decisions live in `project_log.md`, not here.** When a decision is reached while executing
