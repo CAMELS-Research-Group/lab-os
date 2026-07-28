@@ -121,7 +121,8 @@ lane composes its comment and verdict and returns them; Step 10 posts them.
 | Design-pin, on your PR | Returned from the subagent, asked at Step 6 with 2–3 options + `Defer`, applied at Step 8. |
 | Anything on someone else's PR | Reported in the review comment. Never edited — it is their PR. |
 | Roster over 8 PRs | One cost-guard question before dispatch, offering repo- and lane-scoped cuts before a bare count cap. |
-| Your PR conflicts with its base | Remediate lane skips it, reason `merge conflict — manual`, named in the roster. Detected, never resolved — a semantic merge under your identity is not the skill's to guess. Review-lane PRs are unaffected. |
+| Your PR conflicts with its base | Remediate lane skips it, reason `merge conflict — manual`, named in the roster. Detected, never resolved — a semantic merge under your identity is not the skill's to guess. Review-lane PRs are unaffected. (Default; `--merge-base` adds the bounded case below.) |
+| Your PR is merely *behind* its base, and `--merge-base` is set | The lane merges the base into the PR's own worktree and proceeds **only** on a zero-conflict merge. One conflict hunk → `merge --abort` and the skip above, reason naming that the merge was attempted. Never resolves; only closes the stale-branch case. |
 | Red gate, or a gate that cannot run at all | No push. The commit survives; worktree preserved, path named in the roster. |
 | A resolution the skill cannot perform | Returned as an out-of-band follow-up — on your own PRs, filed as a follow-up issue at Step 7 (consent-gated); otherwise recorded in the comment and the roster for manual action. |
 
@@ -158,6 +159,7 @@ stops rather than shipping past it — the missing evidence is the point, and a 
 ```
 /pr-round [<PR ref>…] [--limit N] [--no-skip] [--review-only] [--remediate-only]
           [--dry-run] [--concurrency N] [--no-specialists] [--comment-only] [--hand-back]
+          [--merge-base]
 ```
 
 `--dry-run` resolves and reports the roster and makes no write call of any kind — the safe first
@@ -166,7 +168,10 @@ since this skill's last comment so a re-run costs one API call instead of a mode
 `--comment-only` posts every review as a `COMMENT` verdict whatever the Blocker count — for reviewing
 from an identity without merge authority (the findings still post in full; only the formal
 approve/request-changes claim is withheld). `--hand-back` re-requests review and clears draft after a
-successful remediation (off by default — see *When NOT to use*).
+successful remediation (off by default — see *When NOT to use*). `--merge-base` lets the remediate
+lane merge the PR's base branch into its worktree when the branch is behind or conflicting, and
+proceed **only** on a zero-conflict merge — any conflict aborts and the PR skips as it would without
+the flag. Also off by default, for the same reason as `--hand-back`: it writes.
 
 ## Consent
 
@@ -222,7 +227,10 @@ rather than pre-empting the maintainer's triage.
   draft state on its own; `--hand-back` (Step 9.2, gated by the Step 9.0 posting consent) is the only
   path that clears draft or re-requests review, and only on a PR the round actually advanced.
 - Resolving a merge conflict. A conflicting PR is detected and skipped `merge conflict — manual`, not
-  merged — resolving two people's intent under your identity is not the skill's call.
+  merged — resolving two people's intent under your identity is not the skill's call. `--merge-base`
+  does not change that: it attempts the base merge in the PR's worktree and proceeds only when the
+  merge produces **zero** conflict hunks, aborting to the same skip otherwise. It closes the
+  stale-branch case; a real conflict still ends the lane for that PR.
 - Merging. `pr-round` never calls `gh pr merge`.
 
 ## Claiming compliance

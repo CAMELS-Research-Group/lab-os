@@ -110,6 +110,7 @@ Unparseable ref → abort naming the ref and listing all four forms. Do not gues
 | `--no-specialists` | off | Drop the specialist panel (Step 5.2a) — review-lane PRs get the composed rubric only; each review comment states specialists were disabled by flag |
 | `--comment-only` | off | Force the `COMMENT` verdict on every review-lane PR, whatever the Blocker count. Findings still post in full; only the formal verdict changes. `SKILL_ROOT/reference/review-comment-template.md` § Verdict vocabulary owns the override row — applied where the verdict is derived (Step 9.0) |
 | `--hand-back` | off | After a successful remediation, re-request review from the reviewers this round answered and take a draft PR out of draft (Step 9.2). Both are identity writes, gated by 9.0 |
+| `--merge-base` | off | On a remediate-lane PR that is behind or conflicting with its base, attempt `git merge origin/<base-ref>` inside that PR's worktree and proceed **only** on a zero-conflict merge (Step 2.5, 5.3 step 0). Any conflict hunk → `git merge --abort` and the existing detect-and-skip behavior. Like `--hand-back`, a write the operator opts into rather than inherits |
 
 Unknown flag → abort: `❌ Unknown flag: <flag>`. `--review-only` with `--remediate-only` → abort;
 they are mutually exclusive.
@@ -156,11 +157,11 @@ dropped; Step 11 reports it. A silent cap reads as full coverage.
 
 ## Step 2: Classify by ownership, then filter
 
-For each PR resolve `author`, `isDraft`, `headRefName`, `headRepositoryOwner`, and the comment
-timeline:
+For each PR resolve `author`, `isDraft`, `headRefName`, `baseRefName`, `headRepositoryOwner`, and the
+comment timeline:
 
 ```
-gh pr view <N> --repo <R> --json author,isDraft,headRefName,headRepositoryOwner,comments,reviews,commits,mergeable,mergeStateStatus
+gh pr view <N> --repo <R> --json author,isDraft,headRefName,baseRefName,headRepositoryOwner,comments,reviews,commits,mergeable,mergeStateStatus
 gh api /repos/<R>/pulls/<N>/comments --paginate
 ```
 
@@ -171,7 +172,10 @@ Inline review comments exist only on `pulls/<N>/comments`. Omit the second call 
 blind to every diff-anchored comment on the PR, including the operator's own.
 
 `headRefName` is `<head-ref>` — the value Steps 5.1, 5.3, Step 8, and 11.2 all consume. Resolve it here
-or those commands have no value to substitute.
+or those commands have no value to substitute. `baseRefName` is `<base-ref>` — the PR's **target**
+branch, which only 2.5 and 5.3 step 0 consume, and which is **not** the ref the worktree is branched
+from (that is `origin/<head-ref>`, or `origin/pr/<N>` for a fork). Keep the two distinct; merging the
+wrong one rewrites the PR's own head into itself or the target branch into the wrong place.
 
 ### 2.1 Lane
 
@@ -230,15 +234,31 @@ A remediate-lane PR whose head is a fork the viewer cannot push to → skip, rea
 
 A **remediate-lane** PR whose `mergeable` reads `CONFLICTING` → skip the lane, reason
 `merge conflict — manual`. It travels into the Step 11 roster like any other skip reason, so the
-round ends naming the PR and what it needs.
+round ends naming the PR and what it needs. This is the default and the behavior without
+`--merge-base`.
 
 **Detect, never resolve.** Conflict resolution is a semantic merge of two people's intent; getting it
 wrong writes someone else's work out of the branch under the operator's name, and the failure is
-invisible until long after the round. That is why detection alone is the whole fix here — and it is a
-real fix, because without it the round proceeds: the agent branches from `origin/<head-ref>`, applies
+invisible until long after the round. That is why detection is the default here — and it is a real
+fix, because without it the round proceeds: the agent branches from `origin/<head-ref>`, applies
 mechanical fixes, gates them green, and pushes a commit onto a branch GitHub still will not merge. The
 handoff comment then reads `READY FOR RE-REVIEW` on a PR that cannot land. A round that fixes nothing
 is a better outcome than a round that reports success on one.
+
+**`--merge-base` closes the stale-branch case only.** Not every unmergeable PR carries a real
+conflict: a branch that merely fell behind its base needs no judgment at all, and skipping it spends a
+round on nothing. So when — and only when — `--merge-base` is set, a remediate-lane PR whose
+`mergeStateStatus` is `BEHIND` or `DIRTY` (the latter being the same state `mergeable: CONFLICTING`
+reports) is **not** skipped here. Defer it to **5.3 step 0**, which attempts
+`git merge origin/<base-ref>` inside that PR's isolated worktree and either proceeds on a clean merge
+or aborts and skips with the reason below. The decision is mechanical and made in the worktree, not
+here, because no worktree exists yet at Step 2.
+
+The bound is absolute: **zero conflict hunks, or nothing.** The flag never resolves a conflict, never
+picks a side, and never guesses at intent — a merge that produces so much as one hunk is aborted and
+falls back to the skip above, with the skip reason naming that the merge was attempted and aborted
+(5.3 step 0). Default off, matching `--hand-back`: both write to state the operator should opt into
+rather than inherit.
 
 `mergeable` also returns `UNKNOWN` — GitHub computes mergeability asynchronously and has not finished.
 That is not a conflict: **do not skip on it**, and do not poll. A PR whose conflict is confirmed on the
@@ -448,14 +468,17 @@ Every brief carries this, with only the lane section differing:
   never guessed at.
 - **Values the brief must carry.** Every placeholder the agent's commands substitute, as a literal:
   `<N>` (PR number), `<R>` (`<owner>/<repo>`), `<repo-root>` (the mapped checkout, absolute),
-  `<head-ref>` (`headRefName` from Step 2), `<path>` (the worktree, absolute), and the base ref the
-  worktree was created from — `origin/<head-ref>` or, for a fork, `origin/pr/<N>`. An agent that has
+  `<head-ref>` (`headRefName` from Step 2), `<base-ref>` (`baseRefName` from Step 2 — the PR's target
+  branch, carried on the remediate lane so 5.3 step 0 can name `origin/<base-ref>`; distinct from the
+  ref below), `<path>` (the worktree, absolute), and the ref the worktree was created from —
+  `origin/<head-ref>` or, for a fork, `origin/pr/<N>`. An agent that has
   to infer any of these is improvising a git command against someone's repository.
 - **Structured return.** Report: `pr`, `lane`, `headSha`, findings by severity with each finding's
   location / detail / `mechanical|design-pin` classification, actions taken, the composed review
   comment body and verdict token (review lane) or the returned design-pins (remediate lane),
   readiness, the **gate rung and result** (5.3 step 5), `applyMode` (`applied` or `analysis-only` per
-  5.5, with the edit set when analysis-only), any **out-of-band follow-ups** (5.3 step 8), tiers
+  5.5, with the edit set when analysis-only), any **out-of-band follow-ups** (5.3 step 8), the
+  **base-merge outcome** where 5.3 step 0 ran (`merged clean` or `aborted`), tiers
   applied, and any failure reason. No `comment URL` — a subagent posts
   nothing, so the URL is produced by the main-loop `gh pr comment` in Step 9 or Step 10, not returned here.
 
@@ -508,6 +531,31 @@ the **main loop** dispatches the specialists as siblings of the review-lane agen
    agent, which has already returned its composed body by then.
 
 ### 5.3 Remediate lane
+
+0. **Bring the branch up to date — only under `--merge-base`, and only on a PR Step 2.5 deferred
+   here.** Without the flag this step does not exist and the PR was already skipped at 2.5. It runs
+   **first**, before any fix, so everything below — the auto-fixes, the gate, the commit — happens on
+   the merged tree rather than on a stale one that would have to be gated twice.
+
+   ```
+   git -C <path> fetch origin <base-ref>
+   git -C <path> merge origin/<base-ref>
+   ```
+
+   - **Clean merge (zero conflict hunks) → proceed** to step 1 with the merge commit in the worktree.
+     It rides along with the round's other work and reaches the PR branch through the ordinary step-6
+     push, under the ordinary gate rules — a red gate or rung 3 leaves it unpushed like anything else.
+   - **Any conflict → `git -C <path> merge --abort`, then fail this PR** with reason
+     `merge conflict — manual (merge attempted and aborted)`. That is the 2.5 skip reason plus the
+     evidence that the cheap path was tried, so the roster distinguishes a PR nobody attempted from one
+     the flag could not save. Return it as a per-PR failure per 5.4; do not fix, do not gate, do not
+     push. A worktree left after an aborted merge is clean, so 11.2 removes it normally.
+   - **Never resolve, never take a side, never `-X ours`/`-X theirs`.** The flag closes the
+     stale-branch case and nothing else; a conflict is still two people's intent, and guessing at it
+     under the operator's identity is what 2.5 exists to prevent. A merge that stops is the contract
+     working, not a failure to try harder.
+
+   Report the outcome (`merged clean` / `aborted`) in the structured return so Step 9 can state it.
 
 1. **Ingest all existing feedback** from all four sources, each by its own call — none of them
    subsumes another:
@@ -669,7 +717,9 @@ including the explicit `HEAD:refs/heads/<head-ref>` refspec. State only the diff
 - **Reuse the existing worktree** at the path Step 5.1 recorded for this PR — the default
   `<repo-root>/.claude/worktrees/pr-round-<N>`, or `<PR_ROUND_WORKTREE_ROOT>/<repo-name>/pr-round-<N>`
   when that override is set. It already exists, already on its `pr-round-<N>` branch tracking `origin/<head-ref>`,
-  carrying Step 5's commit. Do not create a new worktree and do not create a new branch.
+  carrying Step 5's commit — and, where `--merge-base` applied, Step 5's base merge. Do not create a
+  new worktree and do not create a new branch, and do **not** re-run 5.3 step 0: the merge already
+  happened once, and a PR whose merge aborted never reached Step 8.
 - Apply exactly the chosen options — no scope beyond them.
 - **Verify the decided option against the code before applying it.** The operator decided the
   *semantics*; they did not verify the implementation, and they answered from the agent's summary
@@ -754,6 +804,9 @@ Review-lane PRs are posted by Step 10 and are skipped here.
      the disclosure is the whole reason the fallback rungs are sanctioned.
    - **Report any Step 8 divergence.** Where an agent applied a corrected variant rather than the decided
      option verbatim (Step 8), `### Decisions made` states both and why.
+   - **Say so when the base was merged in.** Where 5.3 step 0 merged `origin/<base-ref>` clean, name it
+     in `### Addressed` — the pushed head then carries a commit the reviewer did not ask for, and an
+     unexplained merge commit on the branch reads as scope creep.
 3. Set the readiness verdict per the template's trigger table: `READY FOR RE-REVIEW` /
    `PARTIALLY ADDRESSED` / `BLOCKED`.
 4. `head` in the marker is the **final** sha — after Step 8 when it ran, else after Step 5. Nothing
