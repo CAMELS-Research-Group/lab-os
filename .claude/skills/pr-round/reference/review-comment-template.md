@@ -23,8 +23,8 @@ the staleness filter greps for the `pr-round:v1` prefix to find this skill's own
 
 ## Structure
 
-In this order. Headings are `###` for findings sections. Do not omit a section — an empty one
-carries information.
+In this order. Headings are `###` for the sections that stay open; the three collapsed sections carry
+their name in the `<summary>` instead. Do not omit a section — an empty one carries information.
 
 ```markdown
 <!-- pr-round:v1 lane=review head=<sha7> -->
@@ -44,18 +44,36 @@ review carries.>
 
 <numbered; or `None.`>
 
-### Suggestions
+<details><summary><b>Suggestions</b> — <n>, or none</summary>
 
 <numbered; or `None.`>
+</details>
 
-### Load-bearing strengths
+<details><summary><b>Load-bearing strengths</b> — <n>, or none</summary>
 
 <bulleted — what is working and should survive revision>
+</details>
 
-### Open questions for the author
+<details><summary><b>Open questions for the author</b> — <n>, or none</summary>
 
 <bulleted — what could not be resolved by reading, phrased as questions>
+</details>
 ```
+
+**Collapse is display-only; it drops nothing.** `### Suggestions`, `### Load-bearing strengths`, and
+`### Open questions for the author` open collapsed so a reader sees the verdict line, the header, the
+scope paragraph, and the two severity sections that gate the merge first, then expands what they
+need — a full review comment routinely runs long, and the author's first question is "what must I fix",
+which the open part answers. Every rule for those sections below is unchanged: `None.` is still
+written rather than the section omitted, `### Load-bearing strengths` is still **required** (§ Tone
+contract), and every finding still carries its location, mechanism, and proposed fix inside the
+collapsed block. What changed is the default scroll length, not what must be present.
+
+**The verdict line, the `**Reviewed:**` line, the scope paragraph, `### Blockers`, and `### Important`
+stay open.** They are the act-on-it-at-a-glance surface — the verdict, how much weight the review
+carries, and everything the author has to address — so hiding them would defeat the point. The
+`<summary>` for each collapsed section carries a **count** (or "none"), so the reader decides whether
+to expand from the summary alone rather than having to open it to learn it is empty.
 
 ## Verdict vocabulary
 
@@ -98,7 +116,9 @@ Structural findings additionally carry `[regression]` or `[simplification]` as t
 per `rubric-universal.md`. Non-structural findings are untagged.
 
 Empty sections read `None.` — never delete the heading. A `### Blockers` section reading `None.` is
-an assertion the reviewer made; a missing one is ambiguous.
+an assertion the reviewer made; a missing one is ambiguous. A collapsed section is written the same
+way: `None.` inside the `<details>` block, with `none` in its `<summary>` count — the block is never
+dropped for being empty.
 
 ## Tone contract
 
@@ -114,9 +134,10 @@ matter when the author is another person:
 - **Technical reasoning for every finding.** Name the rule, the conflict, or the failing input. A
   finding a maintainer cannot verify from the comment alone is not actionable.
 - **No performative praise.** No "great work", no "nice approach", no softening preamble before a
-  Blocker. `### Load-bearing strengths` is where genuine positives go, and it stays **required** —
-  it tells the author what not to break in revision, which is load-bearing information, not
-  flattery.
+  Blocker. `### Load-bearing strengths` is where genuine positives go, and it stays **required** on
+  every verdict — it tells the author what not to break in revision, which is load-bearing
+  information, not flattery. Collapsing it (§ Structure) changes where it sits on the page, not
+  whether it is written.
 - **Say what was not checked.** An unstated gap reads as coverage. The scope paragraph is where
   honesty about depth lives.
 - **State which tiers applied.** A finding's authority depends on the standard that produced it.
@@ -150,22 +171,25 @@ the test assertions are reviewed by reading only.
    it lands in Important, not Suggestions — `rubric-universal.md` § Overridable defaults owns that
    placement rule.)
 
-### Suggestions
+<details><summary><b>Suggestions</b> — 1</summary>
 
 1. [simplification] `retry.py:12–40` — the `pending` / `retrying` / `exhausted` booleans encode one
    three-state machine and the code defends the cross-field invariants by hand. A single
    `state` enum would delete them, but it touches several call sites — a real reframe, not a singular
    move, so it lands here rather than in Important.
+</details>
 
-### Load-bearing strengths
+<details><summary><b>Load-bearing strengths</b> — 2</summary>
 
 - Retry policy is separated from transport, so the transport layer carries no policy state.
 - The backoff-cap edge case has a test that would fail without the change.
+</details>
 
-### Open questions for the author
+<details><summary><b>Open questions for the author</b> — 1</summary>
 
 - Is the cap intended to interact with the global request timeout, or are they independent budgets?
   `retry.py:31` reads as though one bounds the other, but nothing enforces it.
+</details>
 ```
 
 ## Common deviations
@@ -178,3 +202,6 @@ the test assertions are reviewed by reading only.
 | Approving without a scope paragraph that supports it | An approval whose coverage is unstated is unearned — use `COMMENT` |
 | Bulleted findings instead of numbered | Findings get referenced by number in replies |
 | Softening a Blocker with praise | Buries the finding the author most needs to see |
+| Collapsing `### Blockers`, `### Important`, the scope paragraph, or the `##` header line | They are the act-on-it-at-a-glance surface; only the three lower sections collapse, and the author must not have to expand anything to learn what blocks the merge |
+| Using collapse to omit a section rather than default-hide it | `<details>` changes default visibility, not presence; a section still reads `None.` when empty and still carries every finding it owns — a dropped finding is dropped whether or not it was behind a `<summary>` |
+| A `<summary>` without its count | The count is what lets a reader skip an empty section unopened; a bare section name forces them to expand it to find nothing |
