@@ -233,6 +233,16 @@ rather than pre-empting the maintainer's triage.
 - Taking a PR out of draft, or re-requesting review, **without `--hand-back`**. The skill never leaves
   draft state on its own; `--hand-back` (Step 9.2, gated by the Step 9.0 posting consent) is the only
   path that clears draft or re-requests review, and only on a PR the round actually advanced.
+
+  **Know what the default costs you.** A PR sitting at `CHANGES_REQUESTED` **stays there after every
+  one of its findings is resolved** — GitHub clears that state only when a reviewer re-reviews, and
+  the remediate lane will not re-request one unprompted. So the default run ends with a fixed,
+  pushed, gate-green PR that still reads as blocked to everyone looking at the queue, and nothing
+  moves until you re-request by hand. **Not hypothetical:** the PR that added this skill sat exactly
+  there — every reviewer finding resolved, still `CHANGES_REQUESTED`, waiting on a re-request nobody
+  had made. Opt into `--hand-back` when you want the round to close that loop; leave it off when you
+  want to read the handoff comment before a reviewer is notified. Either is defensible — silently
+  getting the first outcome while expecting the second is not.
 - Resolving a merge conflict. A conflicting PR is detected and skipped `merge conflict — manual`, not
   merged — resolving two people's intent under your identity is not the skill's call. `--merge-base`
   does not change that: it attempts the base merge in the PR's worktree and proceeds only when the
