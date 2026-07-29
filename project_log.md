@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-28 22:26 — Adopt the workspace fork's rules as lab-os standards; add agent-runtime HARD RULE · #58
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -18,6 +19,27 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-28 22:26 — Adopt the workspace fork's rules as lab-os standards; add agent-runtime HARD RULE
+
+**Decision:** lab-os re-syncs `.claude/rules/` from the workspace fork, pinned to the 2026-07-24
+snapshot, and gains a fifth rule: `05-agent-runtime.md`, a HARD RULE binding any asset hosting a
+guardrailed local coding-agent runtime — max-clean `claude -p`, per-run caps, a named halt
+vocabulary, fail-closed per-repo permission and commit-destination policy, a deny-by-default
+approval gate, bot-identity-only posting, disabled-by-default. Logging is re-architected onto three
+altitudes (lab / project / spec-log) with the planning bundle as the spec-log's home. Upstream
+lab-os owns the convention and canonical bytes; the fork is where edits are staged.
+**Why:** The fork has been the de facto authoring surface while lab-os shipped the published
+standard, so they drifted. Pulling that work back as one reviewed slice restores a single source
+before member repos vendor from it. The runtime contract needs rule-tier permanence because it
+constrains spend and identity, not style.
+**Alternatives:** Keep the runtime contract in the hosting repo's docs — rejected: it binds every
+asset hosting a runtime, not one repo. Also re-copy the fork's newer `03-logging.md`/`04-docs.md` —
+rejected: those landed after this PR was cut; pinning to the reviewed snapshot keeps the diff
+auditable and defers them to their own slice.
+**Refs:** #58, .claude/rules/05-agent-runtime.md
 
 ---
 
