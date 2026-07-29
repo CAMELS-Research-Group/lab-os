@@ -64,10 +64,16 @@ review carries.>
 `### Open questions for the author` open collapsed so a reader sees the verdict line, the header, the
 scope paragraph, and the two severity sections that gate the merge first, then expands what they
 need — a full review comment routinely runs long, and the author's first question is "what must I fix",
-which the open part answers. Every rule for those sections below is unchanged: `None.` is still
-written rather than the section omitted, `### Load-bearing strengths` is still **required** (§ Tone
-contract), and every finding still carries its location, mechanism, and proposed fix inside the
-collapsed block. What changed is the default scroll length, not what must be present.
+which the open part answers. Collapse changes the default scroll length, not what must be present:
+`None.` is still written rather than the section omitted, `### Load-bearing strengths` is still
+**required** (§ Tone contract), and every finding still carries its location, mechanism, and proposed
+fix inside the collapsed block.
+
+**Collapse is not a licence to write more.** It settles where bytes sit on the page; § Proportionality
+settles whether they are written at all, and the two are independent. A collapsed section still costs
+the reviewer the attention that produced it, and still arrives in full in email notifications and in
+any agent that ingests the comment downstream — neither honours `<details>`. Hiding a bloated section
+is not the same as not bloating it.
 
 **The verdict line, the `**Reviewed:**` line, the scope paragraph, `### Blockers`, and `### Important`
 stay open.** They are the act-on-it-at-a-glance surface — the verdict, how much weight the review
@@ -108,9 +114,10 @@ Each numbered finding carries three things. A finding missing any of them is not
 2. **What is wrong** — the rule violated, the bug, or the conflict. Name the mechanism: what input
    reaches what sink, which two statements contradict each other, which branch is unreachable.
    "This looks fragile" is not a finding.
-3. **A proposed fix** — concrete enough to act on. When several fixes are defensible, name two or
-   three and say which you would pick and why. A finding with no proposed fix is an
-   observation; either work it into a proposal or drop it.
+3. **A proposed fix** — concrete enough to act on. A finding with no proposed fix is an
+   observation; either work it into a proposal or drop it. Weighing two or three defensible fixes in
+   the open belongs to Blockers, where the choice is load-bearing and the author has to make it;
+   below that tier, name the one you would pick and stop.
 
 Structural findings additionally carry `[regression]` or `[simplification]` as the **first token**,
 per `rubric-universal.md`. Non-structural findings are untagged.
@@ -119,6 +126,34 @@ Empty sections read `None.` — never delete the heading. A `### Blockers` secti
 an assertion the reviewer made; a missing one is ambiguous. A collapsed section is written the same
 way: `None.` inside the `<details>` block, with `none` in its `<summary>` count — the block is never
 dropped for being empty.
+
+## Proportionality
+
+Length follows severity. Left unstated it inverts, because a Suggestion is easier to write at length
+than a Blocker is to prove: the tier that costs the reviewer least attracts the most prose, and the
+finding the author actually has to act on ends up outweighed by the ones they do not.
+
+| Section | Default shape |
+|---|---|
+| `### Blockers` | Full apparatus — location, mechanism, fix, and the alternatives where the choice is real. Spend here. |
+| `### Important` | Location, mechanism, and the fix you would pick. No alternatives menu. |
+| `### Suggestions` | A sentence or two each. One needing a paragraph to motivate is an Important finding, or is not ready. |
+| Scope paragraph | Two or three sentences: read end-to-end, verified by running, not examined. A coverage disclosure, not a narrative of the reading. |
+| `### Load-bearing strengths` | Bullets, one line each. What must survive revision — not why it is admirable. |
+| `### Open questions for the author` | The question, plus the line that prompted it. |
+
+**Defaults, not caps.** An intricate Blocker earns the space it needs, and a diff genuinely examined
+three ways earns a longer scope paragraph. What is never earned is reaching a length because the
+section exists — a section with little to say says it briefly, and the `None.` rule already
+establishes that an honest empty section is a real answer.
+
+**The test is relative, not absolute.** If the Suggestions outrun the Blockers, the review is
+miscalibrated whatever its findings are worth. That comparison is quicker to run against a draft
+than any byte count, and it catches the failure that matters: a merge-gating finding buried under
+agreeable ones.
+
+The reader is deciding what to change. Every sentence that does not move that decision competes with
+the one that does.
 
 ## Tone contract
 
@@ -205,3 +240,6 @@ the test assertions are reviewed by reading only.
 | Collapsing `### Blockers`, `### Important`, the scope paragraph, or the `##` header line | They are the act-on-it-at-a-glance surface; only the three lower sections collapse, and the author must not have to expand anything to learn what blocks the merge |
 | Using collapse to omit a section rather than default-hide it | `<details>` changes default visibility, not presence; a section still reads `None.` when empty and still carries every finding it owns — a dropped finding is dropped whether or not it was behind a `<summary>` |
 | A `<summary>` without its count | The count is what lets a reader skip an empty section unopened; a bare section name forces them to expand it to find nothing |
+| Suggestions that outrun the Blockers | Inverts the budget (§ Proportionality); the merge-gating finding ends up outweighed by the ones the author can ignore |
+| An alternatives menu on an Important finding or a Suggestion | Below Blocker tier the choice is not load-bearing; name the fix you would pick and stop |
+| A scope paragraph that narrates the reading rather than disclosing coverage | It exists so the reader can weigh the review, not to evidence effort |
