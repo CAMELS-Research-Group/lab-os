@@ -34,8 +34,9 @@ coding is the delegate connector through the host's guarded run API.
   no checkpointer**. The row is the durable, exactly-once mechanism: a pending gate survives
   an app/host restart and resolves from the row.
 - **Risk tags.** Enrolled actions are a code-defined registry tagged `spend` / `destructive` /
-  `acts-as-watson`; the gate triggers on tagged actions. `acts-as-watson` is reserved for
-  genuine **user-identity** actions — it is **not** the default for agent output.
+  `acts-as-operator`; the gate triggers on tagged actions. `acts-as-operator` is reserved for
+  actions taken under the **operator's own identity** — it is **not** the default for agent
+  output, which posts under the agent's bot identity.
 
 ## Identity & enablement
 

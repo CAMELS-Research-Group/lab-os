@@ -32,4 +32,4 @@ Each planning bundle carries one **lifecycle `Status:`** in its PRD header — t
 
 ## Rules numbering
 
-lab-os owns `0x-*`; per-repo rules use `10+`. Base `0x` rules and the doc assets listed in the manifest of `scripts/rules_sync.py` **in the lab-os workspace fork** (github.com/WatsonWBlair/Agentic_Workspace) go into member repos as verbatim copies under a one-line sync header: edits land in that fork — the byte source — and re-sync from there; the convention itself is owned upstream. That script is also the drift check, and it runs in the fork, not in member repos.
+lab-os owns `0x-*`; per-repo rules use `10+`. Base `0x` rules and the doc assets listed in the manifest of `scripts/rules_sync.py` go into member repos as verbatim copies under a one-line sync header. **Upstream lab-os (github.com/CAMELS-Research-Group/lab-os) owns both the convention and the canonical bytes.** The lab-os workspace fork (github.com/WatsonWBlair/Agentic_Workspace) is the working surface where edits are staged before syncing upstream; that script — also the drift check — runs there, not in member repos.
