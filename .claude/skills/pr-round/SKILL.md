@@ -124,7 +124,7 @@ lane composes its comment and verdict and returns them; Step 10 posts them.
 | Pin queue over 8 | One volume-guard question before the batches (same shape as the roster guard): decide the ones on otherwise-merge-ready PRs, decide all, decide Blockers only, or defer all. Everything the answer excludes is recorded as **deferred by you** — the guard is you exercising the deferral, not the skill skipping the ask. |
 | A pin the round never asked about | **A skill failure, not an outcome.** Named as its own class in the handoff comment, forces 🔴 `BLOCKED`, and reported separately from deferrals in the roster. |
 | Your PR conflicts with its base | Remediate lane skips it, reason `merge conflict — manual`, named in the roster. Detected, never resolved — a semantic merge under your identity is not the skill's to guess. Review-lane PRs are unaffected. (Default; `--merge-base` adds the bounded case below.) |
-| Your PR is merely *behind* its base, and `--merge-base` is set | The lane merges the base into the PR's own worktree and proceeds **only** on a zero-conflict merge. One conflict hunk → `merge --abort` and the skip above, reason naming that the merge was attempted. Never resolves; only closes the stale-branch case. |
+| Your PR is merely *behind* its base, and `--merge-base` is set | The lane merges the base into the PR's own worktree and proceeds **only** on a zero-conflict merge. One conflict hunk → `merge --abort` and the skip above, reason naming that the merge was attempted. Never resolves; only closes the stale-branch case. The pushed head then carries a merge commit no agent wrote and no reviewer read, so the Step 9.0 pre-post summary flags it per PR and the handoff comment names it. |
 | Red gate, or a gate that cannot run at all | No push. The commit survives; worktree preserved, path named in the roster. |
 | A resolution the skill cannot perform | Returned as an out-of-band follow-up — on your own PRs, filed as a follow-up issue at Step 7 (consent-gated); otherwise recorded in the comment and the roster for manual action. |
 
@@ -190,8 +190,8 @@ deferred, because an un-asked pin is a failure and a `Defer` answer is cheap.
   the dispatch it gates. But it necessarily fires before any comment body, verdict, or final sha
   exists, so it can only describe the posts to come — not show them.
 - **Step 9.0, before anything posts — authorizes the *posts*.** Once the round knows exactly what it
-  would say and where, it prints a per-PR summary (each PR's verdict or readiness, and what lands
-  where) and asks once. This is the ask that governs the identity comments, the formal verdicts, the
+  would say and where, it prints a per-PR summary (each PR's verdict or readiness, what lands where,
+  and — where `--merge-base` merged one — that a base merge landed on that branch) and asks once. This is the ask that governs the identity comments, the formal verdicts, the
   Step 7 follow-up issues, and — under `--hand-back` — the review re-requests and draft clearing,
   each enumerated in the question rather than named by flag.
 

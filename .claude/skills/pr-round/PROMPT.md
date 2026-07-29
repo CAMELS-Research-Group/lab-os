@@ -813,12 +813,20 @@ every PR that would be posted to, so the operator sees the shape of the round ra
 <owner>/<repo>#<N>  review     🔴 REQUEST CHANGES     → review comment + formal verdict
 <owner>/<repo>#<N>  review     ✅ APPROVE             → review comment + formal verdict
 <owner>/<repo>#<N>  remediate  ⚠️ PARTIALLY ADDRESSED → handoff comment
-<owner>/<repo>#<N>  remediate  ✅ READY FOR RE-REVIEW → handoff comment · re-request <login> · mark ready
+<owner>/<repo>#<N>  remediate  ✅ READY FOR RE-REVIEW → handoff comment · base merged · re-request <login> · mark ready
 ```
 
 The third column is the verdict token (review lane) or the readiness verdict (remediate lane) that
 Step 9.1 and Step 10 are about to publish; the fourth is exactly what lands where. The hand-back
 clause appears only for PRs Step 9.2 would act on.
+
+**`base merged` is mandatory on every PR where 5.3 step 0 merged the base clean**, and appears
+nowhere else. That merge pushed a commit **no agent authored and no reviewer read** onto the
+operator's branch; this summary is the last surface before anything posts, so a PR whose head now
+carries a merge commit has to say so here rather than only inside the handoff comment Step 9.1
+composes. Name the base ref merged — `base merged (origin/main)`. The Step-3 consent question's
+wording is untouched by this: `--merge-base` is an opted-into flag and this line reports what it did,
+it does not re-ask for it.
 
 Then ask:
 
