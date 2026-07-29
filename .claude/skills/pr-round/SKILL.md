@@ -266,6 +266,14 @@ lab-os-owned, user-scope-deployed. Authored at `<DEV_ROOT>/.claude/skills/pr-rou
 each clone. Deployment matters here: the PRs in scope span repositories, and a nested project repo's
 own root blocks the `.claude/` walk-up to the dev home.
 
+**lab-os's own tier-2 gap is transitional, not a designed steady state.** A run rooted in a bare
+lab-os clone degrades to tier-2-absent because lab-os does not yet carry
+`reference/code-quality-taxonomy.md` (see *The composed rubric* for what tier 2 is and how absence
+degrades — not restated here). That is closing at the source: the rules-parity sync (#58) copies the
+taxonomy into lab-os at that same `reference/` path, after which a lab-os-rooted run resolves tier 2
+like any dev-home run — still consumed in place, since the skill vendors no rubric of its own. Read
+the degradation as a gap being closed, not a gap being blessed.
+
 **Blessed dev-home layout: project repos nest under `<DEV_ROOT>/projects/<name>`.** Step 4.1 resolves
 a PR's repo to `<DEV_ROOT>/projects/<name>` first, so a dev home that follows this convention is
 unambiguous. A repo sitting as a direct child `<DEV_ROOT>/<name>` also resolves — the `projects/`-first

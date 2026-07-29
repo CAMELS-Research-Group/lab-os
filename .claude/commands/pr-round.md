@@ -1,6 +1,6 @@
 ---
 description: "Push every connected PR through one round — review others', remediate your own"
-argument-hint: "[<PR ref>…] [--limit N] [--no-skip] [--review-only] [--remediate-only] [--dry-run] [--concurrency N]"
+argument-hint: "[<PR ref>…] [--limit N] [--no-skip] [--review-only] [--remediate-only] [--dry-run] [--concurrency N] [--no-specialists] [--comment-only] [--hand-back] [--merge-base]"
 allowed-tools: ["Agent", "AskUserQuestion", "Bash", "Read", "Write", "Edit", "Glob", "Grep", "EnterWorktree"]
 ---
 
