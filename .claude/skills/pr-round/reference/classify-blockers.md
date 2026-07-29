@@ -94,8 +94,11 @@ This file owns only the mechanical-vs-design-pin call, which is the same tree ab
   repeated block. Anything that reframes a state model, resequences a flow, or collapses a layer
   multiple callers traverse is a **design-pin**, because more than one defensible target shape exists.
 
-Because this skill makes a single pass, a design-pin simplification is asked about **once**. If it is
-deferred, it is recorded in the PR comment and left — there is no later round to raise it again.
+Because this skill makes a single pass, a design-pin simplification is asked about **exactly once —
+and it *is* asked**. "Once" means it is never re-raised in a later round; it never means a long queue
+may go unasked, which is what Step 6's drain rule exists to prevent. If it is deferred, it is recorded
+in the PR comment and left — there is no later round to raise it again, which is why the ask has to
+happen now.
 
 ## Worked examples
 

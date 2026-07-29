@@ -9,7 +9,7 @@
 > Step 3  resolve consent              (needs Step 2's authors + permissions)
 > Step 4  map repo -> local checkout + resolve rubric tiers + specialist dispatch ref -> cost guard
 > Step 5  FAN OUT #1: review lane (+ specialist panel, 5.2a) | remediate lane   (none of them post)
-> Step 6  decide returned design-pins       (main loop)
+> Step 6  decide returned design-pins       (main loop; drains the queue — every pin asked)
 > Step 7  file follow-up issues             (main loop; own PRs only, consent-gated)
 > Step 8  FAN OUT #2: apply decisions       (reuses Step-5 worktrees)
 > Step 9  confirm the posts (9.0) -> handoff comment per remediated PR (9.1) -> hand back (9.2)
@@ -657,21 +657,61 @@ is never the default, and 0.0 is what keeps it unreached.
 
 Runs in the main loop, where `AskUserQuestion` is available.
 
+**Drain the queue.** Every design-pin a remediate agent returned reaches the operator before the
+round moves on — each one either **decided** or **deferred by them**. Stopping early is the failure
+this step exists to prevent: an un-asked pin cannot be decided, it lands in the handoff comment
+beside genuinely-deferred items where it reads as a choice somebody made, and it holds a PR at
+`PARTIALLY ADDRESSED` that a single answer would have flipped to `READY FOR RE-REVIEW`. The number of
+questions **per call** is capped at 4; the number of **calls is not**. A long queue is not a reason to
+stop asking — how much of it is worth the operator's time is the operator's call, and step 2 is where
+they make it.
+
 1. Collect every design-pin returned by remediate-lane agents. Empty → ask nothing and continue to
    Step 7, which still files any returned out-of-band follow-ups and otherwise no-ops (Step 8 then
    dispatches no agents). Skipping straight to Step 9 would silently drop those follow-ups' issues.
-2. Ask in batches of at most 4 questions per call, grouping across PRs when the queue is sparse.
-   **Every question names its PR** — a batched call is otherwise ambiguous.
-3. Each question carries the 2–3 defensible options the agent supplied, safest marked
-   `(Recommended)`, **plus a `Defer` option**. Deferring records the item and routes it to Step 7,
-   which files it as a follow-up issue (consent permitting) — say so in the option's description. An
-   operator is never forced to decide a pin they want to sit on; one who wants it held *untracked*
-   says so in a custom answer.
-4. Record each answer against its PR and finding for Step 8 and Step 9.
+2. **Volume guard — fire once, before the batches, iff the queue exceeds 8 pins.** Same shape as the
+   Step 4.3 roster guard: state the real numbers and offer cuts that narrow by *shape*, never a bare
+   count cap. **Exactly one question, however large the queue** — it decides the scope, it does not
+   replace the asking:
 
-**No subagent holds an identity-post decision.** Step 6 is the only place `AskUserQuestion` runs, and
-`CONSENT` (Step 3) never leaves the main loop — which is why every posting step — 7, 9, and 10 — is
-a main-loop step.
+   - `question`: `<N> design-pins came back across <M> PRs (<per-PR breakdown: <owner>/<repo>#<x> — <n> pins, <k> of them Blocker-severity>). Deciding all of them is <ceil(N/4)> more questions. <m> sit on PRs that are otherwise merge-ready — gate green, nothing else open — so deciding just those flips <that many> PRs to READY FOR RE-REVIEW. How do you want to handle them?`
+   - `header`: `Pin volume`
+   - options — at most 4, largest-value narrowing first:
+     1. `Decide the <m> on PRs that are otherwise merge-ready (Recommended)` — highest value per
+        question asked, because those are the pins that change a PR's verdict
+     2. `Decide all <N>`
+     3. `Decide the <k> Blocker-severity pins, defer the rest`
+     4. `Defer all <N> and record them`
+
+     Drop option 3 first if the queue carries no Blocker-severity pins, and option 1 if no PR is
+     otherwise merge-ready — never pad the list with an option that selects nothing.
+
+   **Whatever the operator picks, the pins it excludes are `Defer`-equivalent and are recorded as
+   operator-deferred** — they were put to them, in aggregate, and they chose. They route to Step 7 as
+   deferrals do, and they are *not* the un-asked class in step 6 below. The guard is the operator
+   exercising the deferral, not the skill skipping the ask.
+3. Ask the selected pins in batches of at most 4 questions per call, grouping across PRs when the
+   queue is sparse. **Every question names its PR** — a batched call is otherwise ambiguous.
+   **Keep issuing batches until the selected queue is empty.** Batch count is uncapped; a queue of 12
+   selected pins is three calls, not one call and a shrug.
+4. Each question carries the 2–3 defensible options the agent supplied, safest marked
+   `(Recommended)`, **plus a `Defer` option — on every question, always**. Deferring records the item
+   and routes it to Step 7, which files it as a follow-up issue (consent permitting) — say so in the
+   option's description. An operator is never forced to decide a pin they want to sit on; one who
+   wants it held *untracked* says so in a custom answer. **Deferring is a legitimate outcome; not
+   asking is not** — `Defer` is what makes draining the queue cheap.
+5. Record each answer against its PR and finding for Step 8 and Step 9.
+6. **A pin the round never put to the operator is a skill failure, not a partial outcome.** After the
+   last batch, reconcile: every collected pin must carry a decision, an explicit `Defer`, or a step-2
+   guard exclusion. Any pin left with none of those — the run was interrupted, an
+   `AskUserQuestion` call errored, the batches stopped short — is marked **`never asked`** and
+   travels as that class through Step 9.1's `### Still open` (which names it as a failure of the
+   round, not as a choice) and Step 11.1's summary. **Never re-label one as the other** — a deferral
+   is the operator's decision, an un-asked pin is the skill's failure to obtain one.
+
+**No subagent holds an identity-post decision.** Every `AskUserQuestion` in this skill — Step 3, Step
+4.3, this step, Step 9.0 — runs in the main loop, and `CONSENT` (Step 3) never leaves it, which is
+why every posting step — 7, 9, and 10 — is a main-loop step.
 
 ## Step 7: File follow-up issues (own PRs only)
 
@@ -680,8 +720,14 @@ numbers. It turns the round's "doesn't fit this PR" items into tracked follow-up
 that die in a comment:
 
 - every **out-of-band follow-up** returned per 5.3 step 8, and
-- every design-pin **deferred** at Step 6 (the `Defer` option notes this — an operator who wants an item
-  held privately answers with a custom response instead).
+- every design-pin **deferred** at Step 6 — by the `Defer` option or by a volume-guard exclusion (the
+  `Defer` option notes this — an operator who wants an item held privately answers with a custom
+  response instead).
+
+A pin marked **`never asked`** (Step 6 step 6) is **not** filed here. This step tracks decisions the
+operator made and actions this round could not take; an un-asked pin is neither — it is the round's
+own unfinished work, and filing it would move a visible failure into a backlog where it reads as
+handled. It surfaces at 9.1 and 11.1 instead, and the `BLOCKED` verdict is what gets it looked at.
 
 **Own PRs only — hard boundary.** Items from review-lane PRs are never filed (Step 3: filing on
 someone else's repository pre-empts the maintainer's triage); they stay in the review comment. Filing
@@ -708,8 +754,8 @@ Per item, when `CONSENT == true`:
 ## Step 8: Fan out — apply the decisions
 
 Dispatch one subagent per PR with **≥1 non-decided-as-defer** decision, in **waves of
-`--concurrency`** exactly as Step 5. A PR whose pins were all deferred, or that had none, gets
-**no agent**.
+`--concurrency`** exactly as Step 5. A PR whose pins were all deferred (or all `never asked`), or that
+had none, gets **no agent**.
 
 The brief is a **narrowed** 5.3: same worktree, same gate discipline, same commit and push rules —
 including the explicit `HEAD:refs/heads/<head-ref>` refspec. State only the differences:
@@ -808,13 +854,19 @@ Review-lane PRs are posted by Step 10 and are skipped here.
      in `### Addressed` — the pushed head then carries a commit the reviewer did not ask for, and an
      unexplained merge commit on the branch reads as scope creep.
 3. Set the readiness verdict per the template's trigger table: `READY FOR RE-REVIEW` /
-   `PARTIALLY ADDRESSED` / `BLOCKED`.
+   `PARTIALLY ADDRESSED` / `BLOCKED`. **A PR carrying a `never asked` pin (Step 6 step 6) is
+   `BLOCKED`, never `PARTIALLY ADDRESSED`** — the round failed to obtain a decision it was supposed
+   to obtain, and a verdict that reads as partial progress hides that.
 4. `head` in the marker is the **final** sha — after Step 8 when it ran, else after Step 5. Nothing
    pushed → `unchanged — no commit`.
-5. No section may describe a pin as awaiting a decision; Step 6 resolved them. Deferred items, and every
-   **out-of-band follow-up** returned per 5.3 step 8, go under `### Still open` — each citing the
+5. No section may describe a pin as awaiting a decision; Step 6 drains the queue. Deferred items, and
+   every **out-of-band follow-up** returned per 5.3 step 8, go under `### Still open` — each citing the
    follow-up issue Step 7 filed for it (`#<N>`), or, where none was filed (consent declined, filing
    failed, or the item belongs to someone else's repo), naming the action and who takes it.
+   **`never asked` pins go there too, labelled as that class and never as deferrals** — the template's
+   § Still open owns the labelling, and the entry must state plainly that the round failed to put the
+   pin to the operator and why (interrupted, errored, stopped short). An un-asked pin written as
+   "deferred" is a false claim about a decision the operator never made.
 6. Post `gh pr comment <N> --repo <R> --body-file <tmp>` **only when `CONSENT == true` (Step 3) and
    `POST_OK == true` (Step 9.0)**; otherwise skip and hand the body to Step 11's withheld list. Being
    your own PR is not an authorization — this skill claims no standing permission (Step 3), and a
@@ -906,8 +958,14 @@ Also report, each only when non-empty:
 
 - **Withheld by consent decline** — every unposted comment and verdict, so a declined run still ends
   with an actionable manual list.
-- **Deferred decisions** — every pin deferred at Step 6, each with the Step 7 issue that tracks it (or the
-  reason none does), so a deferral is visible rather than lost.
+- **Deferred decisions** — every pin the operator deferred at Step 6, whether one question at a time
+  or in aggregate through the volume guard, each with the Step 7 issue that tracks it (or the reason
+  none does), so a deferral is visible rather than lost.
+- **Pins never asked** — every pin that reached Step 6 and was never put to the operator (Step 6
+  step 6), with the PR it came from and why the ask did not happen. **Report it as a failure of the
+  round, listed separately from the deferrals** — the two are not the same fact, and a round that
+  merged them would report its own gap as the operator's choice. Empty is the expected state; a
+  non-empty list means the round did not do what this step exists to do.
 - **Issues filed** — every follow-up issue Step 7 created: `#<N> — <title> (<PR it came from>)`.
 - **Out-of-band follow-ups not filed** — every action returned per 5.3 step 8 that ends the round
   untracked (consent declined, filing failed, review-lane repo, or an action no issue can carry —

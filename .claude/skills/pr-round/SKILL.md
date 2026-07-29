@@ -13,7 +13,7 @@ Ownership picks the lane:
 | The PR is… | Lane | What happens |
 |---|---|---|
 | **someone else's**, you're a requested reviewer | **review** | Outsider review against the composed rubric → posts a review comment → posts a formal `approve` / `request-changes` verdict |
-| **yours** | **remediate** | Ingests existing review feedback → auto-fixes mechanical findings → asks you about design-pins → applies → posts one handoff comment |
+| **yours** | **remediate** | Ingests existing review feedback → auto-fixes mechanical findings → asks you about **every** design-pin it found → applies → posts one handoff comment |
 
 Given a PR reference — `lab-os#42`, `CAMELS-Research-Group/lab-os#42`, a pull URL, or a bare number — it acts on
 that PR alone. Given none, it resolves everything you authored plus everything you were asked to
@@ -95,7 +95,7 @@ Subagents cannot call `AskUserQuestion`. So a design-pin found during remediatio
 
 ```
 Step 5  fan out #1  → review (returns comment + verdict) | remediate (fixes, returns pins)
-Step 6  decide      → batched questions, each with a Defer option
+Step 6  decide      → batched questions until the pin queue is drained; every one carries Defer
 Step 7  file issues → follow-up issues for deferred + out-of-band items (own PRs, consent-gated)
 Step 8  fan out #2  → apply decisions, reusing the Step-5 worktree
 Step 9  comment     → ONE handoff comment per remediated PR
@@ -118,9 +118,11 @@ lane composes its comment and verdict and returns them; Step 10 posts them.
 | Finding | Behavior |
 |---|---|
 | Mechanical, on your PR | Auto-fixed via `Edit`, committed, pushed. No interrupt. |
-| Design-pin, on your PR | Returned from the subagent, asked at Step 6 with 2–3 options + `Defer`, applied at Step 8. |
+| Design-pin, on your PR | Returned from the subagent, asked at Step 6 with 2–3 options + `Defer`, applied at Step 8. **Step 6 drains the queue** — batches of at most 4 questions, uncapped batch count, until every pin is decided or deferred *by you*. |
 | Anything on someone else's PR | Reported in the review comment. Never edited — it is their PR. |
 | Roster over 8 PRs | One cost-guard question before dispatch, offering repo- and lane-scoped cuts before a bare count cap. |
+| Pin queue over 8 | One volume-guard question before the batches (same shape as the roster guard): decide the ones on otherwise-merge-ready PRs, decide all, decide Blockers only, or defer all. Everything the answer excludes is recorded as **deferred by you** — the guard is you exercising the deferral, not the skill skipping the ask. |
+| A pin the round never asked about | **A skill failure, not an outcome.** Named as its own class in the handoff comment, forces 🔴 `BLOCKED`, and reported separately from deferrals in the roster. |
 | Your PR conflicts with its base | Remediate lane skips it, reason `merge conflict — manual`, named in the roster. Detected, never resolved — a semantic merge under your identity is not the skill's to guess. Review-lane PRs are unaffected. (Default; `--merge-base` adds the bounded case below.) |
 | Your PR is merely *behind* its base, and `--merge-base` is set | The lane merges the base into the PR's own worktree and proceeds **only** on a zero-conflict merge. One conflict hunk → `merge --abort` and the skip above, reason naming that the merge was attempted. Never resolves; only closes the stale-branch case. |
 | Red gate, or a gate that cannot run at all | No push. The commit survives; worktree preserved, path named in the roster. |
@@ -177,6 +179,11 @@ the flag. Also off by default, for the same reason as `--hand-back`: it writes.
 
 **Two asks, each authorizing what the other cannot** — both once per run, never once per PR.
 `PROMPT.md` § Step 3 and § Step 9.0 are the owning definitions; this is a summary.
+
+*Two **consent** asks — not two questions.* The round also asks the cost guard (roster over 8 PRs),
+the pin volume guard (queue over 8), and one question per design-pin it is deciding. Those authorize
+nothing and are not capped by this section: Step 6 keeps asking until every pin is decided or
+deferred, because an un-asked pin is a failure and a `Defer` answer is cheap.
 
 - **Step 3, before any dispatch — authorizes the *run*.** Reviews, and the commits and pushes the
   remediate lane makes to your own branches. It has to come first, because those writes happen inside
