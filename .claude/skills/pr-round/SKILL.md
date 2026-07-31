@@ -178,26 +178,32 @@ the flag. Also off by default, for the same reason as `--hand-back`: it writes.
 
 ## Consent
 
-**Two asks, each authorizing what the other cannot** — both once per run, never once per PR.
-`PROMPT.md` § Step 3 and § Step 9.0 are the owning definitions; this is a summary.
+**Two asks, each authorizing what the other cannot** — each fired once per run, with per-PR
+granularity available inside the second. `PROMPT.md` § Step 3 and § Step 9.0 are the owning
+definitions; this is a summary.
 
 *Two **consent** asks — not two questions.* The round also asks the cost guard (roster over 8 PRs),
 the pin volume guard (queue over 8), and one question per design-pin it is deciding. Those authorize
 nothing and are not capped by this section: Step 6 keeps asking until every pin is decided or
 deferred, because an un-asked pin is a failure and a `Defer` answer is cheap.
 
-- **Step 3, before any dispatch — authorizes the *run*.** Reviews, and the commits and pushes the
-  remediate lane makes to your own branches. It has to come first, because those writes happen inside
-  the dispatch it gates. But it necessarily fires before any comment body, verdict, or final sha
-  exists, so it can only describe the posts to come — not show them.
-- **Step 9.0, before anything posts — authorizes the *posts*.** Once the round knows exactly what it
-  would say and where, it prints a per-PR summary (each PR's verdict or readiness, what lands where,
-  and — where `--merge-base` merged one — that a base merge landed on that branch) and asks once. This is the ask that governs the identity comments, the formal verdicts, the
-  Step 7 follow-up issues, and — under `--hand-back` — the review re-requests and draft clearing,
-  each enumerated in the question rather than named by flag.
+- **Step 3, before any dispatch — authorizes the *run*.** Reviews, the commits and pushes the
+  remediate lane makes to your own branches, and the Step 7 follow-up issues (which file before the
+  9.0 summary can exist, so the handoff comment can cite their numbers — Step 3's question names
+  them). It has to come first, because those writes happen inside the dispatch it gates. But it
+  necessarily fires before any comment body, verdict, or final sha exists, so it can only describe
+  the posts to come — not show them.
+- **Step 9.0, before anything posts — authorizes the *posts*, run-wide or per PR.** Once the round
+  knows exactly what it would say and where, it prints a per-PR summary (each PR's verdict or
+  readiness, what lands where, and — where `--merge-base` merged one — that a base merge landed on
+  that branch) and asks once, with four options: post all, **show every full body first** and re-ask,
+  **choose per PR** (batched selection; `POST_OK` is a per-PR set), or withhold all. This is the ask
+  that governs the identity comments, the formal verdicts, and — under `--hand-back` — the review
+  re-requests and draft clearing, each enumerated in the question rather than named by flag.
 
-A Step-3 decline withholds everything and makes Step 9.0 moot. A Step-9.0 *withhold* keeps the
-already-pushed commits but sends every post to the withheld list. Either way the round still reviews
+A Step-3 decline withholds everything and makes Step 9.0 moot. A Step-9.0 withhold — global or per
+PR — keeps the already-pushed commits but sends the affected posts to the withheld list, labelled
+run-wide vs per-PR choice so the roster never conflates the two. Either way the round still reviews
 and still fixes your branches, and everything withheld is listed at the end for manual action.
 
 **This skill deliberately claims no standing no-ask permission.** If your global `CLAUDE.md`
@@ -226,11 +232,19 @@ rather than pre-empting the maintainer's triage.
   Availability note above). Once a review-bot identity is provisioned
   (per the lab's agent-runtime rule, where adopted), running `/pr-round` from it routes your PRs into
   the review lane — and that identity is what makes the formal verdict postable, since GitHub forbids
-  self-approval.
+  self-approval. Once the rules-parity sync (#58) lands `.claude/rules/05-agent-runtime.md` here, this
+  identity posture derives from its § Identity & enablement (bot identity for agent output;
+  `acts-as-operator` reserved for the operator's own) rather than being self-owned by this section.
 - Replying to a specific review thread, or out-of-band actions beyond issue filing. It posts exactly
   one comment per PR; on **your own** PRs it additionally files follow-up issues for items that don't
   fit the PR (Step 7, consent-gated), and on anyone else's repository it files nothing — anything
   else is returned as a follow-up for you.
+- Editing a PR's title or body — its own or anyone's. The round's write surfaces are enumerated:
+  commits and pushes to your own branches, one handoff comment, one review comment plus formal
+  verdict, follow-up issues. The PR body is the author's narrative surface (the lab's logging rule
+  routes session narrative there) and `gh pr edit --body` is not among the surfaces; a body gone
+  stale against the remediated diff is returned as an out-of-band follow-up naming what to update,
+  never rewritten under your identity.
 - Taking a PR out of draft, or re-requesting review, **without `--hand-back`**. The skill never leaves
   draft state on its own; `--hand-back` (Step 9.2, gated by the Step 9.0 posting consent) is the only
   path that clears draft or re-requests review, and only on a PR the round actually advanced.
