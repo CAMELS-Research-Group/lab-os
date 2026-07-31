@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-16 12:10 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -18,6 +19,22 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-16 12:10 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md
+
+**Decision:** Cross-repo / lab-level open work routes to a shared `BACKLOG.md` at the
+lab-os root (index → inbox → items per `templates/backlog-item.template.md`); repo-scoped
+work stays in that repo's issues. Retires the maintainer-personal backlog as the team
+mechanism, per the 2026-07-08 retrospective (Drop: "Watson as Backlog"; Try: "Lab Wide
+Backlog", assigned Kiara). Groomed at each 2-week sprint boundary.
+**Why:** Single-owner routing made open lab work invisible and ungroomable by the team;
+the format was already taught in the building-workshop answer key, so adoption cost is a
+promotion, not an invention. Full tradeoffs: `docs/proposals/2026-07-16-lab-wide-backlog.md`.
+**Alternatives:** GitHub Projects org board (new tooling surface, content leaves the
+repo); issues-only (cross-repo work homeless); status quo (voted down at the retro).
+**Refs:** #55; docs/proposals/2026-07-16-lab-wide-backlog.md
 
 ---
 

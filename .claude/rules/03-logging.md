@@ -30,7 +30,8 @@ Else routes:
 |---|---|
 | Deviation from approved plan | Plan doc `## Execution Log` |
 | Expensive finding/gotcha | `TROUBLESHOOTING.md` or GitHub issue |
-| Open work, follow-ups, review findings | GitHub issues (trigger-meeting findings also logged) |
+| Open work, follow-ups, review findings (repo-scoped) | GitHub issues (trigger-meeting findings also logged) |
+| Cross-repo / lab-level open work | lab-os `BACKLOG.md` (item shape: `templates/backlog-item.template.md`) |
 | Bare status ("merged, smoke passed") | PR comment |
 | Session narrative/what-I-did | PR body |
 | Long-lived people/preference facts | Auto-memory |
