@@ -737,7 +737,16 @@ targets the repository the PR belongs to.
 issue (title + body) to Step 11's withheld list so the operator can file manually. Withholding is not
 dropping.
 
-Per item, when `CONSENT == true`:
+**Dedup against prior rounds before filing.** This skill keeps no cross-run state, so a re-run over
+the same PR would re-file every still-open item and leave a trail of duplicate issues. The prior
+rounds' own output is the state: read the marker-carrying comments Step 5 already ingested (2.3's
+prefix) and collect every `#<N>` they cite for a follow-up. An item whose text matches one of those
+citations is **not re-filed** — reuse the existing number in `### Still open`, and record it for Step
+11 as `already tracked — #<N>` rather than as newly filed. Only when no prior citation covers the item
+does it proceed to the numbered steps below. An issue since closed still counts as covered: reopening
+the operator's triage decision is not this round's call.
+
+Per item, when `CONSENT == true` and no prior round already filed it:
 
 1. **Title:** the first sentence of the item's text, truncated to ≤72 chars with `…`.
 2. **Body:** a `## Finding` section carrying the item verbatim (for a deferred pin: the pin, its
@@ -805,6 +814,16 @@ specialist findings and re-derive the verdict per Step 10's rule *now*, so a spe
 turns an `APPROVE` into a `REQUEST CHANGES` is visible in this summary rather than sprung after
 approval. Step 10 then posts that already-merged body and token rather than re-deriving them; this is
 the one place the merge is computed, and 9.0 is where it must be done because 9.0 is where it is shown.
+
+**Then apply `--comment-only` (Step 0.2) to *every* review-lane PR, panel-ran or not.** It is the last
+transform on the token: whatever the merge above produced — and, on a PR where no panel ran, whatever
+5.2 returned untouched — becomes `COMMENT` when the flag is set, per the override row in
+`review-comment-template.md` § Verdict vocabulary. Applying it only on the panel branch is the failure
+this sentence exists to prevent: a repository with no specialist dispatch (lab-os is one) takes the
+no-panel branch on every review-lane PR, and a contributor who passed `--comment-only` would still
+post `REQUEST CHANGES` under their own identity. The findings are unchanged either way — only the
+formal verdict is — and the summary below shows the already-overridden token, so what the operator
+approves is what Step 10 posts.
 
 **One ask for the whole run, never one per PR.** Print the per-PR summary first — one line each,
 every PR that would be posted to, so the operator sees the shape of the round rather than a count:
@@ -935,9 +954,10 @@ specialist Blocker can turn an `APPROVE` into a `REQUEST CHANGES` — is done on
 its result. The merged comment still names any not-run dimension (a specialist that errored, timed
 out, or returned schema-invalid output) and names the absent specialist layer where Step 4.2 did not
 resolve the reference or `--no-specialists` was set. Panel did not run at all → post exactly what 5.2
-returned. **`--comment-only` (Step 0.2)** forces the verdict token to `COMMENT` at that same
-derivation regardless of Blocker count — the override row in § Verdict vocabulary — so the summary the
-operator approved and the verdict posted here already reflect it.
+returned. **`--comment-only` (Step 0.2)** was applied at 9.0 to every review-lane PR — panel-ran or
+not — forcing the verdict token to `COMMENT` regardless of Blocker count per the override row in
+§ Verdict vocabulary, so the summary the operator approved and the verdict posted here already reflect
+it. Never re-derive the token here.
 
 Otherwise, per PR, in this order:
 
@@ -974,7 +994,9 @@ Also report, each only when non-empty:
   round, listed separately from the deferrals** — the two are not the same fact, and a round that
   merged them would report its own gap as the operator's choice. Empty is the expected state; a
   non-empty list means the round did not do what this step exists to do.
-- **Issues filed** — every follow-up issue Step 7 created: `#<N> — <title> (<PR it came from>)`.
+- **Issues filed** — every follow-up issue Step 7 created: `#<N> — <title> (<PR it came from>)`. Items
+  Step 7's dedup matched to a prior round's issue are listed here too, marked `already tracked — #<N>`,
+  so a re-run reads as covered rather than as having filed nothing.
 - **Out-of-band follow-ups not filed** — every action returned per 5.3 step 8 that ends the round
   untracked (consent declined, filing failed, review-lane repo, or an action no issue can carry —
   review threads to reply to, people to ask), with the PR it came from. The round ends with them

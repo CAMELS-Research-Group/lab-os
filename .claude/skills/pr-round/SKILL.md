@@ -243,6 +243,13 @@ rather than pre-empting the maintainer's triage.
   had made. Opt into `--hand-back` when you want the round to close that loop; leave it off when you
   want to read the handoff comment before a reviewer is notified. Either is defensible — silently
   getting the first outcome while expecting the second is not.
+- **Dismissing a review — its own or anyone else's.** The skill never calls
+  `gh api -X PUT .../reviews/<id>/dismissals`, in either lane, on any PR including your own.
+  `--hand-back`'s re-request (Step 9.2) is the only sanctioned path out of `CHANGES_REQUESTED`, and
+  the evidence bar is the reviewer re-reviewing — not the round judging its own fixes sufficient. This
+  bullet sits next to the one above deliberately: the stuck-at-`CHANGES_REQUESTED` cost named there is
+  exactly the pressure that makes dismissal look like the tidy fix, and dismissing a standing review to
+  clear a state the round did not earn erases a reviewer's open finding from the PR's face.
 - Resolving a merge conflict. A conflicting PR is detected and skipped `merge conflict — manual`, not
   merged — resolving two people's intent under your identity is not the skill's call. `--merge-base`
   does not change that: it attempts the base merge in the PR's worktree and proceeds only when the
