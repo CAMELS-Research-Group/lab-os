@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-31 09:00 — Adopt agent-task timeboxing (recording guide + skill) · #3
 - 2026-07-24 17:00 — Adopt session timeboxing standard v1.0 · #1
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
@@ -19,6 +20,22 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-31 09:00 — Adopt agent-task timeboxing (recording guide + skill)
+
+**Decision:** Agent-executed dev tasks run inside time boxes via `.claude/skills/timeboxing/` per
+`docs/timebox_recording.mdx`: box + exit criterion stated before work; expiry notifies the user and
+goes straight to handoff; one calibration row auto-appended per box to the calibration file of the
+repo the task belongs to.
+**Why:** The calibration loop never closed manually (zero rows since adoption); dev work now happens
+in the agent phase of brainstorm → agent-dev → hard-pass review, so that phase is where boxing
+prevents drift.
+**Alternatives:** Marketplace plugin in lab-claude-plugins (portable; re-scoped to lab-os homing
+mid-build — lab conventions live in lab-os). Central-only logging in lab-os (rejected: rows live
+beside the work; cross-repo roll-up is a grep away).
+**Refs:** #3, docs/timebox_recording.mdx, .claude/skills/timeboxing/SKILL.md, _plans/timeboxing-skill-prd.md
 
 ---
 
