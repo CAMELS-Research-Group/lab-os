@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-07-28 22:26 — Adopt the workspace fork's rules as lab-os standards; add agent-runtime HARD RULE · #58
+- 2026-07-31 13:22 — Adopt the workspace fork's rules at current HEAD; agent-runtime HARD RULE stands · #58
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -19,6 +19,26 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-31 13:22 — Adopt the workspace fork's rules at current HEAD; agent-runtime HARD RULE stands
+
+**Decision:** Drops the snapshot pin. `.claude/rules/03-logging.md` and `04-docs.md` are re-copied
+verbatim from the workspace fork's HEAD, landing #54's ratified bundle contract here: the planning
+bundle is four files (`prd`/`spec`/`plan`/`log`), `spec.md` is the bundle's design authority with a
+decision summary table and the `DECIDED / RECOMMENDED / PARKED` legend, chore/docs-only bundles omit
+it, three-file bundles are grandfathered. The spec-log's exemption from the per-entry byte cap is now
+explicit. The rest of the superseded entry stands: `05-agent-runtime.md` as a HARD RULE, the three
+log altitudes, upstream lab-os owning the canonical bytes.
+**Why:** The pin was defended as diff hygiene, but it would ship a rules set member repos must
+immediately re-vendor, and it left `04-docs.md` asserting a four-file bundle while `03-logging.md`
+still described three. Parity with the authoring surface is this PR's purpose; a half-synced pair is
+worse than either end.
+**Alternatives:** Defer the newer text to its own slice (the superseded call) — rejected: publishes a
+self-contradicting pair and doubles downstream vendoring.
+**Supersedes:** 2026-07-28 22:26 — Adopt the workspace fork's rules as lab-os standards; add agent-runtime HARD RULE
+**Refs:** #58, .claude/rules/03-logging.md, .claude/rules/04-docs.md
 
 ---
 
