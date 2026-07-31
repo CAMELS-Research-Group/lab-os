@@ -20,6 +20,9 @@ dependency grammar — not copies).
 `--check` exit codes are load-bearing (the workflow branches on them):
 0 = up to date · 3 = stale (or missing — fails closed) · anything else =
 script/parse failure, which the workflow must NOT report as staleness.
+A non-empty BACKLOG.md that parses to zero Index rows AND zero Items
+(merge-conflict wreckage, truncation, garbage) is a script-failure exit 1,
+never exit 3: a destroyed source gets no staleness verdict.
 
 Stdlib only; Python 3.11+.
 """
@@ -95,16 +98,29 @@ def _write(backlog_path: Path, out_path: Path) -> int:
 
 
 def _check(backlog_path: Path, out_path: Path) -> int:
-    """0 = up to date; _STALE_EXIT = stale/missing. Anything the parse or read
-    raises propagates as a normal traceback (exit 1) — a script failure must
-    stay distinguishable from staleness, so the workflow never mislabels it."""
-    fresh = render(parse_backlog(backlog_path.read_text()))
+    """0 = up to date; _STALE_EXIT = stale/missing; 1 = the backlog parsed
+    empty (no staleness verdict on a destroyed source). Anything the parse or
+    read raises propagates as a normal traceback (exit 1) — a script failure
+    must stay distinguishable from staleness, so the workflow never mislabels
+    it. Staleness itself is annotated as a ::warning in CI: the workflow owns
+    escalation to failure under `enforce`."""
+    text = backlog_path.read_text()
+    backlog = parse_backlog(text)
+    if text.strip() and not backlog.index and not backlog.items:
+        # Non-empty text that parses to nothing is a destroyed backlog
+        # (conflict markers, truncation, garbage), not an empty one — comparing
+        # its render against the committed dashboard would call the wreckage
+        # merely "stale". Hard failure, never exit 3.
+        msg = f"{backlog_path} parsed empty — refusing staleness verdict"
+        print(f"::error::backlog-view: {msg}" if _in_ci() else f"ERROR {msg}")
+        return 1
+    fresh = render(backlog)
     have = out_path.read_text() if out_path.exists() else ""   # missing = stale (fail closed)
     if fresh == have:
         print(f"backlog-view: {out_path} is up to date")
         return 0
     msg = f"{out_path} is stale; run `python3 scripts/backlog_view.py --write`"
-    print(f"::error::backlog-view: {msg}" if _in_ci() else f"ERROR {msg}")
+    print(f"::warning::backlog-view: {msg}" if _in_ci() else f"ERROR {msg}")
     return _STALE_EXIT
 
 
@@ -126,6 +142,11 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+# A lint-valid fixture (backlog_lint reports zero errors on it — asserted in
+# the self-test, matching the digest fixture's bar): every Item block carries
+# the full template schema, and the Index is the byte-exact render of the
+# blocks. B2/B3 differ only in whether their dependency is done, which is
+# what exercises the unblocked predicate.
 _FIX = """## Index
 
 | id | title | owner | size | status |
@@ -138,16 +159,34 @@ _FIX = """## Index
 
 ## B1 — Done thing
 
+- **Problem:** was broken
+- **Who it helps:** the team
+- **Value:** shipped value
+- **Owner:** Kiara
+- **Rough size:** S
+- **Done when:** `scripts/a.py` exists
 - **Depends on:** —
 - **Status:** done
 
 ## B2 — Ready thing
 
+- **Problem:** next up
+- **Who it helps:** the team
+- **Value:** quick win
+- **Owner:** Watson
+- **Rough size:** M
+- **Done when:** `scripts/b.py` lands
 - **Depends on:** B1
 - **Status:** ready
 
 ## B3 — Blocked thing
 
+- **Problem:** waiting on B2
+- **Who it helps:** the team
+- **Value:** sequenced
+- **Owner:** Arya
+- **Rough size:** S
+- **Done when:** `docs/c.md` lands
 - **Depends on:** B2
 - **Status:** ready
 """
@@ -160,6 +199,13 @@ def _self_test() -> int:
         nonlocal ok
         print(f"  [{'ok' if cond else 'FAIL'}] {name}")
         ok = ok and cond
+
+    # The fixture must model a real input: backlog_lint accepts it with zero
+    # errors (full schema, Index == render of the blocks).
+    from backlog_lint import lint, required_fields
+    template = Path(__file__).resolve().parent.parent / "templates/backlog-item.template.md"
+    expect("fixture is lint-valid (zero errors)",
+           not lint(parse_backlog(_FIX), required_fields(template.read_text())).errors)
 
     md = render(parse_backlog(_FIX))
     # B2 is ready and its only dep (B1) is done -> unblocked; B3 depends on B2 (ready) -> blocked.
@@ -184,6 +230,13 @@ def _self_test() -> int:
                _check(src, out) == _STALE_EXIT)
         expect(f"missing dashboard is stale, fails closed (exit {_STALE_EXIT})",
                _check(src, Path(td) / "absent.md") == _STALE_EXIT)
+        # A destroyed backlog (non-empty, parses to zero rows AND zero items)
+        # gets NO staleness verdict: exit 1 (script-failure lane), never 3.
+        garbage = Path(td) / "GARBAGE.md"
+        garbage.write_text("<<<<<<< HEAD\ntotal wreckage\n=======\nother side\n"
+                           ">>>>>>> theirs\n")
+        expect("destroyed backlog refuses staleness verdict (exit 1, not 3)",
+               _check(garbage, out) == 1)
 
     print("backlog-view self-test:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
