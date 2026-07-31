@@ -5,7 +5,7 @@
      Bundle lifecycle for individual slices: _specs/<repo>/YYYY-MM-DD-<slug>/ archived per
      the lab planning-bundle conventions (.claude/rules/04-docs.md). -->
 
-**Status:** draft <!-- draft | active | paused | complete -->
+**Status:** draft <!-- draft | active | paused | complete | superseded | abandoned -->
 **Date:** YYYY-MM-DD · **Repo:** <repo>
 
 > **The PRD stays decision-free.** No decision bodies here — the bundle's resolved decisions

@@ -1,7 +1,7 @@
 # lab-os — project log
 
 Format: lab standard, `lab-os/.claude/rules/03-logging.md`. Skeleton per
-`lab-os/templates/project_log.template.md` (normative — `log-lint` parses this structure).
+`lab-os/templates/docs/project_log.template.md` (normative — `log-lint` parses this structure).
 The `## Standing Decisions` and `## Entries` headings are load-bearing lint anchors: exact
 text, one each, never renamed. Entry headers are the only other `##` headings allowed.
 
