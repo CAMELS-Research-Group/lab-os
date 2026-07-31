@@ -23,8 +23,14 @@ docs-budget warn-until-first-green posture):
     then run `--write-index`; never hand-edit the Index. (This subsumes the
     old orphan-row / missing-row / duplicate-Index-id checks.)
   - `Depends on` referential integrity (ids exist) + acyclicity (no cycle)
+  - structural integrity of the Items section: a `## ` heading that is not a
+    well-formed item heading, and non-blank text no field owns (a severed
+    continuation, or prose between a heading and the first field), are hard
+    errors — nothing silently attaches to the wrong item or escapes the
+    checks below
   - public-tier spot check over Items (titles + full field values, including
-    continuation lines) AND the Inbox section. Intentionally conservative:
+    continuation lines and unattached text) AND the Inbox section.
+    Intentionally conservative:
     the patterns match only the literal phrases "private repo" /
     "gated dataset" and POSIX home paths (`/Users/...`) — clear leaks only.
     They do NOT catch private github.com URLs, real gated-dataset prefixes,
@@ -34,9 +40,9 @@ Warnings (never fail): a `Done when` with no concrete artifact reference
 (a command / file / observable behaviour) — structural checks stay hard,
 concreteness is only nudged, so a legitimate item is never red over phrasing.
 
-Importable API (the backlog view + digest tools reuse it — one parser,
-one dependency grammar, not three): parse_backlog, parse_deps,
-required_fields, render_index.
+Importable API, designed for reuse by the follow-on view/digest tools
+(PR #68) so there is one parser and one dependency grammar, not three:
+parse_backlog, parse_deps, required_fields, render_index.
 
 Stdlib only; Python 3.11+.
 """
@@ -78,6 +84,8 @@ class Backlog:
     items: list[Item]
     inbox: list[tuple[int, str]]  # (1-based line, text) for every Inbox content line
     raw: str
+    parse_errors: list[str] = field(default_factory=list)         # structural defects (hard errors)
+    orphans: list[tuple[int, str]] = field(default_factory=list)  # unattached Items-section lines
 
 
 @dataclass
@@ -117,9 +125,9 @@ def required_fields(template_text: str) -> list[str]:
 def parse_deps(raw: str) -> list[str]:
     """Parse a `Depends on` value into item ids.
 
-    The single dependency grammar for all three backlog tools (lint, view,
-    digest import this — one copy, not three): "—" / "-" / "" / "none" mean
-    no dependencies; otherwise every `B<number>` token is a dependency.
+    The dependency grammar, designed for reuse by the follow-on view/digest
+    tools (PR #68) so there is one copy, not three: "—" / "-" / "" / "none"
+    mean no dependencies; otherwise every `B<number>` token is a dependency.
     """
     return [] if raw.strip() in ("—", "-", "", "none") else re.findall(r"B\d+", raw)
 
@@ -158,6 +166,8 @@ def parse_backlog(text: str) -> Backlog:
 
     items: list[Item] = []
     inbox: list[tuple[int, str]] = []
+    parse_errors: list[str] = []
+    orphans: list[tuple[int, str]] = []
     section = ""
     cur: Item | None = None
     cur_key: str | None = None
@@ -191,6 +201,17 @@ def parse_backlog(text: str) -> Backlog:
             items.append(cur)
             _finish_field()
             continue
+        if line.startswith("## "):
+            # An Items-section heading that is not a well-formed item heading.
+            # Sever attachment AND record a hard error: otherwise the fields
+            # that follow would silently attach to the previous item, or the
+            # whole block would vanish without a trace.
+            parse_errors.append(f"unrecognized item heading at line {i}: {stripped}")
+            cur, cur_key = None, None
+            continue
+        if not stripped:
+            _finish_field()
+            continue
         if cur is None:
             continue
         fm = _FIELD.match(line)
@@ -200,33 +221,45 @@ def parse_backlog(text: str) -> Backlog:
             cur.raw_fields[key] = fm.group("val").strip()
             cur_key = key
             continue
-        if not stripped or line.startswith("## "):
-            _finish_field()
-            continue
         if cur_key is not None:
             cur.fields[cur_key] = (cur.fields[cur_key] + " " + stripped).strip()
             cur.raw_fields[cur_key] = cur.raw_fields[cur_key] + "\n" + line
+        else:
+            # Non-blank text no field owns (a blank line severed a
+            # continuation, or prose sits between the heading and the first
+            # field): hard error — this text would otherwise escape every
+            # field-level check, including the leak scan.
+            parse_errors.append(f"unattached text under item {cur.id} at line {i}")
+            orphans.append((i, line))
     return Backlog(index=index, index_table=index_table, items=items,
-                   inbox=inbox, raw=text)
+                   inbox=inbox, raw=text, parse_errors=parse_errors,
+                   orphans=orphans)
 
 
 # --- derived Index -----------------------------------------------------------
+
+def _cell(v: str) -> str:
+    """Escape a value for a Markdown table cell: a literal `|` would split
+    the row into extra cells, so it is escaped as `\\|` (renders as `|`)."""
+    return v.replace("|", "\\|")
+
 
 def render_index(items: list[Item]) -> str:
     """Render the Index table from the Item blocks (the Index is derived).
 
     Single source: the Item blocks. `title` comes from the item heading,
     `owner` / `size` / `status` from the Owner / Rough size / Status fields.
+    Literal `|` in any value is escaped so the table shape survives.
     """
     out = ["| id | title | owner | size | status |", "|---|---|---|---|---|"]
     for it in items:
         size = it.fields.get("Rough size", "").split()
         out.append("| {} | {} | {} | {} | {} |".format(
             it.id,
-            it.fields.get("__title__", ""),
-            it.fields.get("Owner", ""),
-            size[0] if size else "",
-            it.fields.get("Status", ""),
+            _cell(it.fields.get("__title__", "")),
+            _cell(it.fields.get("Owner", "")),
+            _cell(size[0] if size else ""),
+            _cell(it.fields.get("Status", "")),
         ))
     return "\n".join(out)
 
@@ -253,6 +286,12 @@ def lint(backlog: Backlog, req_fields: list[str]) -> Findings:
     f = Findings()
     ids_seen: dict[str, int] = {}
 
+    # Structural parse defects (unrecognized headings, unattached text) are
+    # hard errors — a file that cannot be attributed line-by-line must not
+    # pass as merely "fields look fine".
+    for e in backlog.parse_errors:
+        f.err(e)
+
     for it in backlog.items:
         where = f"{it.id} (line {it.line})"
         if it.id in ids_seen:
@@ -262,6 +301,11 @@ def lint(backlog: Backlog, req_fields: list[str]) -> Findings:
         for key in req_fields:
             if key not in it.fields:
                 f.err(f"{where}: missing required field '{key}'")
+            elif key != "Done when" and _is_placeholder(it.fields[key]):
+                # `Done when` has its own dedicated check below; every other
+                # required field must also be filled — an empty value or a
+                # verbatim `<placeholder>` is not a filled field.
+                f.err(f"{where}: required field '{key}' is empty or a placeholder")
 
         dw = it.fields.get("Done when", "")
         dw_raw = it.raw_fields.get("Done when", dw)
@@ -296,14 +340,35 @@ def lint(backlog: Backlog, req_fields: list[str]) -> Findings:
                 f.err(f"Inbox (line {lineno}): embeds a non-public reference "
                       f"(matched /{pat.pattern}/)")
 
+    # Unattached Items-section text is already a hard parse error above; scan
+    # it for leaks too, so a non-public reference in a severed line is named
+    # as such rather than hiding behind the structural error.
+    for lineno, text in backlog.orphans:
+        for pat in _PRIVATE_PATTERNS:
+            if pat.search(text):
+                f.err(f"Items (line {lineno}): unattached text embeds a "
+                      f"non-public reference (matched /{pat.pattern}/)")
+
     # The Index is derived from the Item blocks: the committed table must
     # byte-match the render (stale, hand-edited, orphan, or missing rows all
     # surface as a diff).
-    committed = "\n".join(backlog.index_table)
-    rendered = render_index(backlog.items)
+    committed = backlog.index_table
+    rendered = render_index(backlog.items).splitlines()
     if committed != rendered:
-        f.err("Index is stale: it is generated from the Item blocks — edit the "
-              "blocks, then run `python3 scripts/backlog_lint.py --write-index`")
+        for n, (c, r) in enumerate(zip(committed, rendered), start=1):
+            if c != r:
+                detail = (f"first difference at table line {n}: "
+                          f"committed {c!r} vs rendered {r!r}")
+                break
+        else:
+            n = min(len(committed), len(rendered))
+            if len(committed) > len(rendered):
+                detail = f"first extra committed line: {committed[n]!r}"
+            else:
+                detail = f"first missing line (from the render): {rendered[n]!r}"
+        f.err(f"Index is stale ({detail}): it is generated from the Item "
+              "blocks — edit the blocks, then run "
+              "`python3 scripts/backlog_lint.py --write-index`")
 
     # Depends on: referential integrity + acyclicity
     item_ids = set(ids_seen)
@@ -358,10 +423,15 @@ def _fail(msg: str) -> int:
 
 
 def _load_schema(template_path: Path) -> list[str] | None:
-    """Required-field schema from the template. None = unusable (fail closed)."""
-    if not template_path.exists():
+    """Required-field schema from the template. None = unusable (fail closed).
+
+    Any read failure (missing file, permission denied) is "unusable" — the
+    caller reports one clean error line instead of a traceback."""
+    try:
+        text = template_path.read_text()
+    except OSError:
         return None
-    req = required_fields(template_path.read_text())
+    req = required_fields(text)
     return req or None
 
 
@@ -374,8 +444,9 @@ def _run(backlog_path: Path, template_path: Path, enforce: bool) -> int:
         # Fail closed regardless of --enforce: a missing/empty schema source is
         # a code/infra defect, not a content finding — green here would mean
         # the whole required-field dimension silently vanished.
-        return _fail(f"template {template_path} is missing or defines no "
-                     "`- **Field:**` lines — required-field schema unavailable")
+        return _fail(f"template {template_path} is missing, unreadable, or "
+                     "defines no `- **Field:**` lines — required-field "
+                     "schema unavailable")
     findings = lint(parse_backlog(backlog_path.read_text()), req)
     for w in findings.warnings:
         print(f"::warning::backlog-lint: {w}" if _in_ci() else f"WARN  {w}")
@@ -543,6 +614,70 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
           _GOOD.replace("- a raw idea waiting to be shaped", "- idea parked at /Users/someone/notes/idea.md"),
           "Inbox")
 
+    # Structural windows (adversarial self-review, PR #67): malformed headings
+    # and unattached text fail loudly — nothing mis-attaches or vanishes.
+    bad_head = _GOOD.replace("## B2 — Second", "## B2 - Second")
+    check("malformed item heading (hyphen, not em-dash) is a hard error",
+          bad_head, "unrecognized item heading")
+    parsed_bad_head = parse_backlog(bad_head)
+    expect("fields after a malformed heading do not attach to the previous item",
+           [i.id for i in parsed_bad_head.items] == ["B1"]
+           and parsed_bad_head.items[0].fields["Problem"] == "something is missing",
+           str([(i.id, i.fields) for i in parsed_bad_head.items]))
+    check("verbatim template heading (## <id> — ...) is an unrecognized heading",
+          _GOOD + "\n## <id> — <one-line title>\n\n- **Problem:** <x>\n",
+          "unrecognized item heading")
+    check("severed continuation (blank line) is unattached text",
+          _GOOD.replace("- **Done when:** the wrapped dashboard render lands in\n  `docs/y.md` with the new section",
+                        "- **Done when:** the wrapped dashboard render lands in `docs/y.md`\n\n  and the new section renders"),
+          "unattached text under item B2")
+    check("prose between heading and first field is unattached text",
+          _GOOD.replace("## B1 — First\n\n- **Problem:**",
+                        "## B1 — First\n\nstray prose no field owns\n\n- **Problem:**"),
+          "unattached text under item B1")
+    check("leak scan reaches unattached text",
+          _GOOD.replace("- **Done when:** the wrapped dashboard render lands in\n  `docs/y.md` with the new section",
+                        "- **Done when:** the wrapped dashboard render lands in `docs/y.md`\n\n  parked at /Users/someone/private/notes.md"),
+          "non-public")
+
+    # Placeholder / empty checks cover EVERY required field, not just Done when.
+    check("placeholder in a non-Done-when required field",
+          _GOOD.replace("- **Owner:** Kiara", "- **Owner:** <who is driving it>"),
+          "required field 'Owner' is empty or a placeholder")
+    check("empty required field value",
+          _GOOD.replace("- **Value:** worth it", "- **Value:**"),
+          "required field 'Value' is empty or a placeholder")
+    verbatim = _GOOD + """
+## B3 — Copied template, never filled
+
+- **Problem:** <what is broken or missing, and for whom>
+- **Who it helps:** <the person or workflow that benefits>
+- **Value:** <why it is worth doing now rather than later>
+- **Owner:** <who is driving it — required before an item leaves Inbox>
+- **Rough size:** <S = one sitting · M = a few · L = a project — split anything L before it is ready>
+- **Done when:** <the single observable check that proves it shipped — a command, a behaviour, a file>
+- **Depends on:** <other item ids, or —>
+- **Status:** <inbox = raw idea · ready = shaped and unblocked · in-progress · done>
+"""
+    tpl_errs = lint(parse_backlog(verbatim), req).errors
+    expect("verbatim-template item: every placeholder field is named",
+           all(any(f"'{k}'" in e and "placeholder" in e for e in tpl_errs) for k in req),
+           str(tpl_errs))
+
+    stale_errs = lint(parse_backlog(_GOOD.replace(
+        "| B1 | First | Kiara | S | ready |",
+        "| B1 | INDEX TITLE | Kiara | S | ready |")), req).errors
+    expect("stale-index error names the first differing row",
+           any("Index is stale" in e and "INDEX TITLE" in e for e in stale_errs),
+           str(stale_errs))
+
+    piped = parse_backlog(_GOOD.replace("## B1 — First", "## B1 — First | piped"))
+    rendered_rows = render_index(piped.items).splitlines()
+    expect("render_index escapes | in titles (row shape survives)",
+           "First \\| piped" in rendered_rows[2]
+           and all(len(re.split(r"(?<!\\)\|", row)) == 7 for row in rendered_rows),
+           str(rendered_rows))
+
     # CLI exit-code contract through main()/_run (the Phase-2 flip surface).
     import tempfile
     with tempfile.TemporaryDirectory() as td:
@@ -570,6 +705,17 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
         expect("--write-index repairs a stale Index",
                _write_index(stale) == 0
                and not lint(parse_backlog(stale.read_text()), req).errors)
+        piped_b = tdp / "PIPED.md"
+        piped_b.write_text(_GOOD.replace("## B1 — First", "## B1 — First | piped"))
+        expect("--write-index handles | in a title; result lints clean",
+               _write_index(piped_b) == 0
+               and not lint(parse_backlog(piped_b.read_text()), req).errors)
+        unread_tpl = tdp / "unreadable-template.md"
+        unread_tpl.write_text("- **Field:** x\n")
+        unread_tpl.chmod(0)
+        expect("main: unreadable template exits 1 (one-line failure, no traceback)",
+               main(["--check", str(good_b), "--template", str(unread_tpl)]) == 1)
+        unread_tpl.chmod(0o644)
 
     print("backlog-lint self-test:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
