@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-24 17:00 — Adopt session timeboxing standard v1.0 · #1
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -18,6 +19,19 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-24 17:00 — Adopt session timeboxing standard v1.0
+
+**Decision:** All working sessions run under the timeboxing standard (`docs/timeboxing.mdx`): default
+boxes per session type with a written exit criterion, scope-hammer before extension, one extension max
+(half the box, written reason), and a planned-vs-actual calibration row appended to
+`docs/timebox_calibration.mdx` at every box end.
+**Why:** Parkinson's Law + planning fallacy — unbounded sessions produce longer sessions, not better
+artifacts. Fix time and budget, flex scope (Shape Up appetites); the calibration record is the
+reference class that corrects box lengths over time.
+**Refs:** #1, docs/timeboxing.mdx, docs/timeboxing_quickref.mdx, docs/timebox_calibration.mdx
 
 ---
 
