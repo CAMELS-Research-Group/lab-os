@@ -5,7 +5,9 @@
 # fields, a single-condition non-placeholder `Done when`, the status ladder,
 # size (`L` never `ready`), the generated Index matching its render from the
 # Item blocks, `Depends on` integrity + acyclicity, and the public-tier leak
-# tripwire over Items and Inbox. Fail only when `enforce: true`.
+# tripwire over Items and Inbox. Content findings fail the job only when
+# `enforce: true`; tooling defects — a missing/empty/unreadable template, a
+# self-test failure — always fail, regardless of `enforce`.
 #
 # Default is warn-only (the warn-until-first-green posture shared with
 # docs-budget): the job exits green, but hard findings still surface as

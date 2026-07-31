@@ -19,7 +19,7 @@ Read the **Index** first — it is the "what's ready right now" surface. Full it
 | B2 | Workshop process + feedback iteration | Watson | M | ready |
 | B3 | Lab-wide backlog (this file) | Kiara | S | in-progress |
 | B4 | Time-boxing PRDs / working sessions | Arya | S | ready |
-| B5 | Backlog-lint (CI hygiene check for BACKLOG.md) | Kiara | M | ready |
+| B5 | Backlog-lint (CI hygiene check for BACKLOG.md) | Kiara | M | in-progress |
 
 ## Inbox
 
@@ -101,6 +101,6 @@ has a Problem and a Done-when and an owner. -->
 - **Rough size:** M
 - **Done when:** a PR that violates the item schema (missing field / bad `Done when` / stale
   generated Index / dangling `Depends on` / `L` marked `ready`) fails CI, and a well-formed
-  one passes — running only on PRs that touch `BACKLOG.md`.
+  one passes — running on every PR alongside the sibling lints.
 - **Depends on:** B3
-- **Status:** ready
+- **Status:** in-progress

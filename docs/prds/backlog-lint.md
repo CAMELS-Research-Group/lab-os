@@ -22,7 +22,7 @@ The lab already enforces its other text conventions by CI (`log-lint`, `docs-bud
 
 - A PR that adds or edits `BACKLOG.md` **fails CI** when an item is missing a required field, its `Done when` is empty / a placeholder / more than one condition (wrapped continuation lines join into one value; a nested list inside the field fails), its `Status` is off the `inbox → ready → in-progress → done` ladder, the committed Index differs from the Index rendered from the Item blocks, a `Depends on` id doesn't resolve, the dependency graph contains a cycle, or a size-`L` item is marked `ready`.
 - A well-formed backlog PR **passes with no human review of format** — reviewers spend attention on the item's content, not its shape.
-- The check runs **only on PRs that touch `BACKLOG.md`** — zero cost on unrelated PRs.
+- The check runs **on every PR, like the sibling lints** (`log-lint`, `docs-budget`, `merge-bar-check`) — its cost is seconds, so a changed-files gate is not worth the extra conditional. <!-- amended 2026-07: the original "only on PRs that touch BACKLOG.md" claim never matched the shipped workflow; the sibling convention won. -->
 - The field schema the linter enforces is **single-sourced with `backlog-item.template.md`** — editing the template cannot silently diverge from what CI checks.
 - Rollout is **warn-only until the first green run, then enforcing** (matching `docs-budget`), with a documented `backlog-lint:override` label for intentional exceptions (matching `log-lint`).
 
@@ -66,7 +66,7 @@ The lab already enforces its other text conventions by CI (`log-lint`, `docs-bud
 ### Phase 1 — Linter + single-sourced schema (warn-only)
 
 **Goal:** catch every malformed backlog item on PR, without yet blocking merge.
-**Deliverables:** `scripts/backlog_lint.py`, the field schema single-sourced with `backlog-item.template.md`, per-failure-class unit tests, a warn-only `backlog-lint.yml` scoped to PRs touching `BACKLOG.md`.
+**Deliverables:** `scripts/backlog_lint.py`, the field schema single-sourced with `backlog-item.template.md`, per-failure-class unit tests, a warn-only `backlog-lint.yml` run on every PR alongside the sibling lints.
 **Work bundle:** <!-- link once created -->
 
 ### Phase 2 — Enforce + override + document

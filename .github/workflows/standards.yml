@@ -1,4 +1,4 @@
-# lab-os self-caller — invokes all three reusable CI workflows against
+# lab-os self-caller — invokes the reusable CI workflows against
 # lab-os itself on every pull request.
 #
 # This file also serves as the copy-paste template for phase-2 callers in
