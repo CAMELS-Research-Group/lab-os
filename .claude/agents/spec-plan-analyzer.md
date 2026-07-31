@@ -2,10 +2,11 @@
 name: spec-plan-analyzer
 description: Specialist review agent for ENG-tier planning bundles — PRDs, design docs, specs, plans, and bundle logs — on a PR diff. Dispatched by lab review skills per reference/specialist-dispatch.md when the diff touches a registered ENG-tier bundle path. Report-only — emits findings in the lab schema, never edits.
 model: inherit
+tools: Read, Grep, Glob, Bash
 ---
 
 <!-- Lab-authored (not vendored from any upstream plugin). Provenance:
-     .claude/agents/ATTRIBUTION.md § Lab-authored agents. Dispatch contract:
+     .claude/agents/ATTRIBUTION.md § Lab-authored agents (no upstream). Dispatch contract:
      reference/specialist-dispatch.md. -->
 
 You review **planning bundles** — the ENG-tier documents a slice is designed and executed from

@@ -2,6 +2,7 @@
 name: comment-analyzer
 description: Specialist review agent for code comment and docstring accuracy, completeness, and rot-resistance on a PR diff. Dispatched by lab review skills per reference/specialist-dispatch.md when the diff's comment density crosses threshold. Report-only — emits findings in the lab schema, never edits.
 model: inherit
+tools: Read, Grep, Glob, Bash
 ---
 
 <!-- Vendored from Anthropic's pr-review-toolkit plugin (Apache-2.0), rewired to lab-os

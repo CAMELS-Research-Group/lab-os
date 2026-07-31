@@ -46,8 +46,11 @@ taxonomy is a manifest-synced asset whose byte source is the lab's workspace for
 carried in lab-os; where it does not resolve, no class applies and the citation is simply absent.
 All bodies are phrased conditionally for exactly this reason.
 
-The four vendored bodies are carried verbatim — byte-identical to the workspace-fork copies, so the
-two do not drift — and **lab-os is the byte master**: these copies are canonical, and the workspace
-fork inherits them through the normal `git pull upstream main` direction rather than by a
-back-port, never the reverse. `spec-plan-analyzer` moves the same direction; it originates
-**here**, in lab-os, which owns it. (Byte-master choice recorded per the PR #61 review.)
+## Byte ownership
+
+**lab-os is the byte master for every agent body in this directory**: these copies are canonical,
+and the workspace fork inherits them through the normal `git pull upstream main` direction — never
+by a back-port. Identity with the fork copies is restored at each sync, not asserted between them:
+between an upstream edit and the fork's next pull, the copies may legitimately differ, and the
+resolution is always a pull, never the reverse. `spec-plan-analyzer` moves the same direction; it
+originates **here**, in lab-os, which owns it. (Byte-master choice recorded per the PR #61 review.)

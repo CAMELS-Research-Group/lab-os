@@ -2,6 +2,7 @@
 name: silent-failure-hunter
 description: Specialist review agent for silent failures, inadequate error handling, and unjustified fallback behavior in a PR diff. Dispatched by lab review skills per reference/specialist-dispatch.md when the diff carries error-handling-token hunks. Report-only — emits findings in the lab schema, never edits.
 model: inherit
+tools: Read, Grep, Glob, Bash
 ---
 
 <!-- Vendored from Anthropic's pr-review-toolkit plugin (Apache-2.0), rewired to lab-os

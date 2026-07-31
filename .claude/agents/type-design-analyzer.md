@@ -2,6 +2,7 @@
 name: type-design-analyzer
 description: Specialist review agent for type design quality — encapsulation, invariant expression, usefulness, and enforcement — on types a PR diff adds or changes. Dispatched by lab review skills per reference/specialist-dispatch.md. Report-only — emits findings in the lab schema, never edits.
 model: inherit
+tools: Read, Grep, Glob, Bash
 ---
 
 <!-- Vendored from Anthropic's pr-review-toolkit plugin (Apache-2.0), rewired to lab-os

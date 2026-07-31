@@ -48,8 +48,11 @@ phasing de-risked the *lifted* bodies, and this one is authored.
 skills dispatch. `reference/code-quality-taxonomy.md` is **not** ported — it stays byte-owned by the
 workspace fork (the manifest-sync provision lives in the fork's copy of `04-docs.md` § Rules
 numbering; this repo's copy carries only the numbering rule). Where it does not resolve, the
-finding schema's
-taxonomy citation is absent and merge dedup falls back to the specialist's dimension.
+finding schema's taxonomy citation is absent and merge dedup falls back to the specialist's
+dimension. Completing the ownership map (per the PR #61 review): the agent bodies in
+`.claude/agents/**` are byte-owned **here** — lab-os is the byte master, and the workspace fork
+inherits them via `git pull upstream main`, never by back-port (`.claude/agents/ATTRIBUTION.md`
+§ Byte ownership).
 **Why:** The agents were unreachable from a lab-os-rooted dev home. The taxonomy is manifest-synced
 into five member repos under a header naming the fork as byte source, so moving it would create two
 masters for a vendored file.

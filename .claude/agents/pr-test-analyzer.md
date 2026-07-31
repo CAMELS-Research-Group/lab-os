@@ -2,6 +2,7 @@
 name: pr-test-analyzer
 description: Specialist review agent for test coverage quality on a PR diff. Dispatched by lab review skills per reference/specialist-dispatch.md when the diff touches executable source. Report-only — analyzes behavioral coverage gaps and test quality, emits findings in the lab schema, never edits.
 model: inherit
+tools: Read, Grep, Glob, Bash
 ---
 
 <!-- Vendored from Anthropic's pr-review-toolkit plugin (Apache-2.0), rewired to lab-os

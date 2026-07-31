@@ -14,7 +14,7 @@ by agents and CI.
   - [`02-data-protection.md`](.claude/rules/02-data-protection.md) — gated-dataset, PII, and binary/secret protection
   - [`03-logging.md`](.claude/rules/03-logging.md) — project-log standard (altitudes, entry triggers, format, immutability, overflow)
   - [`04-docs.md`](.claude/rules/04-docs.md) — documentation standard (single-source, tiers, byte budgets, ENG doc standards, rules numbering)
-- `.claude/agents/` — specialist review agent bodies dispatched by the lab review skills (four vendored from Anthropic's `pr-review-toolkit`, one lab-authored; provenance: [`ATTRIBUTION.md`](.claude/agents/ATTRIBUTION.md)). Agent bodies execute as instructions the same way skills do — review rigor over `.claude/agents/**` is the security boundary.
+- `.claude/agents/` — specialist review agent bodies dispatched by the lab review skills (vendored from Anthropic's `pr-review-toolkit` plus lab-authored members; provenance: [`ATTRIBUTION.md`](.claude/agents/ATTRIBUTION.md)). Agent bodies execute as instructions the same way skills do — review rigor over `.claude/agents/**` is the security boundary.
 - [`reference/specialist-dispatch.md`](reference/specialist-dispatch.md) — the owning dispatch contract for the specialist review panel (triggers, per-pass cap, model tier, finding schema, merge/dedup rules, degradation).
 - [`PR-LIFECYCLE.md`](PR-LIFECYCLE.md) — end-to-end PR lifecycle: merge bar, solo-maintainer bypass, pre-merge log cleanup.
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — lab-level expensive findings and gotchas, indexed by symptom.
