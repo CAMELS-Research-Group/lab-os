@@ -33,6 +33,14 @@ jobs:
     # No `with:` needed — default exclude-globs ("*.md,docs/**,.github/**")
     # are correct for lab-os.
 
+  backlog-lint:
+    # lab-os-only: BACKLOG.md is the lab-wide backlog (downstream repos use their
+    # own issues). Warn-only until backlog-lint's first green run; Phase 2 flips this.
+    # The workflow's self-test step is unconditional either way.
+    uses: ./.github/workflows/backlog-lint.yml
+    with:
+      enforce: false
+
 # ---------------------------------------------------------------------------
 # Downstream repo example
 # ---------------------------------------------------------------------------

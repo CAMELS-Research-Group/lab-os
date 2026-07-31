@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI · (PR pending)
 - 2026-07-16 12:10 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
@@ -19,6 +20,29 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI
+
+**Decision:** A `backlog_lint` CI check (sibling to `log-lint` / `docs-budget`) validates
+`BACKLOG.md` on PRs that touch it: required fields, a single-condition non-placeholder
+`Done when`, the status ladder, size (`L` never `ready`), the Index as a generated
+projection of the Item blocks (committed table must match the render; `--write-index`
+regenerates it), and `Depends on` referential integrity + acyclicity. Warn-only until
+first green, then enforcing; `backlog-lint:override` label for exceptions. Schema parsed
+from `templates/backlog-item.template.md` (single source, fail-closed); the `Done when`
+check is structural, treating "no concrete artifact reference" as a warning, not a
+failure; behavior documented in the tooling-tour, not a `.claude/rules/` file. Filed as
+backlog item B5.
+**Why:** the backlog's readiness bar was enforced only by grooming discipline; a CI check
+makes it true by construction, matching the lab's other lints. Warn-first + structural
+`Done when` avoid false-failing legitimate items. A derived Index kills the
+dual-representation drift class outright instead of policing it.
+**Alternatives:** fold under B1 (conflates the tool with the proposal→ratify mechanism it
+rides); a `.claude/rules/` entry (rule-budget cost; a lint's behavior is not a hard rule);
+hand-authored Index + reconciliation check (leaves two authoritative copies).
+**Refs:** (PR pending); docs/prds/backlog-lint.md
 
 ---
 

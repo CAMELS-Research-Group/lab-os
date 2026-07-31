@@ -1,0 +1,83 @@
+# Reusable backlog-lint adherence action (PRD: docs/prds/backlog-lint.md, B5).
+#
+# Lints the lab-wide BACKLOG.md against the backlog-item convention
+# (templates/backlog-item.template.md) with scripts/backlog_lint.py: required
+# fields, a single-condition non-placeholder `Done when`, the status ladder,
+# size (`L` never `ready`), the generated Index matching its render from the
+# Item blocks, `Depends on` integrity + acyclicity, and the public-tier leak
+# tripwire over Items and Inbox. Fail only when `enforce: true`.
+#
+# Default is warn-only (the warn-until-first-green posture shared with
+# docs-budget): the job exits green, but hard findings still surface as
+# ::error annotations on the PR (warnings as ::warning) — only the exit code
+# is gated on `enforce`. The self-test step below is NOT gated: a self-test
+# failure is a code defect and always fails the job.
+# BACKLOG.md is a lab-os-only surface, so this is primarily lab-os' own check;
+# a caller repo without a BACKLOG.md no-ops green (the script prints
+# "not found; nothing to check").
+#
+# Caller example:
+#
+#   jobs:
+#     backlog-lint:
+#       uses: CAMELS-Research-Group/lab-os/.github/workflows/backlog-lint.yml@main
+#       with:
+#         enforce: false   # flip to true after the first green run
+
+name: backlog-lint
+
+on:
+  workflow_call:
+    inputs:
+      enforce:
+        description: >-
+          Fail the job when a BACKLOG.md item violates the schema.
+          Leave false (warn-only) until the first green run.
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  backlog-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out caller repo
+        uses: actions/checkout@v4
+
+      - name: Check out lab-os (script + template source)
+        uses: actions/checkout@v4
+        with:
+          repository: CAMELS-Research-Group/lab-os
+          path: .lab-os
+
+      - name: Self-test backlog-lint (unconditional — never gated on enforce)
+        run: |
+          # A self-test failure is a code defect, not a content warning: it
+          # always fails the job, regardless of the enforce input.
+          SCRIPT=".lab-os/scripts/backlog_lint.py"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then
+            SCRIPT="scripts/backlog_lint.py"
+          fi
+          python3 "$SCRIPT" --self-test
+
+      - name: Run backlog-lint
+        env:
+          ENFORCE: ${{ inputs.enforce }}
+        run: |
+          ARGS=""
+          if [ "$ENFORCE" = "true" ]; then ARGS="--enforce"; fi
+          # lab-os' own PRs must run the PR's script (main's copy is absent/stale
+          # there); gate on repo name, not file-exists, so downstream repos can't
+          # shadow the canonical script. The field-schema template comes from the
+          # same source; a missing or empty template FAILS the job (fail closed —
+          # there is no built-in fallback field list).
+          SCRIPT=".lab-os/scripts/backlog_lint.py"
+          TEMPLATE=".lab-os/templates/backlog-item.template.md"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then
+            SCRIPT="scripts/backlog_lint.py"
+            TEMPLATE="templates/backlog-item.template.md"
+          fi
+          python3 "$SCRIPT" --check BACKLOG.md --template "$TEMPLATE" $ARGS
