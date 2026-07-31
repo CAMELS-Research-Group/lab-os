@@ -47,6 +47,7 @@ carried in lab-os; where it does not resolve, no class applies and the citation 
 All bodies are phrased conditionally for exactly this reason.
 
 The four vendored bodies are carried verbatim — byte-identical to the workspace-fork copies, so the
-two do not drift. `spec-plan-analyzer` originates **here**, in lab-os, which owns it; the workspace
-fork picks it up through the normal `git pull upstream main` direction rather than by a
-back-port.
+two do not drift — and **lab-os is the byte master**: these copies are canonical, and the workspace
+fork inherits them through the normal `git pull upstream main` direction rather than by a
+back-port, never the reverse. `spec-plan-analyzer` moves the same direction; it originates
+**here**, in lab-os, which owns it. (Byte-master choice recorded per the PR #61 review.)

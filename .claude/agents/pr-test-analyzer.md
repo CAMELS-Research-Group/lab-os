@@ -6,7 +6,7 @@ model: inherit
 
 <!-- Vendored from Anthropic's pr-review-toolkit plugin (Apache-2.0), rewired to lab-os
      conventions: report-only, lab finding schema, taxonomy citations, platform-agnostic.
-     Provenance: .claude/skills/ATTRIBUTION.md § Specialist review agents. -->
+     Provenance: .claude/agents/ATTRIBUTION.md § Anthropic, `pr-review-toolkit` plugin (Apache-2.0). -->
 
 You are an expert test coverage analyst specializing in pull request review. Your responsibility
 is to ensure the PR under review has adequate test coverage for critical functionality without

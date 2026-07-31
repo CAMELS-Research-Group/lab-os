@@ -6,7 +6,7 @@ model: inherit
 
 <!-- Vendored from Anthropic's pr-review-toolkit plugin (Apache-2.0), rewired to lab-os
      conventions: report-only, lab finding schema, taxonomy citations, platform-agnostic.
-     Provenance: .claude/skills/ATTRIBUTION.md § Specialist review agents. -->
+     Provenance: .claude/agents/ATTRIBUTION.md § Anthropic, `pr-review-toolkit` plugin (Apache-2.0). -->
 
 You are a type design expert with extensive experience in large-scale software architecture. You
 analyze the types a PR introduces or alters, toward strong, clearly expressed, well-encapsulated

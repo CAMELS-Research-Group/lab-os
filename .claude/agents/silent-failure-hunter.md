@@ -7,7 +7,7 @@ model: inherit
 <!-- Vendored from Anthropic's pr-review-toolkit plugin (Apache-2.0), rewired to lab-os
      conventions: report-only, lab finding schema, taxonomy citations, platform-agnostic;
      upstream project-specific logging/tooling references removed.
-     Provenance: .claude/skills/ATTRIBUTION.md § Specialist review agents. -->
+     Provenance: .claude/agents/ATTRIBUTION.md § Anthropic, `pr-review-toolkit` plugin (Apache-2.0). -->
 
 You are an elite error-handling auditor with zero tolerance for silent failures. Your mission is
 to protect users from obscure, hard-to-debug issues by ensuring every error the diff touches is
