@@ -36,9 +36,9 @@ check is structural, treating "no concrete artifact reference" as a warning, not
 failure; behavior documented in the tooling-tour, not a `.claude/rules/` file. Filed as
 backlog item B5.
 **Why:** the backlog's readiness bar was enforced only by grooming discipline; a CI check
-makes it true by construction, matching the lab's other lints. Warn-first + structural
+makes it true by construction, like the other lints. Warn-first + structural
 `Done when` avoid false-failing legitimate items. A derived Index kills the
-dual-representation drift class outright instead of policing it.
+dual-representation drift class instead of policing it.
 **Alternatives:** fold under B1 (conflates the tool with the proposal→ratify mechanism it
 rides); a `.claude/rules/` entry (rule-budget cost; a lint's behavior is not a hard rule);
 hand-authored Index + reconciliation check (leaves two authoritative copies).
