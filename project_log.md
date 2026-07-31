@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
 - 2026-07-24 12:40 — Specialist panel ports to lab-os; the taxonomy stays fork-owned · #61
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
@@ -19,6 +20,24 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time
+
+**Decision:** The ENG doc-tier specialist (`spec-plan-analyzer`, planning-bundle review) lands with
+the vendored four instead of waiting for its Phase-2 slot, and is **lab-authored here** — the first
+agent body lab-os originates rather than vendors; the fork inherits it by `pull upstream`. It
+restates no checklist: it resolves `04-docs.md` § ENG and `03-logging.md` in the repo under review
+and derives its checks, returning a named not-run dimension where neither resolves. Dispatch is
+path-based via a fail-closed per-repo ENG path registry.
+**Why:** Bundle shape is repo- and version-specific — lab-os defines PRD/design/plan under
+`docs/work/`, the fork a four-file `_specs/` bundle. A restated checklist would violate `04-docs.md`
+§ Single source and go stale at the next rules sync; read-time derivation is correct on both.
+**Alternatives:** Restate the fork's bundle shape — rejected: it would review lab-os bundles against
+criteria lab-os does not hold. Hold for Phase 2 behind the dry-run gate — rejected on request; that
+phasing de-risked the *lifted* bodies, and this one is authored.
+**Refs:** #61
 
 ---
 

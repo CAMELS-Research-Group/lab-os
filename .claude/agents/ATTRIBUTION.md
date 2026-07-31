@@ -1,7 +1,8 @@
 # Specialist review agents — attribution & provenance
 
-Provenance for the vendored agent bodies in this directory. Dispatch contract (triggers, cap, model
-tier, merge rules) is owned by `reference/specialist-dispatch.md` and is not restated here.
+Provenance for the agent bodies in this directory — vendored and lab-authored alike. Dispatch
+contract (triggers, cap, model tier, merge rules) is owned by `reference/specialist-dispatch.md`
+and is not restated here.
 
 ## Anthropic, `pr-review-toolkit` plugin (Apache-2.0)
 
@@ -22,10 +23,30 @@ Not vendored: `code-reviewer` (redundant with the review skills' own outsider ge
 `code-simplifier` (an editor — it collides with the report → classify → remediate flow; its value is
 covered by the `[simplification]` rubric class).
 
+## Lab-authored agents (no upstream)
+
+| Agent | Origin | Derives from |
+|---|---|---|
+| `spec-plan-analyzer` | Lab-original — written for lab-os, not lifted from any plugin | The repo's own `.claude/rules/04-docs.md` § ENG document standards and `.claude/rules/03-logging.md`, read at review time |
+
+No upstream license applies to this body; `LICENSE-pr-review-toolkit` covers the four vendored
+agents only.
+
+**It carries no restated checklist by design.** The lab's ENG document standards differ per repo
+and change over time, so the agent resolves them from the rules in the repo under review and
+derives its checks there — a body that restated them would violate `04-docs.md` § Single source and
+would go stale at the next rules sync. Where those sources do not resolve, it returns a named
+not-run dimension instead of reviewing against invented criteria (dispatch reference
+§ Degradation).
+
 ## Taxonomy citations
 
-The agent bodies cite `reference/code-quality-taxonomy.md` classes **where one applies**. That
+Every agent body here cites `reference/code-quality-taxonomy.md` classes **where one applies**. That
 taxonomy is a manifest-synced asset whose byte source is the lab's workspace fork and it is not
 carried in lab-os; where it does not resolve, no class applies and the citation is simply absent.
-The bodies are phrased conditionally for exactly this reason and are vendored here verbatim —
-byte-identical to the workspace-fork copies, so the two do not drift.
+All bodies are phrased conditionally for exactly this reason.
+
+The four vendored bodies are carried verbatim — byte-identical to the workspace-fork copies, so the
+two do not drift. `spec-plan-analyzer` originates **here**, in lab-os, which owns it; the workspace
+fork picks it up through the normal `git pull upstream main` direction rather than by a
+back-port.
