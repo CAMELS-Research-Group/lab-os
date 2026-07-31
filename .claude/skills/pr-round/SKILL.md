@@ -120,6 +120,7 @@ lane composes its comment and verdict and returns them; Step 10 posts them.
 | Mechanical, on your PR | Auto-fixed via `Edit`, committed, pushed. No interrupt. |
 | Design-pin, on your PR | Returned from the subagent, asked at Step 6 with 2–3 options + `Defer`, applied at Step 8. **Step 6 drains the queue** — batches of at most 4 questions, uncapped batch count, until every pin is decided or deferred *by you*. |
 | Anything on someone else's PR | Reported in the review comment. Never edited — it is their PR. |
+| The reviewed PR's head moved before the verdict posts | The head is re-checked immediately before posting; a sha that no longer matches the reviewed one **forces the verdict to `COMMENT`** and adds a note naming both shas. Deterministic, no interrupt — a formal approve or request-changes is never posted against commits nobody read. The round does not re-review them. |
 | Roster over 8 PRs | One cost-guard question before dispatch, offering repo- and lane-scoped cuts before a bare count cap. |
 | Pin queue over 8 | One volume-guard question before the batches (same shape as the roster guard): decide the ones on otherwise-merge-ready PRs, decide all, decide Blockers only, or defer all. Everything the answer excludes is recorded as **deferred by you** — the guard is you exercising the deferral, not the skill skipping the ask. |
 | A pin the round never asked about | **A skill failure, not an outcome.** Named as its own class in the handoff comment, forces 🔴 `BLOCKED`, and reported separately from deferrals in the roster. |
