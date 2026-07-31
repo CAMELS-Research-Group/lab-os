@@ -5,10 +5,12 @@ description: Use when the user hands over a development task to execute autonomo
 
 # timeboxing
 
-> Applies the lab timeboxing standard (`lab-os/docs/timeboxing.mdx`) and the
-> recording guide (`lab-os/docs/timebox_recording.mdx`) to agent-executed
-> tasks. Those docs are the source of truth; this skill is the protocol, not
-> a redefinition.
+> Applies the lab timeboxing standard (`docs/timeboxing.mdx`) and the
+> recording guide (`docs/timebox_recording.mdx`) to agent-executed tasks —
+> paths relative to the lab-os repo root; when this skill is installed via a
+> symlink into `~/.claude/skills/`, resolve them against the lab-os checkout
+> the symlink points into. Those docs are the source of truth; this skill is
+> the protocol, not a redefinition.
 
 ## Overview
 
@@ -24,7 +26,8 @@ user's review and hard pass are outside it.
   during shaping.
 - Sign-off conversations, and the user's review of delivered work.
 - Live incident state where stopping loses an unreproducible repro (capture
-  state first; resume the box after).
+  state first; record a pause in the state file — step 2 — and resume the
+  box after).
 
 ## Protocol
 
@@ -46,8 +49,15 @@ State one line: **goal + box length + exit criterion**.
 Write a state file to the session scratchpad (never the repo tree), e.g.
 `<scratchpad>/timebox-state.json`, containing: ISO-8601 start timestamp
 (from the shell clock, e.g. `date -Iseconds`), planned minutes, task type,
-goal, exit criterion. All later elapsed-time checks are date arithmetic
-against this timestamp — never recall, never estimate.
+goal, exit criterion, and an empty `pauses` list. All later elapsed-time
+checks are date arithmetic against this timestamp — never recall, never
+estimate.
+
+**Pauses:** when the box pauses (approval gate, incident capture, requester
+interruption), append a pause timestamp to `pauses`; append the resume
+timestamp when work restarts. Paused intervals are excluded from elapsed
+time at every checkpoint and from Actual at box end; the row's Note names
+the pause reason.
 
 ### 3. Checkpoints — at natural seams
 
@@ -64,6 +74,10 @@ test run: compute elapsed vs planned.
   is over, in one line: elapsed vs planned. Then go directly to step 5 —
   End. No extension after expiry; record the lateness of the discovery in
   the row's Note (e.g. `expired, noticed at 130%`).
+  **One carve-out (guide § When not to box):** if the timer fires mid-flow
+  on the session's *stated goal* — not a tangent — finish the thought
+  first, then notify and End. The box kills drift, not momentum; the row
+  logs the overrun either way.
 
 ### 4. Extension — once, at most
 
@@ -79,7 +93,8 @@ hand off what exists, `exit met? no`, remainder to the next-box list.
 The box ends when the exit criterion is met or the box (plus any extension)
 expires, whichever is first.
 
-1. Compute actual minutes from the state file timestamp.
+1. Compute actual minutes from the state file timestamp, minus recorded
+   pause intervals.
 2. Judge **Exit met?** yes/no against the stated criterion **as of the
    original box end** (an extension that later succeeds still judges at the
    timer), with one line of evidence (a command result, not an impression).
@@ -104,12 +119,16 @@ Exactly one per box end. Match the target file's columns:
 - **Planned / Actual:** minutes; Actual from timestamp arithmetic.
 - **Note:** optional — scope hammered, extended +N because …, interrupted.
 
-**Target file: the repo where the task lives.** Append to that repo's
-calibration file — `docs/timebox_calibration.mdx` for lab-os work, else the
-repo's `timebox_calibration.md` (create with the standard header on first
-row). `TIMEBOX_CALIBRATION_FILE` env var overrides when set. **Never**
-write rows to any `project_log.md` — telemetry is not a log entry under the
-lab logging standard.
+**Target file: the repo where the task lives, where it has adopted the
+practice.** Append to that repo's calibration file —
+`docs/timebox_calibration.mdx` for lab-os work, else the repo's
+`timebox_calibration.md` **only if it already exists** (creating it is a
+human adoption act — never seed the convention into a repo by side
+effect). Where the task repo has none, fall back to lab-os's
+`docs/timebox_calibration.mdx`. `TIMEBOX_CALIBRATION_FILE` env var
+overrides everything when set. **Never** write rows to any
+`project_log.md` — telemetry is not a log entry under the lab logging
+standard.
 
 ## Handoff report contract
 

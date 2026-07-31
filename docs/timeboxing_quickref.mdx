@@ -53,7 +53,7 @@ Append one line to the table in [`timebox_calibration.mdx`](timebox_calibration.
 
 | Date | Session type | Artifact | Planned | Actual | Exit met? | Note |
 |---|---|---|---|---|---|---|
-| 2026-07-24 | PRD draft | encoders-v2 prd.md | 90 | 110 | yes | extended +20, scope hammered Open Qs |
+| 2026-07-24 | PRD draft | encoders-v2 prd.md | 90 | 110 | no | extended +20, scope hammered Open Qs |
 
 - **Planned / Actual** in minutes.
 - **Exit met?** — judged *at the timer*, before any extension.
@@ -67,7 +67,9 @@ status rows.)
 
 Skim the calibration table. If a session type keeps blowing its box (PRDs
 "planned 90, actual 120" three times in a row), **the box is wrong, not you** —
-raise the default and update [`timeboxing.mdx`](timeboxing.mdx).
+raise the default and update **both** [`timeboxing.mdx`](timeboxing.mdx) and
+the "How long is the box?" table above — they carry the same values and desync
+silently otherwise.
 
 ## Bigger than one sitting?
 

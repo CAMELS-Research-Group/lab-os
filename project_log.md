@@ -7,8 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-07-31 09:00 — Adopt agent-task timeboxing (recording guide + skill) · #3
-- 2026-07-24 17:00 — Adopt session timeboxing standard v1.0 · #1
+- 2026-07-31 16:55 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -23,32 +22,22 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ---
 
-## 2026-07-31 09:00 — Adopt agent-task timeboxing (recording guide + skill)
+## 2026-07-31 16:55 — Adopt timeboxing v1.0: session standard + agent task boxes
 
-**Decision:** Agent-executed dev tasks run inside time boxes via `.claude/skills/timeboxing/` per
-`docs/timebox_recording.mdx`: box + exit criterion stated before work; expiry notifies the user and
-goes straight to handoff; one calibration row auto-appended per box to the calibration file of the
-repo the task belongs to.
-**Why:** The calibration loop never closed manually (zero rows since adoption); dev work now happens
-in the agent phase of brainstorm → agent-dev → hard-pass review, so that phase is where boxing
-prevents drift.
-**Alternatives:** Marketplace plugin in lab-claude-plugins (portable; re-scoped to lab-os homing
-mid-build — lab conventions live in lab-os). Central-only logging in lab-os (rejected: rows live
-beside the work; cross-repo roll-up is a grep away).
-**Refs:** #3, docs/timebox_recording.mdx, .claude/skills/timeboxing/SKILL.md, _plans/timeboxing-skill-prd.md
-
----
-
-## 2026-07-24 17:00 — Adopt session timeboxing standard v1.0
-
-**Decision:** All working sessions run under the timeboxing standard (`docs/timeboxing.mdx`): default
-boxes per session type with a written exit criterion, scope-hammer before extension, one extension max
-(half the box, written reason), and a planned-vs-actual calibration row appended to
-`docs/timebox_calibration.mdx` at every box end.
-**Why:** Parkinson's Law + planning fallacy — unbounded sessions produce longer sessions, not better
-artifacts. Fix time and budget, flex scope (Shape Up appetites); the calibration record is the
-reference class that corrects box lengths over time.
-**Refs:** #1, docs/timeboxing.mdx, docs/timeboxing_quickref.mdx, docs/timebox_calibration.mdx
+**Decision:** lab-os adopts the session timeboxing standard v1.0 (`docs/timeboxing.mdx`: default
+boxes per session type, written exit criterion, scope-hammer before extension, one extension max)
+together with its agent-task extension (`docs/timebox_recording.mdx` + `.claude/skills/timeboxing/`):
+agent dev tasks run inside a stated box, expiry notifies the user and hands off, and one
+planned-vs-actual calibration row is appended per box — to the calibration file of the repo the task
+belongs to where that repo has adopted the practice, else to `docs/timebox_calibration.mdx` here.
+Rules surface: `.claude/rules/05-timeboxing.md`.
+**Why:** Manual discipline never closed the calibration loop in the originating fork (zero rows
+2026-07-24 → 07-31); dev work happens in the agent phase of brainstorm → agent-dev → hard-pass
+review, so that phase is where boxing prevents drift.
+**Alternatives:** Marketplace-plugin homing (portable; re-scoped — lab conventions live in lab-os).
+Central-only row logging (rejected: rows live beside the work; roll-up is a grep away).
+**Refs:** #66; fork provenance: Aryaa-K/lab-os#1 (standard, adopted there 2026-07-24),
+Aryaa-K/lab-os#3 (agent extension, 2026-07-31)
 
 ---
 

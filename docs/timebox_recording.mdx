@@ -52,6 +52,12 @@ agent from the shapes above and confirmed).
   timestamp, planned minutes, goal, exit criterion, task type. Elapsed time is
   always computed by date arithmetic against that timestamp — never estimated
   from recall.
+- **Pauses are recorded, not estimated.** When a box pauses — an approval
+  gate, an incident capture, a requester interruption — the agent appends a
+  pause timestamp to the state file, and a resume timestamp when work
+  restarts. Actual = elapsed minus the recorded pause intervals; the row's
+  Note names the pause reason. A pause with no timestamp is an estimate, and
+  estimates are what this mechanic exists to eliminate.
 - **Checkpoints at natural seams.** After finishing a subtask, before opening
   a new file/subsystem, after a test run — the agent checks elapsed vs
   planned. At ≥80% consumed: stop adding scope, cut to what's done-able,
@@ -85,13 +91,16 @@ by [`timebox_calibration.mdx`](timebox_calibration.mdx):
   agent rather than stated by the user, the Note records
   `self-proposed criterion` — the agent set its own bar, so review and
   calibration should weigh that judgment accordingly.
-- **Target file: the repo where the task lives.** Rows are appended to the
-  calibration file of the repo the ticket/task belongs to —
-  `docs/timebox_calibration.mdx` for lab-os work, else that repo's
-  `timebox_calibration.md`, created on first row with the standard header.
-  The reference class lives beside the work it measures; a cross-repo
-  roll-up is a grep away. `TIMEBOX_CALIBRATION_FILE` env var overrides when
-  set.
+- **Target file: the repo where the task lives, where that repo has
+  adopted the practice.** Rows are appended to the calibration file of the
+  repo the ticket/task belongs to — `docs/timebox_calibration.mdx` for
+  lab-os work, else that repo's `timebox_calibration.md` **if it already
+  exists**. Creating that file is a human's adoption act, not the agent's:
+  the agent never seeds the convention into a repo by side effect. Where the
+  task repo has no calibration file, rows fall back to lab-os's
+  `docs/timebox_calibration.mdx`. `TIMEBOX_CALIBRATION_FILE` env var
+  overrides everything when set. The reference class lives beside the work
+  it measures; a cross-repo roll-up is a grep away.
 - **Never `project_log.md`.** Rows are telemetry; the lab logging standard's
   entry triggers exclude them, at every altitude.
 
