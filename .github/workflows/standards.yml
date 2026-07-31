@@ -41,6 +41,14 @@ jobs:
     with:
       enforce: false
 
+  backlog-views:
+    # lab-os-only: warn-only (enforce: false) — a stale docs/backlog-views.md
+    # surfaces as a ::warning, it does not fail the PR; a script/parse failure
+    # always fails, and the workflow's self-test step is unconditional either way.
+    uses: ./.github/workflows/backlog-views.yml
+    with:
+      enforce: false
+
 # ---------------------------------------------------------------------------
 # Downstream repo example
 # ---------------------------------------------------------------------------

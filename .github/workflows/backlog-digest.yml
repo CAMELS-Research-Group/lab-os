@@ -1,0 +1,68 @@
+# Scheduled backlog grooming digest (lab-os-only; BACKLOG.md lives here).
+#
+# At each sprint boundary the digest (scripts/backlog_digest.py) is written to
+# the Actions run summary — a safe surface that posts under nobody's identity.
+#
+# Posting a GitHub issue is WIRED BUT UNARMED: it only happens on a manual
+# workflow_dispatch run with post_issue=true. Explicit arming, because the
+# issue posts under a maintainer's identity — comms under an identity need a
+# deliberate per-run action, never a schedule.
+#
+# One-time setup before the first armed run: the `backlog-digest` label must
+# exist (`gh label create backlog-digest --repo CAMELS-Research-Group/lab-os`)
+# — `gh issue create` rejects an unknown label, and `gh issue list` filters on
+# it to find the standing grooming issue.
+
+name: backlog-digest
+
+on:
+  schedule:
+    - cron: "0 13 1,15 * *"   # ~sprint boundary: 1st & 15th, 13:00 UTC
+  workflow_dispatch:
+    inputs:
+      post_issue:
+        description: "Also post/update the grooming issue (arms comms under your identity)."
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  issues: write   # used only when the issue-post is armed
+
+jobs:
+  digest:
+    if: github.repository == 'CAMELS-Research-Group/lab-os'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Self-test backlog-digest (unconditional)
+        run: python3 scripts/backlog_digest.py --self-test
+      - name: Render digest to the run summary (always)
+        run: |
+          python3 scripts/backlog_digest.py > digest.md
+          cat digest.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Post/update the grooming issue (only when armed)
+        if: github.event_name == 'workflow_dispatch' && inputs.post_issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Capture the lookup's exit status separately: a failed
+          # `gh issue list` (auth, rate limit, 5xx, network) FAILS the step —
+          # only a successful-but-empty result means "no open grooming issue
+          # yet" and routes to create. Swallowing the failure here would open
+          # a duplicate grooming issue on every failed run.
+          set +e
+          existing="$(gh issue list --label backlog-digest --state open --json number --jq '.[0].number')"
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::gh issue list failed (exit $rc) — refusing to create a possibly-duplicate issue"
+            exit "$rc"
+          fi
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file digest.md
+            echo "Updated grooming issue #$existing."
+          else
+            gh issue create --title "Backlog grooming digest" --label backlog-digest --body-file digest.md
+          fi

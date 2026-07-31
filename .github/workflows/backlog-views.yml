@@ -1,0 +1,70 @@
+# Reusable backlog-views sync check.
+#
+# The dashboard docs/backlog-views.md is a generated projection of BACKLOG.md
+# (scripts/backlog_view.py). `--check` compares the committed dashboard against
+# a fresh render. Warn-only by default: a STALE dashboard (the script's
+# dedicated exit code 3) surfaces as a ::warning; any other failure — a
+# traceback, an unparseable BACKLOG.md, a missing script — FAILS the job even
+# in warn-only mode, because a script failure is not staleness and must not be
+# reported as one. `enforce: true` makes staleness fail too.
+# The self-test step is never gated on `enforce`: a self-test failure is a
+# code defect and always fails the job.
+# lab-os-only surface (BACKLOG.md); a caller without one no-ops green.
+
+name: backlog-views
+
+on:
+  workflow_call:
+    inputs:
+      enforce:
+        description: Fail when the committed dashboard is stale (else warn-only).
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  backlog-views:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out caller repo
+        uses: actions/checkout@v4
+      - name: Check out lab-os (script source)
+        uses: actions/checkout@v4
+        with:
+          repository: CAMELS-Research-Group/lab-os
+          path: .lab-os
+      - name: Self-test backlog-view (unconditional — never gated on enforce)
+        run: |
+          SCRIPT=".lab-os/scripts/backlog_view.py"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/backlog_view.py"; fi
+          python3 "$SCRIPT" --self-test
+      - name: Check the dashboard is in sync
+        env:
+          ENFORCE: ${{ inputs.enforce }}
+        run: |
+          SCRIPT=".lab-os/scripts/backlog_view.py"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/backlog_view.py"; fi
+          if [ ! -f BACKLOG.md ]; then echo "No BACKLOG.md; nothing to check."; exit 0; fi
+          # Capture --check's exit status separately so staleness (exit 3) and
+          # script/parse failure (any other non-zero) stay distinguishable —
+          # a traceback must never be reported as "dashboard is stale".
+          set +e
+          python3 "$SCRIPT" --check docs/backlog-views.md
+          rc=$?
+          set -e
+          case "$rc" in
+            0) ;;
+            3)
+              if [ "$ENFORCE" = "true" ]; then
+                exit 1
+              fi
+              echo "::warning::backlog dashboard is stale (warn-only) — run scripts/backlog_view.py --write"
+              ;;
+            *)
+              echo "::error::backlog_view.py --check failed (exit $rc) — script/parse failure, not staleness"
+              exit "$rc"
+              ;;
+          esac
