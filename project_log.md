@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI · (PR pending)
+- 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI · #67
 - 2026-07-16 12:10 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
@@ -42,7 +42,7 @@ dual-representation drift class outright instead of policing it.
 **Alternatives:** fold under B1 (conflates the tool with the proposal→ratify mechanism it
 rides); a `.claude/rules/` entry (rule-budget cost; a lint's behavior is not a hard rule);
 hand-authored Index + reconciliation check (leaves two authoritative copies).
-**Refs:** (PR pending); docs/prds/backlog-lint.md
+**Refs:** #67; docs/prds/backlog-lint.md
 
 ---
 
