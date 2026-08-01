@@ -1,6 +1,6 @@
 # Workflow: Commits, PRs, and Documentation
 
-Applies across all WatsonWBlair lab repos.
+Applies across all lab repos.
 
 ## Commit Messages
 

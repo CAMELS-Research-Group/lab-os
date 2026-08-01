@@ -25,7 +25,9 @@ No literal code. The only code blocks allowed are short shell commands in **Veri
 - Create: `<exact/path/to/file>`
 - Modify: `<exact/path/to/file>`
 
-**Depends on:** — <!-- task numbers, or — if none -->
+**Depends on:** — <!-- task numbers only, or — if none -->
+
+**Requires:** — <!-- external preconditions this task needs but no task in this plan produces (access, data, a merged upstream PR, provisioned infra); — if none. Kept out of Depends on, which is task numbers only -->
 
 **Spec:** [§N <section title>](./spec.md#anchor) <!-- design-authority section this task satisfies; prd.md anchor only for bundles that omit spec.md -->
 
@@ -55,6 +57,8 @@ No literal code. The only code blocks allowed are short shell commands in **Veri
 - Create: `<exact/path/to/file>`
 
 **Depends on:** 1
+
+**Requires:** —
 
 **Spec:** [§N <section title>](./spec.md#anchor)
 
