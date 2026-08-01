@@ -2,7 +2,7 @@
 
 **Status:** v1.0, 2026-07-31. Owner: Arya Kurup. Scope: how timeboxes are
 recorded and logged — for human sittings under
-[`timeboxing.mdx`](timeboxing.mdx) and for **agent-executed task boxes**, which
+[`timeboxing.md`](timeboxing.md) and for **agent-executed task boxes**, which
 this guide defines. Companion skill: `.claude/skills/timeboxing/` (the
 protocol an agent follows to run a boxed task).
 
@@ -20,7 +20,7 @@ The lab's dev workflow has three phases with different owners:
 
 | Phase | Owner | Boxed? |
 |---|---|---|
-| Brainstorm / context assembly | User + agent, joint | By the human standard ([`timeboxing.mdx`](timeboxing.mdx)), if at all |
+| Brainstorm / context assembly | User + agent, joint | By the human standard ([`timeboxing.md`](timeboxing.md)), if at all |
 | Development work | Agent, autonomous | **Yes — this guide + the `timeboxing` skill** |
 | Review → hard pass | User | Never. Review ends when the reviewer decides |
 
@@ -42,8 +42,10 @@ Seeded values — not yet calibrated. After ~10 rows exist, compare and correct
 | Research spike | 15 min | A written claim, or a written "dead end, because…" |
 
 A box without an exit criterion is just an alarm clock: the agent must refuse
-to start a boxed task until one is stated (by the user, or proposed by the
-agent from the shapes above and confirmed).
+to start a boxed task until one exists — stated by the user, or proposed by
+the agent from the shapes above. A self-proposed criterion stands unless the
+user corrects it, and is marked `self-proposed criterion` in the row's Note
+so the exit-met judgment can be weighed (and overridden) at review.
 
 ## Recording mechanics
 
@@ -75,7 +77,7 @@ agent from the shapes above and confirmed).
 ## Logging rules
 
 **One row per box end**, appended to the calibration file. Columns are fixed
-by [`timebox_calibration.mdx`](timebox_calibration.mdx):
+by [`timebox_calibration.md`](timebox_calibration.md):
 
 | Date | Session type | Artifact | Planned | Actual | Exit met? | Note |
 |---|---|---|---|---|---|---|
@@ -93,12 +95,12 @@ by [`timebox_calibration.mdx`](timebox_calibration.mdx):
   calibration should weigh that judgment accordingly.
 - **Target file: the repo where the task lives, where that repo has
   adopted the practice.** Rows are appended to the calibration file of the
-  repo the ticket/task belongs to — `docs/timebox_calibration.mdx` for
+  repo the ticket/task belongs to — `docs/timebox_calibration.md` for
   lab-os work, else that repo's `timebox_calibration.md` **if it already
   exists**. Creating that file is a human's adoption act, not the agent's:
   the agent never seeds the convention into a repo by side effect. Where the
   task repo has no calibration file, rows fall back to lab-os's
-  `docs/timebox_calibration.mdx`. `TIMEBOX_CALIBRATION_FILE` env var
+  `docs/timebox_calibration.md`. `TIMEBOX_CALIBRATION_FILE` env var
   overrides everything when set. The reference class lives beside the work
   it measures; a cross-repo roll-up is a grep away.
 - **Never `project_log.md`.** Rows are telemetry; the lab logging standard's

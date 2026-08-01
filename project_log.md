@@ -24,13 +24,13 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## 2026-07-31 16:55 — Adopt timeboxing v1.0: session standard + agent task boxes
 
-**Decision:** lab-os adopts the session timeboxing standard v1.0 (`docs/timeboxing.mdx`: default
+**Decision:** lab-os adopts the session timeboxing standard v1.0 (`docs/timeboxing.md`: default
 boxes per session type, written exit criterion, scope-hammer before extension, one extension max)
-together with its agent-task extension (`docs/timebox_recording.mdx` + `.claude/skills/timeboxing/`):
+together with its agent-task extension (`docs/timebox_recording.md` + `.claude/skills/timeboxing/`):
 agent dev tasks run inside a stated box, expiry notifies the user and hands off, and one
 planned-vs-actual calibration row is appended per box — to the calibration file of the repo the task
-belongs to where that repo has adopted the practice, else to `docs/timebox_calibration.mdx` here.
-Rules surface: `.claude/rules/05-timeboxing.md`.
+belongs to where that repo has adopted the practice, else to `docs/timebox_calibration.md` here.
+Rules surface: `.claude/rules/06-timeboxing.md`.
 **Why:** Manual discipline never closed the calibration loop in the originating fork (zero rows
 2026-07-24 → 07-31); dev work happens in the agent phase of brainstorm → agent-dev → hard-pass
 review, so that phase is where boxing prevents drift.

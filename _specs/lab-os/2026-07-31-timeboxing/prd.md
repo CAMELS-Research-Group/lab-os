@@ -1,11 +1,11 @@
 # PRD — timeboxing skill + recording guide (lab-os)
 
 **Status:** active — in review, PR #66. Decision history: `project_log.md`.
-**Deliverables:** `docs/timebox_recording.mdx` (guide) · `.claude/skills/timeboxing/SKILL.md` (skill) · `.claude/rules/05-timeboxing.md` (rules surface).
+**Deliverables:** `docs/timebox_recording.md` (guide) · `.claude/skills/timeboxing/SKILL.md` (skill) · `.claude/rules/06-timeboxing.md` (rules surface).
 
 ## Problem
 
-The lab timeboxing standard (`docs/timeboxing.mdx`, v1.0) defines a calibration loop — state box + exit criterion at start, append a planned-vs-actual row at box end — but it depends entirely on manual discipline. In the originating fork (Aryaa-K/lab-os), the calibration file sat at zero rows from the standard's adoption (2026-07-24) until this skill's first dogfood run (2026-07-31): the loop never closed on discipline alone.
+The lab timeboxing standard (`docs/timeboxing.md`, v1.0) defines a calibration loop — state box + exit criterion at start, append a planned-vs-actual row at box end — but it depends entirely on manual discipline. In the originating fork (Aryaa-K/lab-os), the calibration file sat at zero rows from the standard's adoption (2026-07-24) until this skill's first dogfood run (2026-07-31): the loop never closed on discipline alone.
 
 The lab's dev workflow is: user + agent brainstorm together → context ironed out → **the agent does the development work** → the user reviews and gives the hard pass. The standard's boxes target human sittings; nothing boxes or instruments the agent's autonomous dev phase — the phase where drift, gold-plating, and unbounded thrash now actually happen.
 
@@ -26,7 +26,7 @@ The lab's dev workflow is: user + agent brainstorm together → context ironed o
 
 ## Constraints
 
-- Row format must match `docs/timebox_calibration.mdx` columns exactly: Date · Session type · Artifact · Planned · Actual · Exit met? · Note.
+- Row format must match `docs/timebox_calibration.md` columns exactly: Date · Session type · Artifact · Planned · Actual · Exit met? · Note.
 - Calibration rows never go to `project_log.md` (lab logging standard, `03-logging.md`).
 - Skill state must not pollute repos: box state lives in the session scratchpad, not the working tree.
 - ~$0 cost; no network dependencies.

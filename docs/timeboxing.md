@@ -1,11 +1,12 @@
 # Timeboxing Working Sessions
 
-**Status:** v1.0, adopted 2026-07-24. Owner: Arya Kurup. Scope: all working
+**Status:** v1.0 — lab adoption: PR #66 (2026-07-31); adopted in the
+originating fork 2026-07-24. Owner: Arya Kurup. Scope: all working
 sessions — spec/PRD drafting, review remediation, research spikes, debugging,
 decision sessions. Calibration data lives in
-[`timebox_calibration.mdx`](timebox_calibration.mdx). At-a-glance version:
-[`timeboxing_quickref.mdx`](timeboxing_quickref.mdx). Agent-executed task
-boxes (recording, logging, defaults): [`timebox_recording.mdx`](timebox_recording.mdx).
+[`timebox_calibration.md`](timebox_calibration.md). At-a-glance version:
+[`timeboxing_quickref.md`](timeboxing_quickref.md). Agent-executed task
+boxes (recording, logging, defaults): [`timebox_recording.md`](timebox_recording.md).
 
 ## Principles
 
@@ -18,7 +19,7 @@ Three findings from established practice do the load-bearing work here:
 2. **We are systematically bad at estimating our own work** (the planning
    fallacy — Kahneman & Tversky). The fix is reference-class forecasting: set
    box lengths from what past sessions *actually took* (the
-   [`timebox_calibration.mdx`](timebox_calibration.mdx) record), not from how
+   [`timebox_calibration.md`](timebox_calibration.md) record), not from how
    long this one feels like it should take.
 3. **Fix time and budget; flex scope** (Basecamp's *Shape Up* — "appetite,"
    not estimate). The question is never "how long will this take?" but "how
@@ -77,7 +78,7 @@ criterion is just an alarm clock.
 ## Calibration loop
 
 At every box end, append one row to
-[`timebox_calibration.mdx`](timebox_calibration.mdx): *planned vs actual*, plus
+[`timebox_calibration.md`](timebox_calibration.md): *planned vs actual*, plus
 whether the exit criterion was met. Periodically compare — if PRD drafts
 consistently run 120 minutes against a 90-minute box, the box is wrong, not
 the discipline. This is the reference class that defeats the planning fallacy;

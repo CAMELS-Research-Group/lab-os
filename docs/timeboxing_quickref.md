@@ -1,7 +1,7 @@
 # Timeboxing — Quick Reference
 
-The friendly version of [`timeboxing.mdx`](timeboxing.mdx) (the full standard, v1.0).
-Calibration rows go in [`timebox_calibration.mdx`](timebox_calibration.mdx).
+The at-a-glance version of [`timeboxing.md`](timeboxing.md) (the full standard, v1.0).
+Calibration rows go in [`timebox_calibration.md`](timebox_calibration.md).
 
 ## The idea in three sentences
 
@@ -49,7 +49,7 @@ Legitimate exceptions (no guilt, but log the overrun):
 
 ## After the box: one calibration row
 
-Append one line to the table in [`timebox_calibration.mdx`](timebox_calibration.mdx), newest last:
+Append one line to the table in [`timebox_calibration.md`](timebox_calibration.md), newest last:
 
 | Date | Session type | Artifact | Planned | Actual | Exit met? | Note |
 |---|---|---|---|---|---|---|
@@ -67,7 +67,7 @@ status rows.)
 
 Skim the calibration table. If a session type keeps blowing its box (PRDs
 "planned 90, actual 120" three times in a row), **the box is wrong, not you** —
-raise the default and update **both** [`timeboxing.mdx`](timeboxing.mdx) and
+raise the default and update **both** [`timeboxing.md`](timeboxing.md) and
 the "How long is the box?" table above — they carry the same values and desync
 silently otherwise.
 

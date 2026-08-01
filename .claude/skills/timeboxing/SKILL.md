@@ -5,8 +5,8 @@ description: Use when the user hands over a development task to execute autonomo
 
 # timeboxing
 
-> Applies the lab timeboxing standard (`docs/timeboxing.mdx`) and the
-> recording guide (`docs/timebox_recording.mdx`) to agent-executed tasks —
+> Applies the lab timeboxing standard (`docs/timeboxing.md`) and the
+> recording guide (`docs/timebox_recording.md`) to agent-executed tasks —
 > paths relative to the lab-os repo root; when this skill is installed via a
 > symlink into `~/.claude/skills/`, resolve them against the lab-os checkout
 > the symlink points into. Those docs are the source of truth; this skill is
@@ -121,11 +121,11 @@ Exactly one per box end. Match the target file's columns:
 
 **Target file: the repo where the task lives, where it has adopted the
 practice.** Append to that repo's calibration file —
-`docs/timebox_calibration.mdx` for lab-os work, else the repo's
+`docs/timebox_calibration.md` for lab-os work, else the repo's
 `timebox_calibration.md` **only if it already exists** (creating it is a
 human adoption act — never seed the convention into a repo by side
 effect). Where the task repo has none, fall back to lab-os's
-`docs/timebox_calibration.mdx`. `TIMEBOX_CALIBRATION_FILE` env var
+`docs/timebox_calibration.md`. `TIMEBOX_CALIBRATION_FILE` env var
 overrides everything when set. **Never** write rows to any
 `project_log.md` — telemetry is not a log entry under the lab logging
 standard.
