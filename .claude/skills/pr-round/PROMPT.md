@@ -194,8 +194,8 @@ Drop draft PRs with reason `draft`, **unless** named by an explicit ref — an e
 
 Skipped when `--no-skip` is set, and never applied to explicit refs.
 
-1. Find the newest comment **authored by `VIEWER` (or a provisioned review-bot identity you operate
-   for this skill)** whose body starts with this skill's marker prefix, read from
+1. Find the newest comment **authored by `VIEWER`** whose body starts with this skill's marker
+   prefix, read from
    `SKILL_ROOT/reference/review-comment-template.md` § Machine marker — the token is defined there
    and is not repeated here, so a version bump lands in one place. None → never processed;
    **keep it**.
@@ -204,6 +204,14 @@ Skipped when `--no-skip` is set, and never applied to explicit refs.
    the marker literal; an unauthenticated marker accepted here would let a third-party comment mark
    the PR processed and skip it every round. A marker-prefixed comment from any other author is
    ordinary activity for step 2 — and a finding for the lane to report.
+
+   **`VIEWER` is the whole trusted class today, and a bot login is not added on faith.** A run
+   launched from a provisioned review-bot identity is `VIEWER` for its own markers, so that path
+   already works; what is *not* sanctioned is trusting some other login because it looks like a bot,
+   which would re-open the spoof this check closes here and at Step 7's citation dedup and the
+   Step 9.1/10 concurrent-round re-check. A second trusted login is added only once one is actually
+   provisioned, declared where rule 05 § Identity & enablement puts it — which lands in this
+   repository with #58.
 2. Compare that comment's timestamp against the newest of: last commit; last review submission
    **not authored by `VIEWER`** (**review lane only** — see below); last non-marker issue comment;
    **last inline review comment, whatever its author**.
@@ -549,8 +557,9 @@ the **main loop** dispatches the specialists as siblings of the review-lane agen
 3. A specialist that errors, times out, or returns schema-invalid output becomes a **named
    not-run dimension** for that PR — carried to Step 10's comment and Step 11's summary. Never
    re-dispatch, never fail the PR over it.
-4. Findings are merged at **Step 10**, before the comment and verdict post — not inside the review
-   agent, which has already returned its composed body by then.
+4. Findings are merged at **Step 9.0**, before the operator approves the token — not inside the review
+   agent, which has already returned its composed body by then, and not at Step 10, which posts the
+   already-merged body and token without re-deriving either.
 
 ### 5.3 Remediate lane
 

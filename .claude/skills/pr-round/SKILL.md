@@ -71,10 +71,12 @@ there.
 - **Dispatched from the main loop, in the review-lane PR's wave** — a subagent cannot spawn
   agents, so the specialists run as siblings of that PR's review agent, and their findings return
   to the main loop.
-- **Composed before the verdict.** Step 10 merges specialist findings into the review comment
-  under the three-tier rubric (dedup on `file::symbol` + category; cross-category collisions get
-  a recorded same-defect judgment) and re-derives the verdict token from the merged findings per
-  the template's trigger table — the posted verdict reflects the full panel.
+- **Composed before the verdict — and before the operator approves it.** Step 9.0 merges specialist
+  findings into the review comment under the three-tier rubric (dedup on `file::symbol` + category;
+  cross-category collisions get a recorded same-defect judgment) and re-derives the verdict token
+  from the merged findings per the template's trigger table. Step 10 posts that already-merged result
+  and never re-derives the token — so the verdict the operator approved is the verdict that lands,
+  and it reflects the full panel.
 - **Degrades like a missing rubric tier.** Where the dispatch reference does not resolve, the run
   goes specialist-less and the posted comment names the absent layer — one degradation pattern,
   not two. A specialist that errors or returns schema-invalid output is named in the comment as a
