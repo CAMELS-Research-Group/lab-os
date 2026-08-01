@@ -8,7 +8,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 ## Standing Decisions
 
 - 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
-- 2026-07-24 12:40 — Specialist panel ports to lab-os; the taxonomy stays fork-owned · #61
+- 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -41,23 +41,22 @@ phasing de-risked the *lifted* bodies, and this one is authored.
 
 ---
 
-## 2026-07-24 12:40 — Specialist panel ports to lab-os; the taxonomy stays fork-owned
+## 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried
 
 **Decision:** The four vendored specialist review agents and their dispatch contract
 (`reference/specialist-dispatch.md`) are carried here, so a bare clone resolves the panel the review
-skills dispatch. `reference/code-quality-taxonomy.md` is **not** ported — it stays byte-owned by the
-workspace fork (the manifest-sync provision lives in the fork's copy of `04-docs.md` § Rules
-numbering; this repo's copy carries only the numbering rule). Where it does not resolve, the
-finding schema's taxonomy citation is absent and merge dedup falls back to the specialist's
-dimension. Completing the ownership map (per the PR #61 review): the agent bodies in
-`.claude/agents/**` are byte-owned **here** — lab-os is the byte master, and the workspace fork
-inherits them via `git pull upstream main`, never by back-port (`.claude/agents/ATTRIBUTION.md`
-§ Byte ownership).
-**Why:** The agents were unreachable from a lab-os-rooted dev home. The taxonomy is manifest-synced
-into five member repos under a header naming the fork as byte source, so moving it would create two
-masters for a vendored file.
-**Alternatives:** Port the taxonomy too — rejected on scope, not merits: it needs an `04-docs.md`
-amendment, a `rules_sync.py` header change, and a five-repo re-sync. Omit the agents entirely —
+skills dispatch. `reference/code-quality-taxonomy.md` is **not carried by this slice** — ownership
+is unaffected: upstream lab-os owns its convention and canonical bytes like every other manifest
+asset, and the fork is only the staging surface where those bytes are edited and where the
+fork-side `scripts/rules_sync.py` (§ Manifest) vendors them into member repos. PR #58 lands it
+here. Wherever it does not resolve, the finding schema's taxonomy citation is absent and merge
+dedup falls back to the specialist's dimension. The agent bodies in `.claude/agents/**` are
+byte-owned **here** — the fork inherits them via `git pull upstream main`, never by back-port
+(`.claude/agents/ATTRIBUTION.md` § Byte ownership).
+**Why:** The agents were unreachable from a lab-os-rooted dev home. The taxonomy's absence is a
+carry gap, not an ownership split — its sync header already names lab-os as owner.
+**Alternatives:** Carry the taxonomy too — rejected on scope, not merits: it belongs with the
+rules-parity sync (#58) that lands the rules it cites. Omit the agents entirely —
 rejected: runtime `DEV_ROOT` resolution already makes them optional.
 **Refs:** #61, #59
 

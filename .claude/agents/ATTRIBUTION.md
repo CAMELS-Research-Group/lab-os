@@ -41,10 +41,13 @@ not-run dimension instead of reviewing against invented criteria (dispatch refer
 
 ## Taxonomy citations
 
-Every agent body here cites `reference/code-quality-taxonomy.md` classes **where one applies**. That
-taxonomy is a manifest-synced asset whose byte source is the lab's workspace fork and it is not
-carried in lab-os; where it does not resolve, no class applies and the citation is simply absent.
-All bodies are phrased conditionally for exactly this reason.
+Every agent body here cites `reference/code-quality-taxonomy.md` classes **where one applies**.
+Ownership of that file runs the same direction as § Byte ownership below: upstream lab-os owns the
+convention and the canonical bytes; the lab's workspace fork is the staging surface where its bytes
+are edited and where the fork-side `scripts/rules_sync.py` (§ Manifest) vendors it into member
+repos. lab-os does not yet *carry* the file — PR #58 is what lands it here. Wherever it does not
+resolve, no class applies and the citation is simply absent. All bodies are phrased conditionally
+for exactly this reason.
 
 ## Byte ownership
 
