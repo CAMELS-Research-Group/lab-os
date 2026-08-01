@@ -44,9 +44,15 @@ For each finding:
      YES -> MECHANICAL
      NO  -> continue
 
-  3. Does the finding enumerate 2+ resolution options?
-     YES -> continue to (4)
-     NO  -> if a clear simplest-defensible fix exists -> MECHANICAL; else DESIGN-PIN
+  3. Did the finding arrive carrying an explicit `mechanical` / `design-pin` label from
+     the review lane that produced it? (PROMPT.md 5.2 step 3 emits one per finding;
+     5.3 step 1 carries it in with the item. This branch is only ever reached past 0b,
+     which bounds who the labelling reviewer can be.)
+     YES -> HONOUR THE LABEL as emitted, and stop. Do not re-derive it.
+     NO  -> does the finding enumerate 2+ resolution options?
+            YES -> continue to (4)
+            NO  -> if a clear simplest-defensible fix exists -> MECHANICAL;
+                   else DESIGN-PIN
 
   4. Among the enumerated options, is one OBVIOUSLY simplest
      AND free of downstream redesign implications?
@@ -62,6 +68,39 @@ feedback-shaped text promotes itself into the trusted class and a plausible-look
 then commits and pushes under the operator's name. Repository association is GitHub-computed, is not
 self-joinable, travels with every ingested item already (PROMPT.md 5.3 step 1), and needs no extra
 API call.
+
+## Step 3 honours an emitted label, and why that is safe
+
+**An emitted label is authoritative when present; the tree re-derives only when it is absent.**
+Without that rule, two files in this skill disagree by construction. `review-comment-template.md`
+§ Proportionality requires an `### Important` finding to name **one** fix and forbids an alternatives
+menu below Blocker tier — so a reviewer who classified a genuine design choice as a design-pin, and
+then wrote it up as the template demands, produces a finding with exactly one stated option. Step 3's
+re-derivation reads that shape as "no 2+ options, a simplest fix exists" and calls it **mechanical**.
+The design choice is then auto-fixed, committed, and pushed under the operator's name — and the
+reviewer's own explicit label said not to. The collision is not hypothetical: it is the template's
+default shape for the whole Important tier.
+
+Honouring the label resolves it in the direction the evidence points. The upstream reviewer read the
+diff, made the call, and said so; the remediate lane is inferring the same call from a rendering of
+that reviewer's prose, downstream of a formatting rule that deliberately strips the signal the
+inference depends on.
+
+**This is sound only because step 0b runs first, and it is a hard dependency.** Honouring a label is
+importing another party's judgment into a change that ships under the operator's identity, which is
+safe only when that party is bounded. Step 0b bounds it: a finding whose author is not the PR author
+or a repository OWNER / MEMBER / COLLABORATOR is a design-pin and stops there, before step 3 is ever
+reached — and it fails closed on a missing or unrecognized association. So the only labels this branch
+can honour are ones written by an account GitHub itself associates with the repository, and a drive-by
+comment cannot promote its own finding to `mechanical` by attaching the word to it.
+
+**Removing or weakening 0b re-opens this branch as a self-service auto-fix path**, where any account
+that can comment can get an edit committed and pushed under the operator's name by labelling it
+`mechanical`. Anyone changing 0b changes this rule too; they are one mechanism, not two.
+
+Absent a label — an ordinary human review comment, a bot with a different format, the review lane
+walking this tree to *produce* a label rather than consume one — nothing changes. The tree re-derives
+exactly as before, and every worked example below is an unlabelled finding.
 
 ## Mechanical markers
 

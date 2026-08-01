@@ -10,9 +10,9 @@
 > Step 4  map repo -> local checkout + resolve rubric tiers + specialist dispatch ref -> cost guard
 > Step 5  FAN OUT #1: review lane (+ specialist panel, 5.2a) | remediate lane   (none of them post)
 > Step 6  decide returned design-pins       (main loop; drains the queue — every pin asked)
-> Step 7  file follow-up issues             (main loop; own PRs only, consent-gated)
+> Step 7  compose follow-up issues          (main loop; own PRs only; composes only — 9.0a files)
 > Step 8  FAN OUT #2: apply decisions       (reuses Step-5 worktrees)
-> Step 9  confirm the posts (9.0) -> handoff comment per remediated PR (9.1) -> hand back (9.2)
+> Step 9  confirm posts (9.0) -> file composed issues (9.0a) -> handoff comment (9.1) -> hand back (9.2)
 > Step 10 post review comment + verdict per reviewed PR  (main loop; merge computed at 9.0)
 > Step 11 roster summary + worktree cleanup  (MUST run after Steps 8-10)
 >
@@ -20,8 +20,9 @@
 >
 > Two consent asks, each authorizing what the other cannot. Step 3 authorizes the RUN —
 > reviews, and the commits and pushes to your own branches — before anything dispatches.
-> Step 9.0 authorizes the identity POSTS, once the round knows what it would say and where.
-> Each fires once per run; 9.0 can show every full body and grant or withhold per PR.
+> Step 9.0 authorizes the identity POSTS — comments, verdicts, and the follow-up issues
+> Step 7 composed — once the round knows what it would say and where. Each fires once per
+> run; 9.0 can show every full body and grant or withhold per PR.
 > ```
 
 ## Step 0: Isolate, parse arguments, resolve paths, establish identity
@@ -309,15 +310,16 @@ unambiguous: anything under your name is gated.
 **Fire the ask iff the surviving roster contains at least one PR this run would post to.** Nothing to
 post → no ask. Otherwise exactly one question for the whole run, never one per PR:
 
-- `question`: `This run will review, and will commit and push fixes to your own PR branches. It will then prepare identity posts: a review comment and a formal approve / request-changes verdict on each PR you do not own, one handoff comment on each of your own PRs it remediates, and a follow-up issue on your own repositories for each item that does not fit its PR (deferred decisions, out-of-band follow-ups). You confirm the comments and verdicts once more at Step 9.0, when they exist and can be summarized. Approve the run?`
+- `question`: `This run will review, and will commit and push fixes to your own PR branches. It will then prepare identity posts: a review comment and a formal approve / request-changes verdict on each PR you do not own, one handoff comment on each of your own PRs it remediates, and a follow-up issue on your own repositories for each item that does not fit its PR (deferred decisions, out-of-band follow-ups). You confirm the comments, verdicts, and issues once more at Step 9.0, when they exist and can be summarized. Approve the run?`
 - `header`: `Run consent`
 - options: `Accept (Recommended)` → `CONSENT = true`; `Decline (no identity posts)` → `CONSENT = false`.
 
-**Every post requires `CONSENT == true`; the comments, verdicts, and hand-back additionally require
-`POST_OK[pr] == true` from Step 9.0, which is granted run-wide or per PR.** Steps 9 and 10 defer to
-that conjunction rather than restating it.
-Step 7's issue filing is governed by `CONSENT` alone — it runs before Step 8 so that Step 9.1 can cite
-the issue numbers, which places it earlier in the round than a 9.0 summary could exist.
+**Every post requires both `CONSENT == true` and `POST_OK[pr] == true` from Step 9.0, which is
+granted run-wide or per PR.** That conjunction governs the comments, the verdicts, the hand-back,
+**and the follow-up issues** — Steps 9, 9.0a, and 10 defer to it rather than restating it. Step 7 only
+*composes* the issues; the irreversible `gh` call that creates them runs at **9.0a**, after the
+operator has seen the bodies and granted the flag for that PR. Nothing this skill creates under your
+identity escapes the second ask.
 
 **Declining does not stop the run.** Review and remediation both still execute; remediation still
 commits and pushes to your own branches, which this ask is what authorizes. Every withheld post is
@@ -326,7 +328,7 @@ moot — there is nothing left to confirm — so it does not fire.
 
 The review lane never files issues on someone else's repository — findings live in the comment
 thread. Filing there would pre-empt the maintainer's own triage. Issue filing exists only for **your
-own** PRs, at Step 7.
+own** PRs — composed at Step 7, filed at 9.0a.
 
 Emit: `Consent: <granted | declined | not needed — nothing to post | n/a (dry-run)>`.
 
@@ -615,12 +617,20 @@ the **main loop** dispatches the specialists as siblings of the review-lane agen
    alongside its text. Classification consumes it — `classify-blockers.md` step 0b demotes a
    mechanical fix only a third party asked for — and Step 9's handoff comment can attribute what was
    applied to who asked for it.
+
+   **Carry any emitted classification label, too.** Where an ingested finding already states its own
+   `mechanical` / `design-pin` classification — the label a review lane emits per 5.2 step 3 — record
+   it verbatim with the item. Step 3 below honours it rather than re-deriving it, so an ingestion that
+   drops the label silently changes the classification of every labelled finding.
 2. **The PR author's own feedback counts, and only the marker is excluded.** On this lane the author
    is `VIEWER`, and notes they left on their own diff arrive as `VIEWER`-authored `COMMENTED` reviews
    (GitHub forbids only `APPROVE` and `REQUEST_CHANGES` from the author) — ingest them like any other
    finding. The one exclusion: this skill's own prior marker-carrying comments (same prefix 2.3
    matches on) are *output*, and treating them as feedback loops the skill onto itself.
-3. Classify each finding per `SKILL_ROOT/reference/classify-blockers.md`.
+3. Classify each finding per `SKILL_ROOT/reference/classify-blockers.md`. **A label the finding
+   arrived with is authoritative** (that file's step 3): re-derive only where none is present. The
+   tree reaches that branch only past its step 0b, which is what bounds whose judgment can be
+   imported — see `classify-blockers.md` § Step 3 honours an emitted label.
 4. **Auto-fix mechanical findings** with minimal `Edit`s — no adjacent refactoring, no opportunistic
    cleanup. Scope discipline is what makes the diff reviewable.
 5. **Run the gate unpiped, and report which rung ran.** Piping swallows the exit code and lets a red
@@ -668,9 +678,9 @@ the **main loop** dispatches the specialists as siblings of the review-lane agen
 
    **Subagents post exactly nothing and file nothing.** A subagent does not reply to individual
    review threads and does not open issues, on your repositories or anyone else's — anything
-   requiring either is returned as an out-of-band follow-up. The **main loop** may then file a
-   follow-up issue for it at Step 7 (your own PRs only, consent-gated); replying to review
-   threads remains out of scope everywhere.
+   requiring either is returned as an out-of-band follow-up. The **main loop** may then compose a
+   follow-up issue for it at Step 7 and file it at 9.0a (your own PRs only, consent-gated); replying
+   to review threads remains out of scope everywhere.
 
 ### 5.4 Failure handling
 
@@ -711,7 +721,7 @@ stop asking — how much of it is worth the operator's time is the operator's ca
 they make it.
 
 1. Collect every design-pin returned by remediate-lane agents. Empty → ask nothing and continue to
-   Step 7, which still files any returned out-of-band follow-ups and otherwise no-ops (Step 8 then
+   Step 7, which still composes any returned out-of-band follow-ups and otherwise no-ops (Step 8 then
    dispatches no agents). Skipping straight to Step 9 would silently drop those follow-ups' issues.
 2. **Volume guard — fire once, before the batches, iff the queue exceeds 8 pins.** Same shape as the
    Step 4.3 roster guard: state the real numbers and offer cuts that narrow by *shape*, never a bare
@@ -740,8 +750,8 @@ they make it.
    selected pins is three calls, not one call and a shrug.
 4. Each question carries the 2–3 defensible options the agent supplied, safest marked
    `(Recommended)`, **plus a `Defer` option — on every question, always**. Deferring records the item
-   and routes it to Step 7, which files it as a follow-up issue (consent permitting) — say so in the
-   option's description. An operator is never forced to decide a pin they want to sit on; one who
+   and routes it to Step 7, which composes it as a follow-up issue for 9.0a to file (consent
+   permitting) — say so in the option's description. An operator is never forced to decide a pin they want to sit on; one who
    wants it held *untracked* says so in a custom answer. **Deferring is a legitimate outcome; not
    asking is not** — `Defer` is what makes draining the queue cheap.
 5. Record each answer against its PR and finding for Step 8 and Step 9.
@@ -755,44 +765,58 @@ they make it.
 
 **No subagent holds an identity-post decision.** Every `AskUserQuestion` in this skill — Step 3, Step
 4.3, this step, Step 9.0 — runs in the main loop, and `CONSENT` (Step 3) never leaves it, which is
-why every posting step — 7, 9, and 10 — is a main-loop step.
+why every posting step — Step 9 (including 9.0a's issue filing) and Step 10 — is a main-loop step,
+and why Step 7, which composes what 9.0a files, is one too.
 
-## Step 7: File follow-up issues (own PRs only)
+## Step 7: Compose follow-up issues (own PRs only)
 
-Runs in the main loop, after Step 6 and before Step 8, so the handoff comment (Step 9) can cite the filed issue
-numbers. It turns the round's "doesn't fit this PR" items into tracked follow-ups instead of lines
-that die in a comment:
+Runs in the main loop, after Step 6 and before Step 8. **This step composes; it does not file.** It
+builds each follow-up issue's title, body, and target repository and hands the set to Step 9 — 9.0
+shows the composed bodies alongside the comment bodies, and **9.0a** makes the creating `gh` call.
+Nothing here writes to GitHub: the read-only `gh label list` lookup in step 3 below is the only API
+call this step makes.
+
+The split exists because creating an issue under the operator's identity is irreversible in exactly
+the way a comment is, and an earlier draft of this step ran it under Step 3's `CONSENT` alone — before
+the operator had seen a single composed body and outside the per-PR `POST_OK[pr]` gate that covers
+every other identity post. Composing early and filing late keeps both properties: 9.1 still cites real
+issue numbers, because 9.0a runs before it, while the irreversible act still lands after the body view
+and the per-PR gate.
+
+It turns the round's "doesn't fit this PR" items into tracked follow-ups instead of lines that die in
+a comment:
 
 - every **out-of-band follow-up** returned per 5.3 step 8, and
 - every design-pin **deferred** at Step 6 — by the `Defer` option or by a volume-guard exclusion (the
   `Defer` option notes this — an operator who wants an item held privately answers with a custom
   response instead).
 
-A pin marked **`never asked`** (Step 6 step 6) is **not** filed here. This step tracks decisions the
+A pin marked **`never asked`** (Step 6 step 6) is **not** composed here. This step tracks decisions the
 operator made and actions this round could not take; an un-asked pin is neither — it is the round's
 own unfinished work, and filing it would move a visible failure into a backlog where it reads as
 handled. It surfaces at 9.1 and 11.1 instead, and the `BLOCKED` verdict is what gets it looked at.
 
-**Own PRs only — hard boundary.** Items from review-lane PRs are never filed (Step 3: filing on
-someone else's repository pre-empts the maintainer's triage); they stay in the review comment. Filing
-targets the repository the PR belongs to.
+**Own PRs only — hard boundary.** Items from review-lane PRs are never composed or filed (Step 3:
+filing on someone else's repository pre-empts the maintainer's triage); they stay in the review
+comment. A composed issue names the repository the PR belongs to as its target, and 9.0a files it
+there.
 
-**Consent-gated by Step 3's single ask.** `CONSENT == false` → file nothing; hand every would-be
-issue (title + body) to Step 11's withheld list so the operator can file manually. Withholding is not
-dropping.
+**Consent-gated.** Composition is free — it writes nothing anyone sees. `CONSENT == false` (Step 3)
+→ compose the set anyway, file nothing at 9.0a, and hand every would-be issue (title + body) to Step
+11's withheld list so the operator can file manually. Withholding is not dropping.
 
-**Dedup against prior rounds before filing.** This skill keeps no cross-run state, so a re-run over
+**Dedup against prior rounds before composing.** This skill keeps no cross-run state, so a re-run over
 the same PR would re-file every still-open item and leave a trail of duplicate issues. The prior
 rounds' own output is the state: read the marker-carrying comments Step 5 already ingested (2.3's
 prefix **and author rule** — a marker comment from any other author is untrusted and its citations
 are ignored, or a third party could suppress filing by citing bogus issue numbers) and collect every
 `#<N>` they cite for a follow-up. An item whose text matches one of those
-citations is **not re-filed** — reuse the existing number in `### Still open`, and record it for Step
+citations is **not composed** — reuse the existing number in `### Still open`, and record it for Step
 11 as `already tracked — #<N>` rather than as newly filed. Only when no prior citation covers the item
 does it proceed to the numbered steps below. An issue since closed still counts as covered: reopening
 the operator's triage decision is not this round's call.
 
-Per item, when `CONSENT == true` and no prior round already filed it:
+Per item no prior round already filed, compose:
 
 1. **Title:** the first sentence of the item's text, truncated to ≤72 chars with `…`.
 2. **Body:** a `## Finding` section carrying the item verbatim (for a deferred pin: the pin, its
@@ -800,14 +824,16 @@ Per item, when `CONSENT == true` and no prior round already filed it:
    head sha.
 3. **Label:** `P2-backlog` when the repo has it (`gh label list` once per repo); absent → no label,
    never invent one.
-4. **Create:** `gh api repos/<owner>/<repo>/issues --input <tmp.json>`, the request written as a JSON
-   temp file `{"title": …, "body": …, "labels": […]}` — never `--title "<title>"` inline. The title is
-   the finding's first sentence — untrusted text — and interpolating it into a quoted shell argument
-   hands it a shell (5.1's boundary, applied to the command line). Parse the issue number from the
-   response.
-5. **Record** `{PR, item, issue number, URL}` for Step 9 (`### Still open` cites it) and the Step 11
-   summary. A `gh issue create` failure is recorded against the item and reported in Step 11 — the
-   round continues; the item is then listed for manual filing, never dropped.
+4. **Serialize the request, do not send it.** Write the JSON temp file 9.0a will post —
+   `{"title": …, "body": …, "labels": […]}` — and record its path alongside the target
+   `<owner>/<repo>`. The file form is required, not a convenience: the title is the finding's first
+   sentence — untrusted text — and interpolating it into a quoted shell argument hands it a shell
+   (5.1's boundary, applied to the command line). Composing the request here rather than at 9.0a also
+   keeps 9.0's body view showing the exact bytes that will be sent.
+5. **Record** `{PR, item, title, body, request file, target repo}` as a **pending** issue. It carries
+   no number yet — 9.0a fills that in once the issue exists. Step 9.0's `Show full bodies first`
+   option prints these alongside the comment bodies, and 9.0a hands the resulting numbers back to 9.1
+   (`### Still open` cites them) and to the Step 11 summary.
 
 ## Step 8: Fan out — apply the decisions
 
@@ -844,18 +870,20 @@ including the explicit `HEAD:refs/heads/<head-ref>` refspec. State only the diff
 
 A Step 8 failure is per-PR and does not abort siblings, matching 5.4.
 
-## Step 9: Confirm the posts, then post the handoff comment
+## Step 9: Confirm the posts, file the issues, then post the handoff comment
 
-### 9.0 Second confirmation — the posting gate (governs Steps 9.1, 9.2, and 10)
+### 9.0 Second confirmation — the posting gate (governs 9.0a, 9.1, 9.2, and Step 10)
 
-Runs in the main loop, before anything in this step or Step 10 posts. Step 3 authorized the *run*;
-this authorizes the *posts*. The gap it closes is that Step 3 necessarily fires before the content
-exists — no comment body, no verdict, no readiness, no final sha — so an operator answering there
-approves a description of posts rather than the posts. Here the round knows all of it.
+Runs in the main loop, before anything in this step or Step 10 posts **or files**. Step 3 authorized
+the *run*; this authorizes the *posts*. The gap it closes is that Step 3 necessarily fires before the
+content exists — no comment body, no verdict, no readiness, no final sha, no composed issue — so an
+operator answering there approves a description of posts rather than the posts. Here the round knows
+all of it.
 
-**Fires iff `CONSENT == true` and at least one post remains.** A Step-3 decline already withheld
-everything, so there is nothing to confirm and this does not fire. Skipped under `--dry-run` with the
-rest of the posting path.
+**Fires iff `CONSENT == true` and at least one post or composed issue remains.** A Step-3 decline
+already withheld everything, so there is nothing to confirm and this does not fire. Skipped under
+`--dry-run` with the rest of the posting path — 9.0a is skipped with it, so a dry run composes issues
+and files none.
 
 **Finalize each review-lane verdict before building the summary.** For a review-lane PR whose panel
 ran (Step 5.2a), the token the operator approves here must be the **post-merge** one — merge the
@@ -883,13 +911,18 @@ every PR that would be posted to, so the operator sees the shape of the round ra
 ```
 <owner>/<repo>#<N>  review     🔴 REQUEST CHANGES     → review comment + formal verdict
 <owner>/<repo>#<N>  review     ✅ APPROVE             → review comment + formal verdict
-<owner>/<repo>#<N>  remediate  ⚠️ PARTIALLY ADDRESSED → handoff comment
+<owner>/<repo>#<N>  remediate  ⚠️ PARTIALLY ADDRESSED → handoff comment · 2 follow-up issues
 <owner>/<repo>#<N>  remediate  ✅ READY FOR RE-REVIEW → handoff comment · base merged · re-request <login> · mark ready
 ```
 
 The third column is the verdict token (review lane) or the readiness verdict (remediate lane) that
 Step 9.1 and Step 10 are about to publish; the fourth is exactly what lands where. The hand-back
 clause appears only for PRs Step 9.2 would act on.
+
+**The follow-up-issue count is mandatory on every PR carrying composed issues** (Step 7), and appears
+nowhere else. `POST_OK[pr]` now gates those issues as well as the comment, so a summary that omitted
+them would ask the operator to authorize a creation they cannot see. Name the count here; the titles
+and bodies are one option away.
 
 **`base merged` is mandatory on every PR where 5.3 step 0 merged the base clean**, and appears
 nowhere else. That merge pushed a commit **no agent authored and no reviewer read** onto the
@@ -901,14 +934,16 @@ it does not re-ask for it.
 
 Then ask:
 
-- `question`: `Post these under your GitHub identity? Review comments and a formal approve / request-changes verdict on the PRs you do not own, and one handoff comment on each of your own PRs this round remediated.` — and, **only when `--hand-back` is set**, append: ` Hand-back is also on: this will re-request review from the reviewers whose changes-requested this round answered, notifying them, and will take a draft PR out of draft.`
+- `question`: `Post these under your GitHub identity? Review comments and a formal approve / request-changes verdict on the PRs you do not own, one handoff comment on each of your own PRs this round remediated, and the <N> follow-up issues listed above on your own repositories (deferred decisions and out-of-band follow-ups — nothing is filed on anyone else's repository).` — and, **only when `--hand-back` is set**, append: ` Hand-back is also on: this will re-request review from the reviewers whose changes-requested this round answered, notifying them, and will take a draft PR out of draft.`
 - `header`: `Post now`
 - options — exactly these four:
   1. `Post all (Recommended)` → `POST_OK[pr] = true` for every summarized PR.
   2. `Show full bodies first` → print every composed body verbatim — each review comment, verdict
-     rationale, handoff comment, and issue title + body already filed or withheld — then ask this
-     question again. The summary line is a digest, not the post; this option is how an operator reads
-     exactly what will appear under their name before anything irreversible happens.
+     rationale, handoff comment, and the title + body of every follow-up issue Step 7 composed — then
+     ask this question again. The summary line is a digest, not the post; this option is how an
+     operator reads exactly what will appear under their name before anything irreversible happens,
+     **and the issues are inside that guarantee rather than beside it**: none of them exists yet, so
+     what is printed is what 9.0a would create, not a report of what was already created.
   3. `Choose per PR` → select in batches (Step 6's shape: at most 4 questions per call, call count
      uncapped): one Post/Withhold question per summarized PR, each naming the PR and exactly what
      would land on it. `POST_OK[pr]` is set from each answer.
@@ -918,14 +953,37 @@ Then ask:
 people see — one lands in a reviewer's notifications, the other changes the PR's own status — and a
 question that named only the flag would be asking the operator to approve a word.
 
-**`POST_OK` is a per-PR set, not a run-wide boolean.** Every consumer — 9.1, 9.2, and Step 10 —
+**`POST_OK` is a per-PR set, not a run-wide boolean.** Every consumer — 9.0a, 9.1, 9.2, and Step 10 —
 consults `POST_OK[pr]` for its own PR. A withheld PR's comment body, verdict, and hand-back actions go
 to Step 11's withheld list marked `withheld — per-PR choice`; a `Withhold all` (like a Step 3 decline)
 marks them `withheld — run-wide`. The roster keeps the two labels distinct, so a selective choice
 never reads as a global decline and a global decline never reads as the operator picking PRs. Nothing
-else about the round changes; the commits are already pushed and stay pushed. (Step 7's issues are
-already filed by now under Step 3's `CONSENT` — see Step 3 for why it cannot wait for this ask — so a
-per-PR withhold here does not retract them; option 2 above still shows them.)
+else about the round changes; the commits are already pushed and stay pushed. **The follow-up issues
+Step 7 composed are inside this set, not outside it** — a PR whose `POST_OK` is false files none of
+its issues, and they go to Step 11's withheld list under the same label as its comment. There is
+nothing to retract, because nothing was filed before this ask.
+
+### 9.0a File the composed follow-up issues (own PRs only)
+
+Runs in the main loop, immediately after 9.0 and **before 9.1**, which is what lets the handoff
+comment cite real issue numbers. Files each issue Step 7 composed, **only when `CONSENT == true`
+(Step 3) and `POST_OK[pr] == true` (9.0)** for the PR that item came from. Either false → file nothing
+for that PR and hand its composed titles and bodies to Step 11's withheld list, labelled exactly as
+that PR's other withheld posts are (`withheld — run-wide` or `withheld — per-PR choice`).
+
+Per issue cleared to file:
+
+1. **Create:** `gh api repos/<owner>/<repo>/issues --input <tmp.json>` against the request file Step 7
+   serialized — never a `--title "<title>"` inline form, for the injection reason Step 7 gives. Parse
+   the issue number and URL from the response.
+2. **Record** `{PR, item, issue number, URL}` for 9.1 (`### Still open` cites it) and the Step 11
+   summary, replacing the pending record Step 7 left.
+3. A create **failure** is recorded against the item and reported in Step 11 — the round continues to
+   9.1, the item is listed for manual filing, and 9.1 names the action instead of a number. A failed
+   issue never blocks the handoff comment: the comment is how the PR's author learns the item exists
+   at all.
+
+Nothing here re-asks. 9.0 is the only gate; this step reads its answer.
 
 ### 9.1 Post the handoff comment
 
@@ -954,8 +1012,9 @@ Review-lane PRs are posted by Step 10 and are skipped here.
    pushed → `unchanged — no commit`.
 5. No section may describe a pin as awaiting a decision; Step 6 drains the queue. Deferred items, and
    every **out-of-band follow-up** returned per 5.3 step 8, go under `### Still open` — each citing the
-   follow-up issue Step 7 filed for it (`#<N>`), or, where none was filed (consent declined, filing
-   failed, or the item belongs to someone else's repo), naming the action and who takes it.
+   follow-up issue 9.0a filed for it (`#<N>`), or, where none was filed (consent declined, this PR's
+   `POST_OK` withheld, filing failed, or the item belongs to someone else's repo), naming the action
+   and who takes it.
    **`never asked` pins go there too, labelled as that class and never as deferrals** — the template's
    § Still open owns the labelling, and the entry must state plainly that the round failed to put the
    pin to the operator and why (interrupted, errored, stopped short). An un-asked pin written as
@@ -1111,18 +1170,19 @@ Also report, each only when non-empty:
   answer), so a declined run still ends with an actionable manual list and a selective choice never
   reads as a global decline.
 - **Deferred decisions** — every pin the operator deferred at Step 6, whether one question at a time
-  or in aggregate through the volume guard, each with the Step 7 issue that tracks it (or the reason
-  none does), so a deferral is visible rather than lost.
+  or in aggregate through the volume guard, each with the follow-up issue that tracks it (or the
+  reason none does), so a deferral is visible rather than lost.
 - **Pins never asked** — every pin that reached Step 6 and was never put to the operator (Step 6
   step 6), with the PR it came from and why the ask did not happen. **Report it as a failure of the
   round, listed separately from the deferrals** — the two are not the same fact, and a round that
   merged them would report its own gap as the operator's choice. Empty is the expected state; a
   non-empty list means the round did not do what this step exists to do.
-- **Issues filed** — every follow-up issue Step 7 created: `#<N> — <title> (<PR it came from>)`. Items
+- **Issues filed** — every follow-up issue 9.0a created: `#<N> — <title> (<PR it came from>)`. Items
   Step 7's dedup matched to a prior round's issue are listed here too, marked `already tracked — #<N>`,
   so a re-run reads as covered rather than as having filed nothing.
 - **Out-of-band follow-ups not filed** — every action returned per 5.3 step 8 that ends the round
-  untracked (consent declined, filing failed, review-lane repo, or an action no issue can carry —
+  untracked (consent declined, a 9.0 withhold, filing failed, review-lane repo, or an action no issue
+  can carry —
   review threads to reply to, people to ask), with the PR it came from. The round ends with them
   collected in one place for manual action.
 - **Gate rungs below 1** — each PR whose gate ran scoped, could not run, or does not exist, with the

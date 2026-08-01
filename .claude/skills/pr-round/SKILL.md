@@ -98,9 +98,9 @@ Subagents cannot call `AskUserQuestion`. So a design-pin found during remediatio
 ```
 Step 5  fan out #1  → review (returns comment + verdict) | remediate (fixes, returns pins)
 Step 6  decide      → batched questions until the pin queue is drained; every one carries Defer
-Step 7  file issues → follow-up issues for deferred + out-of-band items (own PRs, consent-gated)
+Step 7  compose     → follow-up issues for deferred + out-of-band items (own PRs) — composed, not filed
 Step 8  fan out #2  → apply decisions, reusing the Step-5 worktree
-Step 9  comment     → ONE handoff comment per remediated PR
+Step 9  confirm (9.0) → file the composed issues (9.0a) → ONE handoff comment per remediated PR (9.1)
 Step 10 comment     → review comment + formal verdict per reviewed PR
 Step 11 summary + cleanup (must run last)
 ```
@@ -129,7 +129,7 @@ lane composes its comment and verdict and returns them; Step 10 posts them.
 | Your PR conflicts with its base | Remediate lane skips it, reason `merge conflict — manual`, named in the roster. Detected, never resolved — a semantic merge under your identity is not the skill's to guess. Review-lane PRs are unaffected. (Default; `--merge-base` adds the bounded case below.) |
 | Your PR is merely *behind* its base, and `--merge-base` is set | The lane merges the base into the PR's own worktree and proceeds **only** on a zero-conflict merge. One conflict hunk → `merge --abort` and the skip above, reason naming that the merge was attempted. Never resolves; only closes the stale-branch case. The pushed head then carries a merge commit no agent wrote and no reviewer read, so the Step 9.0 pre-post summary flags it per PR and the handoff comment names it. |
 | Red gate, or a gate that cannot run at all | No push. The commit survives; worktree preserved, path named in the roster. |
-| A resolution the skill cannot perform | Returned as an out-of-band follow-up — on your own PRs, filed as a follow-up issue at Step 7 (consent-gated); otherwise recorded in the comment and the roster for manual action. |
+| A resolution the skill cannot perform | Returned as an out-of-band follow-up — on your own PRs, composed as a follow-up issue at Step 7 and filed at 9.0a under the same per-PR consent as the comments; otherwise recorded in the comment and the roster for manual action. |
 
 ## Verification: the gate ladder
 
@@ -189,19 +189,23 @@ the pin volume guard (queue over 8), and one question per design-pin it is decid
 nothing and are not capped by this section: Step 6 keeps asking until every pin is decided or
 deferred, because an un-asked pin is a failure and a `Defer` answer is cheap.
 
-- **Step 3, before any dispatch — authorizes the *run*.** Reviews, the commits and pushes the
-  remediate lane makes to your own branches, and the Step 7 follow-up issues (which file before the
-  9.0 summary can exist, so the handoff comment can cite their numbers — Step 3's question names
-  them). It has to come first, because those writes happen inside the dispatch it gates. But it
-  necessarily fires before any comment body, verdict, or final sha exists, so it can only describe
-  the posts to come — not show them.
-- **Step 9.0, before anything posts — authorizes the *posts*, run-wide or per PR.** Once the round
-  knows exactly what it would say and where, it prints a per-PR summary (each PR's verdict or
-  readiness, what lands where, and — where `--merge-base` merged one — that a base merge landed on
-  that branch) and asks once, with four options: post all, **show every full body first** and re-ask,
-  **choose per PR** (batched selection; `POST_OK` is a per-PR set), or withhold all. This is the ask
-  that governs the identity comments, the formal verdicts, and — under `--hand-back` — the review
-  re-requests and draft clearing, each enumerated in the question rather than named by flag.
+- **Step 3, before any dispatch — authorizes the *run*.** Reviews, and the commits and pushes the
+  remediate lane makes to your own branches. It has to come first, because those writes happen inside
+  the dispatch it gates. But it necessarily fires before any comment body, verdict, or final sha
+  exists, so it can only describe the posts to come — not show them.
+- **Step 9.0, before anything posts or is filed — authorizes the *posts*, run-wide or per PR.** Once
+  the round knows exactly what it would say and where, it prints a per-PR summary (each PR's verdict
+  or readiness, what lands where, how many follow-up issues it would file, and — where `--merge-base`
+  merged one — that a base merge landed on that branch) and asks once, with four options: post all,
+  **show every full body first** and re-ask, **choose per PR** (batched selection; `POST_OK` is a
+  per-PR set), or withhold all. This is the ask that governs the identity comments, the formal
+  verdicts, **the follow-up issues**, and — under `--hand-back` — the review re-requests and draft
+  clearing, each enumerated in the question rather than named by flag.
+
+  Step 7 *composes* the follow-up issues before Step 8 so the handoff comment can cite their numbers;
+  **9.0a**, immediately after this gate, is what actually creates them. Creating an issue under your
+  identity is as irreversible as posting a comment, so it sits behind the same body view and the same
+  per-PR flag rather than beside them.
 
 A Step-3 decline withholds everything and makes Step 9.0 moot. A Step-9.0 withhold — global or per
 PR — keeps the already-pushed commits but sends the affected posts to the withheld list, labelled
@@ -239,8 +243,8 @@ rather than pre-empting the maintainer's triage.
   `acts-as-operator` reserved for the operator's own) rather than being self-owned by this section.
 - Replying to a specific review thread, or out-of-band actions beyond issue filing. It posts exactly
   one comment per PR; on **your own** PRs it additionally files follow-up issues for items that don't
-  fit the PR (Step 7, consent-gated), and on anyone else's repository it files nothing — anything
-  else is returned as a follow-up for you.
+  fit the PR (composed at Step 7, filed at 9.0a under the same per-PR consent), and on anyone else's
+  repository it files nothing — anything else is returned as a follow-up for you.
 - Editing a PR's title or body — its own or anyone's. The round's write surfaces are enumerated:
   commits and pushes to your own branches, one handoff comment, one review comment plus formal
   verdict, follow-up issues. The PR body is the author's narrative surface (the lab's logging rule

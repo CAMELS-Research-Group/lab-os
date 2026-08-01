@@ -147,6 +147,13 @@ three ways earns a longer scope paragraph. What is never earned is reaching a le
 section exists — a section with little to say says it briefly, and the `None.` rule already
 establishes that an honest empty section is a real answer.
 
+**The `mechanical` / `design-pin` label carries what the no-menu rule strips.** An Important finding
+naming a single fix is indistinguishable in prose from a mechanical one, so a downstream remediate
+lane inferring the classification from the shape of the write-up would read every Important design
+choice as mechanical. It does not have to: the emitted label is authoritative where present
+(`classify-blockers.md` § Step 3 honours an emitted label). Keep the label on the finding — it is what
+makes the one-fix rule above safe to follow.
+
 **The test is relative, not absolute.** If the Suggestions outrun the Blockers, the review is
 miscalibrated whatever its findings are worth. That comparison is quicker to run against a draft
 than any byte count, and it catches the failure that matters: a merge-gating finding buried under

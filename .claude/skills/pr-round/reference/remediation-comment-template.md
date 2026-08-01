@@ -158,12 +158,12 @@ deferral, versus answer the question that was skipped), so the label has to carr
 also forces the readiness verdict to `BLOCKED` (§ Readiness verdict), so a comment carrying one and
 grading ⚠️ contradicts itself.
 
-For classes 1 and 2: where Step 7 filed a follow-up issue for the item (own PRs, consent permitting),
-the entry cites it — `tracked as #<N>`. Where no issue was filed, the entry names the action and who
-takes it; recording a follow-up is not performing it, and the entry should not read as though it
-were.
+For classes 1 and 2: where a follow-up issue was filed for the item (own PRs — composed at Step 7,
+filed at 9.0a when consent and this PR's `POST_OK` permit), the entry cites it — `tracked as #<N>`.
+Where no issue was filed, the entry names the action and who takes it; recording a follow-up is not
+performing it, and the entry should not read as though it were.
 
-**Class 3 carries no issue number**, because Step 7 does not file for it (`PROMPT.md` § Step 7 files
+**Class 3 carries no issue number**, because Step 7 composes none for it (`PROMPT.md` § Step 7 covers
 deferrals and out-of-band items — decisions the operator made, and actions outside the round). An
 un-asked pin is neither: it is this round's unfinished work, and filing it would move a visible
 failure into a backlog where it reads as tracked. It stays in this comment and in the roster, and the
@@ -231,7 +231,7 @@ nowhere reads as missed.
 | `### Addressed` populated with nothing pushed | Claims work that does not exist on the branch |
 | Reporting the gate green without running it unpiped | A piped gate swallows the exit code; the claim is unfounded |
 | Writing a scoped (rung-2) gate as plain `green` | Converts a partial check into a full-verification claim — the exact thing disclosure exists to prevent |
-| An out-of-band follow-up phrased as though the round did it | The round replies to no thread and performs no action beyond Step 7's issue filing; an unfiled item that reads as handled is a dropped item |
+| An out-of-band follow-up phrased as though the round did it | The round replies to no thread and performs no action beyond the follow-up issues 9.0a files; an unfiled item that reads as handled is a dropped item |
 | A decision entry with no reasoning | The section's whole value is the *why*; the *what* is already in `### Addressed` |
 | Findings appearing in no section | Reads as missed rather than considered |
 | Collapsing `### Addressed` or the `##` header line | They are the ready-at-a-glance surface; only the three lower sections collapse, and the reader must not have to expand anything to learn whether the round moved the PR |
