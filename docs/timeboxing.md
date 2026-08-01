@@ -1,6 +1,6 @@
 # Timeboxing Working Sessions
 
-**Status:** v1.0 — lab adoption: PR #66 (2026-07-31); adopted in the
+**Status:** v1.0 — lab adoption: PR #66 (at merge); adopted in the
 originating fork 2026-07-24. Owner: Arya Kurup. Scope: all working
 sessions — spec/PRD drafting, review remediation, research spikes, debugging,
 decision sessions. Calibration data lives in

@@ -35,9 +35,12 @@ user's review and hard pass are outside it.
 
 State one line: **goal + box length + exit criterion**.
 
-- Box length: user-stated if given; else the default for the task type from
-  the recording guide (dev 30 · docs 15 · debug 20 · spike 15 minutes),
-  offered for confirmation only if the task looks atypical for its type.
+- Box length: user-stated if given; else the default for the task type
+  (dev 30 · docs 15 · debug 20 · spike 15 minutes — derived from
+  `docs/timebox_recording.md` § Default boxes for agent tasks, which owns
+  these values; kept inline so an agent that cannot resolve that path can
+  still box), offered for confirmation only if the task looks atypical for
+  its type.
 - Exit criterion: **required**. If the user didn't state one, propose one in
   the shape the guide gives for the task type and proceed unless corrected —
   and mark the row's Note `self-proposed criterion` at box end, so review
@@ -106,7 +109,9 @@ expires, whichever is first.
 The judgment is provisional until the hard pass. If the user overrides
 exit-met or amends the note: correct the row **in place** if it is not yet
 committed; if it is, leave it and append a correction row
-(Note: `corrects <date> row`). Never rewrite committed rows.
+(Note: `corrects <date> row`). Never rewrite committed rows. (Derived from
+`docs/timebox_recording.md` § The override flow, which owns this
+contract.)
 
 ## Calibration row
 
@@ -128,10 +133,12 @@ effect). Where the task repo has none, fall back to lab-os's
 `docs/timebox_calibration.md`. `TIMEBOX_CALIBRATION_FILE` env var
 overrides everything when set. **Never** write rows to any
 `project_log.md` — telemetry is not a log entry under the lab logging
-standard.
+standard. (Derived from `docs/timebox_recording.md` § Logging rules, which
+owns the target-file rule; kept inline because resolving the target is the
+one step an agent must get right with no docs in reach.)
 
 ## Handoff report contract
 
-In order: what was built and how it was verified · planned vs actual ·
-exit-met judgment + evidence line · the appended row, verbatim · the
-next-box list (what was cut or discovered) · extension reason, if taken.
+Owned by `docs/timebox_recording.md` § Handoff report contract — deliver
+the report with that section's items, in that section's order. Not
+restated here.

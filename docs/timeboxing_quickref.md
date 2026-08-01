@@ -20,13 +20,18 @@ If you can't fit the goal in one line, spend the first 10 minutes scoping — no
 
 ## How long is the box?
 
-| I'm about to… | Box | I'm done when… |
+| I'm about to… | Session type (log this name) | Box |
 |---|---|---|
-| Draft a PRD or spec | **90 min** | Every section exists (Problem, Success criteria, Scope, Constraints, Plan, Open questions). Thin sections are fine; missing ones are not. |
-| Fix review findings | **45 min** | Every finding is fixed, rejected with a reason, or parked. |
-| Research something | **25 min** | I've written down a claim — or "dead end, because…". No unrecorded wandering. |
-| Debug something | **30 min** | Root cause found, or a reproducible minimal case written up. After 30 min: stop and escalate, don't thrash alone. |
-| Make a decision | **15 min each** | Decision recorded with rationale, or blocker named plus who unblocks it. |
+| Draft a PRD or spec | `PRD / spec first draft` | **90 min** |
+| Fix review findings | `Review remediation` | **45 min** |
+| Research something | `Research spike` | **25 min** |
+| Debug something | `Debugging` | **30 min, then escalate** |
+| Make a decision | `Decision session` | **15 min each** |
+
+The middle column is the enumerated session-type vocabulary from
+[`timeboxing.md`](timeboxing.md) § Default boxes — write it verbatim in your
+calibration row so the loop can group by it. Exit criteria live in that same
+table; they're definitions of done, and the standard owns their wording.
 
 ## During the session
 
@@ -53,7 +58,7 @@ Append one line to the table in [`timebox_calibration.md`](timebox_calibration.m
 
 | Date | Session type | Artifact | Planned | Actual | Exit met? | Note |
 |---|---|---|---|---|---|---|
-| 2026-07-24 | PRD draft | encoders-v2 prd.md | 90 | 110 | no | extended +20, scope hammered Open Qs |
+| 2026-07-24 | PRD / spec first draft | encoders-v2 prd.md | 90 | 110 | no | extended +20, scope hammered Open Qs |
 
 - **Planned / Actual** in minutes.
 - **Exit met?** — judged *at the timer*, before any extension.
@@ -68,8 +73,8 @@ status rows.)
 Skim the calibration table. If a session type keeps blowing its box (PRDs
 "planned 90, actual 120" three times in a row), **the box is wrong, not you** —
 raise the default and update **both** [`timeboxing.md`](timeboxing.md) and
-the "How long is the box?" table above — they carry the same values and desync
-silently otherwise.
+the "How long is the box?" table above — the box lengths are the one value
+both carry, and they desync silently otherwise.
 
 ## Bigger than one sitting?
 

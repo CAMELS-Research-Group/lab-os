@@ -131,4 +131,6 @@ scope-hammered out (the next-box list) · extension reason, if one was taken.
 Same exemptions as the human standard: sign-off conversations, live
 incident state with an unreproducible repro, and finishing-the-thought on
 the stated goal when the timer fires mid-flow (log the overrun; the box
-kills drift, not momentum).
+kills drift, not momentum). The exemptions align; extension timing does
+not — humans may extend when the timer fires, agent boxes only before
+expiry (see § Recording mechanics), by design.
