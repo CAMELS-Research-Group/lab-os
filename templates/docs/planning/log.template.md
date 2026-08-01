@@ -69,7 +69,7 @@
 
 ## Execution Log
 
-<!-- Plan-execution altitude (see .claude/rules/03-logging.md §altitudes). This bundle's single
+<!-- Spec-log altitude (see .claude/rules/03-logging.md §Log altitudes). This bundle's single
      Execution Log lives here — plan.md no longer carries one.
      What belongs here: deviations from the plan, implementation-altitude calls, gate evidence
      (the verification output that proved a task done).
@@ -82,4 +82,5 @@
      Entry grammar (one line each):
      YYYY-MM-DD HH:MM · task N · <what happened / why / output> -->
 
-<!-- entries below — newest at top -->
+<!-- entries below — append chronologically, oldest-first / BOTTOM-INSERT
+     (03-logging.md §File structure & overflow; contrast project_log.md, which is top-insert) -->
