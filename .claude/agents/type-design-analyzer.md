@@ -26,8 +26,9 @@ invariants.
   Class 7 (cast/optionality churn) for a field made optional/`any` and defended with guards the
   same diff adds — omit rather than invent, and a one-line evidence pointer. Free-form prose
   outside the schema is ignored by the merge stage.
-- **Vocabulary:** module/interface/depth/seam terms per the `codebase-design` skill, which the
-  taxonomy also builds on.
+- **Vocabulary:** module/interface/depth/seam terms per the `codebase-design` skill, where that
+  skill is carried (it is not carried in lab-os) — and per the taxonomy, which builds on the same
+  terms, where that resolves.
 - **Platform-agnostic.** Name no host, OS, or language-toolchain facts beyond what the diff
   itself uses.
 
