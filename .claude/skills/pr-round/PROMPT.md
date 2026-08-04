@@ -399,8 +399,10 @@ model pass and the operator is cost-conscious:
   almost always asking about one of them — so stating the breakdown in the question and offering the
   scoped cuts saves the follow-up round-trip that a bare `all / 5 / abort` forces.
 
-Under `--dry-run`, report the roster and **stop here**. Steps 5–11 do not run; there is nothing to
-report that the roster does not already contain.
+Under `--dry-run`, report the roster and **stop here**. The cost-guard question is skipped along
+with everything else in Steps 5–11 — a large roster is simply reported, never interrupted with a
+question (same rule as Step 3: a dry run writes nothing, so it needs no permission). Steps 5–11 do
+not run; there is nothing to report that the roster does not already contain.
 
 ## Step 5: Fan out — one subagent per PR
 
@@ -825,8 +827,9 @@ Per item no prior round already filed, compose:
 2. **Body:** a `## Finding` section carrying the item verbatim (for a deferred pin: the pin, its
    options, and that it was deferred), then a `## Backlinks` section with the PR URL and the round's
    head sha.
-3. **Label:** `P2-backlog` when the repo has it (`gh label list` once per repo); absent → no label,
-   never invent one.
+3. **Label:** `P2-backlog` when the repo has it (`gh label list --repo <owner>/<repo>` once per
+   repo, against the issue's own target repository — never the coordinator worktree's ambient repo);
+   absent → no label, never invent one.
 4. **Serialize the request, do not send it.** Write the JSON temp file 9.0a will post —
    `{"title": …, "body": …, "labels": […]}` — and record its path alongside the target
    `<owner>/<repo>`. The file form is required, not a convenience: the title is the finding's first

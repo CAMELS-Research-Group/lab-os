@@ -14,6 +14,11 @@ ships a wrong change under the reviewer's name.
 
 ## Decision tree
 
+> Reading note: branch 3 (honour an emitted label) is **inert in pr-round as currently
+> structured** — lanes are per-PR exclusive, so the remediate lane never ingests a same-run
+> structured return. It is retained for lineage with the vendored source; details in
+> § Step 3 honours an emitted label below.
+
 ```
 For each finding:
 
