@@ -84,11 +84,11 @@ there.
 - **The remediate lane is untouched** — specialists review, they never remediate.
 - **`--no-specialists`** drops the panel for the whole round.
 
-**Availability note:** the agents and the dispatch reference are **not yet carried in lab-os** —
-they are maintained in the lab's workspace forks, and a bare clone of this repository resolves
-neither. Until they are ported, a run rooted here degrades to the composed rubric alone and says so;
-a run from a dev home that carries them gets the full panel, because both paths resolve against
-`DEV_ROOT` at runtime rather than against the repository the skill ships from.
+**Availability note:** the agents and the dispatch reference are **not part of this skill** — both
+paths resolve against `DEV_ROOT` at runtime rather than against the repository the skill ships from,
+so panel availability is a property of the dev home the round runs from, not of this skill. A dev
+home that carries them gets the full panel; one that does not — including a clone of any repository
+that has not yet ported them — degrades to the composed rubric alone and says so.
 
 ## Two fan-outs, and why
 
@@ -313,7 +313,7 @@ working while a new one should prefer `projects/`.
 - [PROMPT.md](PROMPT.md) — the executable body, Steps 0–11
 - [reference/rubric-layering.md](reference/rubric-layering.md) — tier discovery, precedence, cold-start
 - [reference/rubric-universal.md](reference/rubric-universal.md) — tier 1, the always-present standard
-- `<DEV_ROOT>/reference/specialist-dispatch.md` — specialist panel: triggers, cap, merge/verdict contract (consumed in place; not carried in lab-os — absent → degrade like a missing tier)
+- `<DEV_ROOT>/reference/specialist-dispatch.md` — specialist panel: triggers, cap, merge/verdict contract (consumed in place; absent → degrade like a missing tier)
 - [reference/classify-blockers.md](reference/classify-blockers.md) — mechanical vs design-pin
 - [reference/review-comment-template.md](reference/review-comment-template.md) — review comment; owns the marker literal
 - [reference/remediation-comment-template.md](reference/remediation-comment-template.md) — the handoff comment

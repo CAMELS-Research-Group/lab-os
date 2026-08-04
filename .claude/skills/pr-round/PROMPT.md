@@ -896,7 +896,7 @@ the one place the merge is computed, and 9.0 is where it must be done because 9.
 transform on the token: whatever the merge above produced — and, on a PR where no panel ran, whatever
 5.2 returned untouched — becomes `COMMENT` when the flag is set, per the override row in
 `review-comment-template.md` § Verdict vocabulary. Applying it only on the panel branch is the failure
-this sentence exists to prevent: a repository with no specialist dispatch (lab-os is one) takes the
+this sentence exists to prevent: a repository with no specialist dispatch takes the
 no-panel branch on every review-lane PR, and a contributor who passed `--comment-only` would still
 post `REQUEST CHANGES` under their own identity. The findings are unchanged either way — only the
 formal verdict is — and the summary below shows the already-overridden token, so what the operator
