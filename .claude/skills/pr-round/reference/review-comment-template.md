@@ -97,6 +97,12 @@ deliberately and the skill never applies on its own.
 `COMMENT` exists so incomplete coverage is never laundered into an approval. Reaching for it is
 correct when the honest answer is "I could not check the part that matters."
 
+**An `APPROVE` must state explicitly whether anything was executed.** This lane reads and reasons; it
+runs no gate — the rung ladder belongs to the remediate lane. So unless the scope paragraph names
+something the reviewer actually ran, an `APPROVE` says in those words that no verification was
+executed and the approval is from reading alone. Silence reads as "I ran it and it passed", the one
+claim this verdict cannot make on its own.
+
 **The `--comment-only` override exists because the mechanical derivation assumes the reviewer is the
 merge authority.** A formal `APPROVE` or `REQUEST CHANGES` is a merge-gating act on most repositories;
 a contributor without write access who posts one overstates their standing, however sound the
@@ -148,11 +154,12 @@ section exists — a section with little to say says it briefly, and the `None.`
 establishes that an honest empty section is a real answer.
 
 **The `mechanical` / `design-pin` label carries what the no-menu rule strips.** An Important finding
-naming a single fix is indistinguishable in prose from a mechanical one, so a downstream remediate
-lane inferring the classification from the shape of the write-up would read every Important design
-choice as mechanical. It does not have to: the emitted label is authoritative where present
-(`classify-blockers.md` § Step 3 honours an emitted label). Keep the label on the finding — it is what
-makes the one-fix rule above safe to follow.
+naming a single fix is indistinguishable in prose from a mechanical one, so the classification cannot
+be recovered from the write-up — and nothing downstream tries to. The label rides the review lane's
+structured return (`PROMPT.md` 5.2 step 3), the only place it is authoritative
+(`classify-blockers.md` § Step 3 honours an emitted label); the comment body carries no label token
+and needs none. Keep the label on the finding in the return, and the one-fix rule above stays safe to
+follow.
 
 **The test is relative, not absolute.** If the Suggestions outrun the Blockers, the review is
 miscalibrated whatever its findings are worth. That comparison is quicker to run against a draft
