@@ -43,6 +43,9 @@ approximation as the procedure, or "merge bar met" without walking it, is a
 violation, not a shortcut. When unsure a step ran as specified, say so rather than
 imply it did.
 
+Review check: named skill run or merge bar claimed? → every approximated or skipped
+step enumerated up front, or the claim dropped.
+
 ## Merge Bar
 
 All of the following, verified at merge time:
@@ -54,6 +57,8 @@ All of the following, verified at merge time:
 5. **Bundle-backed changes: log maintenance — spec-log current and overflow archived** (`03-logging.md` spec-log altitude): the bundle's `log.md` captures this slice's decisions, discarded detail, and execution log (deviations, gate evidence); any bundle `log.md` overflow archived to `log_archive.md` co-located in the bundle
 6. Doc-sync triggers checked (Documentation Update Triggers below)
 7. Single concern; on a bundle-backed slice, once the slice is done the owner flips the bundle's PRD `Status` to a terminal state (`complete`) in place (bundle lifecycle: `04-docs.md`) — bundles are retained dated under `_specs/`, never moved or deleted
+
+Review check: bundle-backed PR? → bundle `log.md` current and overflow archived; on slice done, PRD `Status:` flipped to a terminal state.
 
 ## Documentation Update Triggers
 

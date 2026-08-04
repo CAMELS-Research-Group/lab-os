@@ -19,17 +19,19 @@ Budgets (bytes): per-repo `CLAUDE.md` 8 KB · `.claude/rules/*.md` 5 KB each · 
 ## ENG document standards
 
 - **PRD** — living doc, stable path, amended never archived (only its lifecycle `Status:` advances — §Bundle lifecycle). Required: Problem · Success criteria (measurable) · Scope (in/explicitly out) · Constraints · Plan (phased) · Open questions. Open questions owns known gaps. No decision bodies — link to the bundle's `spec.md`; decisions outliving the slice route to `project_log.md`.
-- **Spec** — the bundle's `spec.md`: what was decided; current design authority. Decision summary table (question → resolution → status) · per-decision sections (contract impact) · finalized contracts; legend `DECIDED / RECOMMENDED / PARKED`. Single-source at bundle altitude: a decision lives here once — `log.md` records how it got there; `prd.md`/`plan.md` link, never restate. Chore/docs-only bundles (log-overflow archives, doc syncs) omit it; existing three-file bundles are grandfathered. Cross-cutting shared specs stay under `_specs/_design/`.
+- **Spec** — the bundle's `spec.md`: what was decided; current design authority. Decision summary table (question → resolution → status) · per-decision sections (contract impact) · finalized contracts; legend `DECIDED / RECOMMENDED / PARKED`. Single-source at bundle altitude: a decision lives here once — `log.md` records how it got there; `prd.md`/`plan.md` link, never restate. Chore/docs-only bundles (log-overflow archives, doc syncs) omit it; existing three-file bundles are grandfathered. Cross-cutting shared specs stay under `_specs/shared-design/`.
 - **Plan** — code-free: per task, Files/Depends on/Requires/Spec link/Architectural constraints/Acceptance/Verification/Agent-suitable/Commit; only code blocks: shell in Verification lines. On code-touching plans, run `standards-aware-planning` (if present; derives from the taxonomy; expresses constraints in `codebase-design` terms) to populate Architectural constraints; `none triggered` when empty; doc-only plans omit it. Its execution counterpart: while implementing those tasks, apply `execution-writing-disposition` (if present) for classes at altitude `execution`. No plan-carried Execution Log: deviations and gate evidence live in the bundle's `log.md`; resolved decisions live once in `spec.md` (rationale/alternatives history in `log.md`); known gaps live in the PRD's Open questions. The plan is one file in the planning bundle (source: `03-logging.md` spec-log altitude).
 
 ## Bundle lifecycle
 
-Each planning bundle carries one **lifecycle `Status:`** in its PRD header — the bundle's single state marker (source of truth for "is this the active plan"). Enumerated, non-terminal → terminal: `draft` · `active` · `paused` — then terminal `complete` · `superseded` · `abandoned`. Format: `**Status:** <state> — <optional free-text qualifier>` (e.g. `active — in review, PR #91`).
+Each planning bundle carries one **lifecycle `Status:`** in its PRD header — the bundle's single state marker. Enumerated, non-terminal → terminal: `draft` · `active` · `paused` — then terminal `complete` · `superseded` · `abandoned`. Format: `**Status:** <state> — <optional free-text qualifier>` (e.g. `active — in review, PR #91`).
 
 - `draft` shaping/pre-signoff · `active` in execution · `paused` on hold (mirrors the `03-logging.md` pause banner).
 - `complete` slice shipped/merged · `superseded` replaced by another bundle · `abandoned` deliberately not built. **Terminal states freeze the body** — amend only for accuracy, never new scope.
 - **Supersession is a forward pointer, not an edit:** the new bundle's PRD carries `Supersedes: <handle>` (`03-logging.md` convention); the old flips to `Status: superseded — by <handle>`. Never delete the old.
-- **Retain in place, never move.** "Bundle archival" (merge bar) = flip `Status: complete`; bundles stay dated under `_specs/`. The PRD stays a living doc — only its Status advances (§ENG document standards, PRD).
+- **Retain in place, never move.** "Bundle archival" (merge bar) = flip `Status: complete`; bundles stay dated under `_specs/`.
+
+Review check: PRD `Status:` off-enum or stale against the bundle's state? → correct to an enumerated value.
 
 ## Rules numbering
 

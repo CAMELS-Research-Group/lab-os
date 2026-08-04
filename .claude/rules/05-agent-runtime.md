@@ -1,7 +1,6 @@
 # Agent Runtime
 
-HARD RULE. Binds any lab-os asset that hosts a guardrailed local coding-agent runtime
-(the P13 control-panel skeleton; the runtime extracted from mission-control P12). The
+HARD RULE. Binds any lab-os asset that hosts a guardrailed local coding-agent runtime. The
 contract below is enumerable from this file alone — no need to read runtime source. Doc
 tiers/budgets: `04-docs.md`. Logging: `03-logging.md`.
 
