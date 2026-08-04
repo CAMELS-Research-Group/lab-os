@@ -1,6 +1,6 @@
 ---
 name: comment-analyzer
-description: Specialist review agent for code comment and docstring accuracy, completeness, and rot-resistance on a PR diff. Dispatched by lab review skills per reference/specialist-dispatch.md when the diff's comment density crosses threshold. Report-only — emits findings in the lab schema, never edits.
+description: Specialist review agent for code comment and docstring accuracy, completeness, and rot-resistance on a PR diff. Dispatched by lab review skills per reference/specialist-dispatch.md when the diff's comment density crosses threshold and a docstring block is added or modified. Report-only — emits findings in the lab schema, never edits.
 model: inherit
 tools: Read, Grep, Glob, Bash
 ---
