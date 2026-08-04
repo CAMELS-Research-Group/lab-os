@@ -147,6 +147,46 @@ merge stage**:
   it conditionally.
 - **Evidence pointer:** one line — file + line/heading and what was observed.
 
+## Proportionality
+
+Length follows severity. Left unstated it inverts, because a Suggestion is easier to write at length
+than a Blocker is to prove: the tier that costs the specialist least attracts the most prose, and the
+finding the author actually has to act on ends up outweighed by the ones they do not.
+
+This section governs the **finding as returned**. How merged findings are laid out in the posted
+comment belongs to the consuming skill's comment template (`pr-round`:
+`.claude/skills/pr-round/reference/review-comment-template.md` § Proportionality, where that skill
+is carried) and is not restated here.
+
+| Severity | Default shape of the returned finding |
+|---|---|
+| `Blocker` | Full apparatus — key, mechanism, evidence pointer, proposed fix. Weigh alternatives only where the choice is load-bearing, which is what the `design-pin` classification already marks. Spend here. |
+| `Important` | Key, mechanism, evidence pointer, and the one fix you would pick. No alternatives menu. |
+| `Suggestion` | A sentence or two. One needing a paragraph to motivate is an `Important` finding, or is not ready to return. |
+
+**Defaults, not caps.** An intricate Blocker earns the space it needs. What is never earned is
+reaching a length because the dimension was dispatched.
+
+**The single-dimension incentive is the specialist failure mode, and it is not the generalist's.** A
+generalist that finds little reports little and nothing looks amiss; a specialist summoned for one
+named dimension has a standing pull to justify the summons with volume. It does not need to — a
+fired predicate is a trigger, not a prediction (§ Trigger table), so a dimension that was genuinely
+examined and came back thin is a real answer and is returned as one. § Degradation already owns the
+dimension that *could not* be reviewed; brevity owns the one that was reviewed and found little.
+Neither is padded into the other, and a thin dimension reported at length is the harder of the two
+to catch, because it reads like diligence.
+
+**The test is relative, not absolute.** If a specialist's Suggestions outrun its Blockers, that
+dimension is miscalibrated whatever the individual findings are worth — a comparison quicker to run
+against a draft than any byte count.
+
+**Prose outside the schema is not free for being ignored.** § Finding schema discards free-form text
+at the merge stage, but the attention that produced it was already spent and the coordinating skill
+still ingests it. Per-finding sprawl also defeats the per-pass cap (§ Cap), which bounds how many
+dimensions run and not how much each returns. Length buys no authority either: severity is set by
+the schema and adjusted only by the ceiling knob (§ Per-agent severity-ceiling knob), never by how
+much was written about it.
+
 ## Merge / dedup rules (spec D9)
 
 The coordinating skill's parse step gains a **merge stage**; everything downstream of it (routing,
