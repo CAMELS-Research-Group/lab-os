@@ -29,7 +29,7 @@ Each planning bundle carries one **lifecycle `Status:`** in its PRD header — t
 - `draft` shaping/pre-signoff · `active` in execution · `paused` on hold (mirrors the `03-logging.md` pause banner).
 - `complete` slice shipped/merged · `superseded` replaced by another bundle · `abandoned` deliberately not built. **Terminal states freeze the body** — amend only for accuracy, never new scope.
 - **Supersession is a forward pointer, not an edit:** the new bundle's PRD carries `Supersedes: <handle>` (`03-logging.md` convention); the old flips to `Status: superseded — by <handle>`. Never delete the old.
-- **Retain in place, never move.** "Bundle archival" (merge bar) = flip `Status: complete` in place; bundles stay dated under `_specs/`. The PRD stays a living doc — only its Status advances (§ENG document standards, PRD).
+- **Retain in place, never move.** "Bundle archival" (merge bar) = flip `Status: complete`; bundles stay dated under `_specs/`. The PRD stays a living doc — only its Status advances (§ENG document standards, PRD).
 
 ## Rules numbering
 
