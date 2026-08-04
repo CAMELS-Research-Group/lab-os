@@ -48,8 +48,8 @@ phasing de-risked the *lifted* bodies, and this one is authored.
 skills dispatch. `reference/code-quality-taxonomy.md` is **not carried by this slice** — ownership
 is unaffected: upstream lab-os owns its convention and canonical bytes like every other manifest
 asset, and the fork is only the staging surface where those bytes are edited and where the
-fork-side `scripts/rules_sync.py` (§ Manifest) vendors them into member repos. PR #58 lands it
-here. Wherever it does not resolve, the finding schema's taxonomy citation is absent and merge
+fork-side `scripts/rules_sync.py` (§ Manifest) vendors them into member repos. Wherever it does
+not resolve, the finding schema's taxonomy citation is absent and merge
 dedup falls back to the specialist's dimension. The agent bodies in `.claude/agents/**` are
 byte-owned **here** — the fork inherits them via `git pull upstream main`, never by back-port
 (`.claude/agents/ATTRIBUTION.md` § Byte ownership).

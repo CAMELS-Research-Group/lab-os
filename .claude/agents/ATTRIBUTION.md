@@ -45,13 +45,14 @@ Every agent body here cites `reference/code-quality-taxonomy.md` classes **where
 Ownership of that file runs the same direction as § Byte ownership below: upstream lab-os owns the
 convention and the canonical bytes; the lab's workspace fork is the staging surface where its bytes
 are edited and where the fork-side `scripts/rules_sync.py` (§ Manifest) vendors it into member
-repos. lab-os does not yet *carry* the file — PR #58 is what lands it here. Wherever it does not
-resolve, no class applies and the citation is simply absent. All bodies are phrased conditionally
+repos. Wherever the file does not resolve — including a lab-os clone that does not yet carry it —
+no class applies and the citation is simply absent. All bodies are phrased conditionally
 for exactly this reason.
 
 ## Byte ownership
 
-**lab-os is the byte master for every agent body in this directory**: these copies are canonical,
+**lab-os is the byte master for every agent body in this directory and for the dispatch contract
+they cite, `reference/specialist-dispatch.md`**: these copies are canonical,
 and the workspace fork inherits them through the normal `git pull upstream main` direction — never
 by a back-port. Identity with the fork copies is restored at each sync, not asserted between them:
 between an upstream edit and the fork's next pull, the copies may legitimately differ, and the

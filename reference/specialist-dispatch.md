@@ -9,7 +9,7 @@ self-contained — nothing below requires reading that bundle.
 **Consumers (no skill copies any table from this file):**
 
 - `pr-round` (`.claude/skills/pr-round/`) — review lane only; the remediate lane does not dispatch
-  specialists. That skill is **not yet carried in lab-os** (it arrives with #59), so this row
+  specialists. That skill is **not yet carried in lab-os**, so this row
   describes the contract it honours where it is present.
 - `pr-review-loop` — single-PR loop review dispatch, every pass; the multi-PR conductor path does
   **not** dispatch specialists. That skill is **not yet carried in lab-os** (it is maintained in the
@@ -140,8 +140,9 @@ merge stage**:
   omitted (not invented) where none does. Ownership of that file is upstream lab-os's — the
   convention and the canonical bytes alike; the lab's workspace fork is the staging surface where
   its bytes are edited and where the fork-side `scripts/rules_sync.py` (§ Manifest) vendors it into
-  member repos. **lab-os does not yet _carry_ the file** — PR #58 is what lands it here. Wherever it
-  does not resolve, no class applies, so the citation is simply absent: this is the schema's
+  member repos. **Wherever the file does not resolve** in the repo under review — including a
+  lab-os clone that does not yet carry it — no class applies, so the citation is simply absent:
+  this is the schema's
   existing "omitted where none does" path, not a degraded mode, and the agent bodies already phrase
   it conditionally.
 - **Evidence pointer:** one line — file + line/heading and what was observed.
