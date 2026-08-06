@@ -651,9 +651,15 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
             ok = False
         print(f"  [{'ok' if cond else 'FAIL'}] {name}" + (f" -> {detail}" if not cond else ""))
 
-    def check(name: str, text: str, want_err_substr: str | None) -> None:
+    def check(name: str, text: str, want_err_substr: str | None,
+              want_n: int | None = None) -> None:
+        """want_err_substr=None asserts NO errors; want_n pins the exact error
+        count where it is stable, so 'the rule bit' is distinguishable from
+        'the rule bit plus collateral noise'."""
         errs = lint(parse_backlog(text), req).errors
         hit = any(want_err_substr in e for e in errs) if want_err_substr else not errs
+        if want_n is not None:
+            hit = hit and len(errs) == want_n
         expect(name, hit, str(errs))
 
     expect("template schema is non-empty (fail-closed source)",
@@ -664,6 +670,7 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
 
     good = lint(parse_backlog(_GOOD), req)
     expect("good backlog is clean (no errors)", not good.errors, str(good.errors))
+    check("clean fixture through check() (exercises its assert-clean arm)", _GOOD, None)
     expect("wrapped Done-when joins fully (no false concreteness warning)",
            not good.warnings, str(good.warnings))
     b2 = [i for i in parse_backlog(_GOOD).items if i.id == "B2"][0]
@@ -671,8 +678,8 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
            b2.fields["Done when"].endswith("`docs/y.md` with the new section"),
            b2.fields["Done when"])
 
-    check("missing field", _GOOD.replace("- **Value:** worth it\n", ""), "missing required field 'Value'")
-    check("placeholder Done when", _GOOD.replace("`scripts/x.py --self-test` passes", "<the check>"), "placeholder")
+    check("missing field", _GOOD.replace("- **Value:** worth it\n", ""), "missing required field 'Value'", want_n=1)
+    check("placeholder Done when", _GOOD.replace("`scripts/x.py --self-test` passes", "<the check>"), "placeholder", want_n=1)
     check("multi-condition Done when (nested list)",
           _GOOD.replace("- **Done when:** `scripts/x.py --self-test` passes",
                         "- **Done when:** `scripts/x.py --self-test` passes\n  - and a second condition holds"),
@@ -690,17 +697,17 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
           _GOOD.replace("| B2 | Second | Watson | M | in-progress |\n",
                         "| B2 | Second | Watson | M | in-progress |\n| B9 | Ghost | Kiara | S | ready |\n"),
           "Index is stale")
-    check("dangling depends", _GOOD.replace("- **Depends on:** B1", "- **Depends on:** B7"), "not a backlog item")
+    check("dangling depends", _GOOD.replace("- **Depends on:** B1", "- **Depends on:** B7"), "not a backlog item", want_n=1)
     check("'Depends on: TBD' is an error, not silently no-deps",
           _GOOD.replace("- **Depends on:** B1", "- **Depends on:** TBD"),
-          "neither a no-deps sentinel")
+          "neither a no-deps sentinel", want_n=1)
     check("lowercase dep id ('b1') is an error, not silently no-deps",
           _GOOD.replace("- **Depends on:** B1", "- **Depends on:** b1"),
-          "neither a no-deps sentinel")
-    check("dependency cycle", _GOOD.replace("- **Depends on:** —", "- **Depends on:** B2"), "cycle")
-    check("private path leak", _GOOD.replace("something is missing", "see /Users/someone/secret/x"), "non-public")
+          "neither a no-deps sentinel", want_n=1)
+    check("dependency cycle", _GOOD.replace("- **Depends on:** —", "- **Depends on:** B2"), "cycle", want_n=1)
+    check("private path leak", _GOOD.replace("something is missing", "see /Users/someone/secret/x"), "non-public", want_n=1)
     check("Linux home-path leak (/home/... — the CI runner's own prefix)",
-          _GOOD.replace("something is missing", "see /home/runner/work/x"), "non-public")
+          _GOOD.replace("something is missing", "see /home/runner/work/x"), "non-public", want_n=1)
     check("leak in an item heading title is caught",
           _GOOD.replace("## B1 — First", "## B1 — First (in /Users/kiara/notes/)"),
           "non-public")
@@ -827,24 +834,40 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
             rc = main(args)
         return rc, buf.getvalue()
 
+    # Pin GITHUB_ACTIONS so the annotation contract is exercised regardless of
+    # where the self-test runs: in the shipped warn-only posture the
+    # ::error / ::warning prefixes are the ONLY signal that reaches a PR.
+    import os
+    prev_ga = os.environ.get("GITHUB_ACTIONS")
+    os.environ["GITHUB_ACTIONS"] = "true"
+
     with tempfile.TemporaryDirectory() as td:
         tdp = Path(td)
         good_b, bad_b = tdp / "GOOD.md", tdp / "BAD.md"
         good_b.write_text(_GOOD)
         bad_b.write_text(_GOOD.replace("`scripts/x.py --self-test` passes", "<the check>"))
         tpl = str(_repo_template())
-        expect("main: clean backlog exits 0",
-               main(["--check", str(good_b), "--template", tpl]) == 0)
-        expect("main: errors without --enforce exit 0 (warn-only)",
-               main(["--check", str(bad_b), "--template", tpl]) == 0)
+        rc, out = run_main(["--check", str(good_b), "--template", tpl])
+        expect("main: clean backlog exits 0", rc == 0, out)
+        rc, out = run_main(["--check", str(bad_b), "--template", tpl])
+        expect("main: errors without --enforce exit 0 (warn-only)", rc == 0, out)
+        expect("CI errors annotate as ::error anchored to file and line",
+               f"::error file={bad_b},line=" in out, out)
         expect("main: errors with --enforce exit 1",
-               main(["--check", str(bad_b), "--template", tpl, "--enforce"]) == 1)
+               run_main(["--check", str(bad_b), "--template", tpl, "--enforce"])[0] == 1)
+        warn_b = tdp / "WARNONLY.md"
+        warn_b.write_text(_GOOD.replace("`scripts/x.py --self-test` passes",
+                                        "the team agrees it works"))
+        rc, out = run_main(["--check", str(warn_b), "--template", tpl])
+        expect("CI warnings annotate as ::warning (never ::error), exit 0",
+               rc == 0 and f"::warning file={warn_b}" in out and "::error" not in out,
+               out)
         expect("main: missing template exits 1 (fail closed)",
-               main(["--check", str(good_b), "--template", str(tdp / "no-such.md")]) == 1)
+               run_main(["--check", str(good_b), "--template", str(tdp / "no-such.md")])[0] == 1)
         empty_tpl = tdp / "empty-template.md"
         empty_tpl.write_text("# a template with no field lines\n")
         expect("main: template with zero fields exits 1 (fail closed)",
-               main(["--check", str(good_b), "--template", str(empty_tpl)]) == 1)
+               run_main(["--check", str(good_b), "--template", str(empty_tpl)])[0] == 1)
         renamed_tpl = tdp / "renamed-label-template.md"
         renamed_tpl.write_text(_repo_template().read_text().replace("- **Status:**", "- **State:**"))
         rc, out = run_main(["--check", str(good_b), "--template", str(renamed_tpl)])
@@ -875,12 +898,21 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
                and "unrecognized item heading" in out, out)
         expect("--write-index leaves the broken file byte-identical",
                mal.read_text() == mal_text)
-        unread_tpl = tdp / "unreadable-template.md"
-        unread_tpl.write_text("- **Field:** x\n")
-        unread_tpl.chmod(0)
+        # Unreadable-template fixture: a DIRECTORY, not a chmod(0) file —
+        # chmod(0) does not deny reads to root, so on a root-executing runner
+        # (container jobs, some self-hosted docker runners) that variant would
+        # false-red every PR. read_text() on a directory raises
+        # IsADirectoryError (an OSError subclass), exercising the same
+        # _load_schema branch with no privilege dependence.
+        unread_tpl = tdp / "unreadable-template-dir"
+        unread_tpl.mkdir()
         expect("main: unreadable template exits 1 (one-line failure, no traceback)",
-               main(["--check", str(good_b), "--template", str(unread_tpl)]) == 1)
-        unread_tpl.chmod(0o644)
+               run_main(["--check", str(good_b), "--template", str(unread_tpl)])[0] == 1)
+
+    if prev_ga is None:
+        os.environ.pop("GITHUB_ACTIONS", None)
+    else:
+        os.environ["GITHUB_ACTIONS"] = prev_ga
 
     print("backlog-lint self-test:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
