@@ -22,7 +22,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 
 ### Kiara
 - B3 — Lab-wide backlog (this file) (S, in-progress)
-- B5 — Backlog-lint (CI hygiene check for BACKLOG.md) (M, ready)
+- B5 — Backlog-lint (CI hygiene check for BACKLOG.md) (M, in-progress)
 
 ### Watson
 - B2 — Workshop process + feedback iteration (M, ready)
