@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
 - 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
@@ -18,6 +19,25 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks
+
+**Decision:** lab-os is the source of truth for the lab's shared Claude Code skills and commands; they
+live in-repo (`.claude/skills/`, `.claude/commands/`, `.claude/scripts/`) and deploy user-scope via
+`link-lab-assets.sh`, which symlinks them into `~/.claude/`. Recorded when #59 added `ATTRIBUTION.md`,
+which states the convention.
+**Why:** A clone or fork is self-contained with no marketplace install, and `git pull upstream` keeps
+skills current. The load-bearing consequence: because deployment is user-scope, merged skill content
+later executes as *instructions* under every member's identity, in every session — so `.claude/skills/**`
+review rigor is a security boundary, and a skills PR is read as code, not docs.
+**Alternatives:** Marketplace-plugin distribution (a separate repo the lab installs from) — rejected,
+reintroduces the install step and a `plugin.json` surface the in-repo model avoids. Per-repo vendoring
+(each member repo carries its own copy) — rejected for shared skills; it multiplies drift with no
+owning source. (A single skill still vendors a sibling's file where a runtime cross-skill dependency
+would fail worse — `ATTRIBUTION.md`.)
+**Refs:** #59, .claude/skills/ATTRIBUTION.md
 
 ---
 

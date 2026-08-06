@@ -1,5 +1,10 @@
 .claude/.pr-review-loop.state.json
 
+# Nested project repos live under projects/ — each is its own git repo, so the
+# container is ignored wholesale rather than committed as a gitlink. This is the
+# blessed dev-home layout (.claude/skills/pr-round/SKILL.md § Deployment).
+/projects/
+
 # Docusaurus site artifacts
 site/node_modules/
 site/build/
