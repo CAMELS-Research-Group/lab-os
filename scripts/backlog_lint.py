@@ -24,10 +24,11 @@ docs-budget warn-until-first-green posture):
     old orphan-row / missing-row / duplicate-Index-id checks.)
   - `Depends on` referential integrity (ids exist) + acyclicity (no cycle)
   - structural integrity of the Items section: a `## ` heading that is not a
-    well-formed item heading, and non-blank text no field owns (a severed
-    continuation, or prose between a heading and the first field), are hard
-    errors — nothing silently attaches to the wrong item or escapes the
-    checks below
+    well-formed item heading, and non-blank text no item or field owns (a
+    severed continuation, prose between a heading and the first field, text
+    between `## Items` and the first item heading, or any line inside a
+    block whose heading failed to parse), are hard errors — nothing silently
+    attaches to the wrong item or escapes the checks below
   - public-tier spot check over Items (titles + full field values, including
     continuation lines and unattached text) AND the Inbox section.
     Intentionally conservative:
@@ -213,6 +214,13 @@ def parse_backlog(text: str) -> Backlog:
             _finish_field()
             continue
         if cur is None:
+            # Non-blank Items-section text no item owns: prose between
+            # `## Items` and the first item heading, or any line inside a
+            # block whose heading failed to parse. Hard error + orphan
+            # record — same treatment as owned-line errors below, so the
+            # leak scan still covers this text instead of dropping it.
+            parse_errors.append(f"unattached text in Items section at line {i}")
+            orphans.append((i, line))
             continue
         fm = _FIELD.match(line)
         if fm:
@@ -638,6 +646,23 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
     check("leak scan reaches unattached text",
           _GOOD.replace("- **Done when:** the wrapped dashboard render lands in\n  `docs/y.md` with the new section",
                         "- **Done when:** the wrapped dashboard render lands in `docs/y.md`\n\n  parked at /Users/someone/private/notes.md"),
+          "non-public")
+    # Blocker 1 (PR #67 review): the two `cur is None` windows. The four cases
+    # above all run with an item OPEN; these two run with no item open, which
+    # is exactly where the old `continue` silently dropped text.
+    check("text between ## Items and the first item heading is a hard error",
+          _GOOD.replace("## Items\n", "## Items\n\nstray note above the first item\n"),
+          "unattached text in Items section")
+    check("leak scan reaches text before the first item heading",
+          _GOOD.replace("## Items\n",
+                        "## Items\n\nstray note referencing /Users/watson/private/x.md\n"),
+          "non-public")
+    check("field lines under a malformed heading are recorded, not dropped",
+          _GOOD.replace("## B2 — Second", "## B2 - Second"),
+          "unattached text in Items section")
+    check("leak scan reaches field lines under a malformed heading",
+          _GOOD.replace("## B2 — Second", "## B2 - Second")
+               .replace("another gap", "see /Users/someone/private/notes.md"),
           "non-public")
 
     # Placeholder / empty checks cover EVERY required field, not just Done when.
