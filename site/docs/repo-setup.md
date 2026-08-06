@@ -7,7 +7,7 @@ description: First-cut runbook for creating a repository that follows lab conven
 # Setting Up a New Repo
 
 A first-cut checklist for creating a repository that conforms to lab conventions from commit one.
-The [lab-os templates](https://github.com/WatsonWBlair/lab-os/tree/main/templates) are its building
+The [lab-os templates](https://github.com/CAMELS-Research-Group/lab-os/tree/main/templates) are its building
 blocks — each step links its source of truth rather than restating it.
 
 **This runbook is deliberately first-cut.** It is the first step of the
@@ -29,7 +29,7 @@ No lab template yet — start from a standard `.gitignore` for your stack (the f
 git must never commit; GitHub's repo-creation flow
 offers one, or pull from [github/gitignore](https://github.com/github/gitignore)), then make sure
 it covers the lab's protection rules
-([`02-data-protection.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/02-data-protection.md)):
+([`02-data-protection.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/02-data-protection.md)):
 
 - `.env` and other secret-bearing files
 - model artifacts and checkpoints (`.pt`, `.npy`, `.task`, `.onnx`, `.bin`, `.safetensors`)
@@ -38,25 +38,25 @@ it covers the lab's protection rules
 ### 3. Seed `CLAUDE.md`
 
 Copy
-[`templates/repo-CLAUDE.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/repo-CLAUDE.template.md)
+[`templates/repo-CLAUDE.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/repo-CLAUDE.template.md)
 to the repo root (or `.claude/CLAUDE.md`) and fill the placeholders. Follow the template's embedded
 author guidance — dense writing aimed at an AI reader, 8 KB size budget, no restating lab rules that already load.
 
 ### 4. Seed `project_log.md`
 
 Copy
-[`templates/project_log.template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/templates/project_log.template.md)
+[`templates/project_log.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/project_log.template.md)
 to the repo root. Its structure is load-bearing (the `log-lint` automated check parses it) — keep the `## Standing Decisions`
 and `## Entries` headings exactly as shipped. Entry format and triggers:
-[`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md).
+[`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md).
 
 ### 5. Add the PR template
 
 Copy lab-os's
-[`.github/pull_request_template.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.github/pull_request_template.md)
+[`.github/pull_request_template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/pull_request_template.md)
 into your repo's `.github/` as a starting point, adjusting checklist items to the repo. Every PR
 fills it — see
-[`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md).
+[`01-workflow.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/01-workflow.md).
 
 ### 6. Caller YAML pointer — *phase 2, not yet required*
 

@@ -17,7 +17,7 @@
 #
 #   jobs:
 #     merge-bar-check:
-#       uses: WatsonWBlair/lab-os/.github/workflows/merge-bar-check.yml@main
+#       uses: CAMELS-Research-Group/lab-os/.github/workflows/merge-bar-check.yml@main
 #       # optionally:
 #       # with:
 #       #   exclude-globs: "*.md,docs/**,.github/**,notebooks/**"
@@ -59,7 +59,7 @@ jobs:
       - name: Check out lab-os (script source)
         uses: actions/checkout@v4
         with:
-          repository: WatsonWBlair/lab-os
+          repository: CAMELS-Research-Group/lab-os
           ref: main
           path: .lab-os-checkout
 
@@ -86,7 +86,7 @@ jobs:
           # absent or stale there); gate on repo name so downstream repos can't
           # shadow the canonical script.
           SCRIPT=".lab-os-checkout/scripts/merge_bar_check.py"
-          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-os" ]; then
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then
             SCRIPT="scripts/merge_bar_check.py"
           fi
           python3 "$SCRIPT" \

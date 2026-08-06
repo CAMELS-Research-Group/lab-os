@@ -11,7 +11,7 @@
 #
 #   jobs:
 #     docs-budget:
-#       uses: WatsonWBlair/lab-os/.github/workflows/docs-budget.yml@main
+#       uses: CAMELS-Research-Group/lab-os/.github/workflows/docs-budget.yml@main
 #       with:
 #         enforce: false   # flip to true after this repo's first green run
 
@@ -41,7 +41,7 @@ jobs:
       - name: Check out lab-os (script source)
         uses: actions/checkout@v4
         with:
-          repository: WatsonWBlair/lab-os
+          repository: CAMELS-Research-Group/lab-os
           path: .lab-os
 
       - name: Run docs-budget
@@ -52,5 +52,5 @@ jobs:
           if [ "$ENFORCE" = "true" ]; then ARGS="--enforce"; fi
           # lab-os' own PRs must run the PR's script (main's copy is absent/stale there); gate on repo name, not file-exists, so downstream repos can't shadow the canonical script
           SCRIPT=".lab-os/scripts/docs_budget.py"
-          if [ "$GITHUB_REPOSITORY" = "WatsonWBlair/lab-os" ]; then SCRIPT="scripts/docs_budget.py"; fi
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/docs_budget.py"; fi
           python3 "$SCRIPT" --root . $ARGS

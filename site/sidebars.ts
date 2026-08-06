@@ -89,6 +89,7 @@ const sidebars: SidebarsConfig = {
             'workshops/closeout/pre-work',
             'workshops/closeout/learnings-carry-forward-worksheet',
             'workshops/closeout/presentation-worksheet',
+            'workshops/closeout/cohort-retrospective',
             'workshops/closeout/completion-checklist',
           ],
         },

@@ -2,7 +2,7 @@
 
 Cross-repo conventions for `WatsonWBlair`'s lab repos.
 
-**New to the lab? Start at the handbook: <https://watsonwblair.github.io/lab-os/>** (source: `site/`).
+**New to the lab? Start at the handbook: <https://camels-research-group.github.io/lab-os/>** (source: `site/`).
 The site owns the human-facing docs — setup runbook, working-with-Claude methods, the onboarding
 project, the rules tour. This README is reference for how the conventions in this repo are consumed
 by agents and CI.
@@ -15,7 +15,13 @@ by agents and CI.
   - [`03-logging.md`](.claude/rules/03-logging.md) — project-log standard (altitudes, entry triggers, format, immutability, overflow)
   - [`04-docs.md`](.claude/rules/04-docs.md) — documentation standard (single-source, tiers, byte budgets, ENG doc standards, rules numbering)
   - [`06-timeboxing.md`](.claude/rules/06-timeboxing.md) — timeboxing standard (session boxes, agent task boxes, calibration loop; owning docs under `docs/`). The `05` slot is reserved for in-flight rules, not a gap.
+- `.claude/agents/` — specialist review agent bodies dispatched by the lab review skills (vendored from Anthropic's `pr-review-toolkit` plus lab-authored members; provenance: [`ATTRIBUTION.md`](.claude/agents/ATTRIBUTION.md)). Agent bodies execute as instructions the same way skills do — review rigor over `.claude/agents/**` is the security boundary.
+- `.claude/skills/` + `.claude/commands/` — shared Claude Code skills and their slash commands. Currently: [`pr-round`](.claude/skills/pr-round/SKILL.md) (`/pr-round`) — one round of PR work across every PR connected to you: review others' PRs, remediate review feedback on your own. Note: from a bare `lab-os` clone the tier-2 rubric layer is absent until the rules-parity sync (#58) lands, and degrades silently (details: SKILL.md § Deployment). The specialist panel resolves natively here — this repo carries both `.claude/agents/` and `specialist-dispatch.md`; it still degrades silently in a dev home that lacks them (SKILL.md § The specialist panel). Provenance: [`ATTRIBUTION.md`](.claude/skills/ATTRIBUTION.md).
+- `.claude/scripts/` — [`link-lab-assets.sh`](.claude/scripts/link-lab-assets.sh) symlinks the skills/commands into `~/.claude/` so they work from any repo, not just sessions opened in the dev home. Re-run per machine.
+- [`reference/specialist-dispatch.md`](reference/specialist-dispatch.md) — the owning dispatch contract for the specialist review panel (triggers, per-pass cap, model tier, finding schema, merge/dedup rules, degradation).
 - [`PR-LIFECYCLE.md`](PR-LIFECYCLE.md) — end-to-end PR lifecycle: merge bar, solo-maintainer bypass, pre-merge log cleanup.
+- [`BACKLOG.md`](BACKLOG.md) — the lab-wide backlog for cross-repo work (convention: [`docs/proposals/2026-07-16-lab-wide-backlog.md`](docs/proposals/2026-07-16-lab-wide-backlog.md)); repo-scoped work stays in that repo's issues.
+- `docs/proposals/` — dated convention proposals (`<YYYY-MM-DD>-<slug>.md`), e.g. the [lab-wide backlog proposal](docs/proposals/2026-07-16-lab-wide-backlog.md).
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — lab-level expensive findings and gotchas, indexed by symptom.
 - `templates/` — starter files for new repos and members:
   - [`global-CLAUDE.template.md`](templates/global-CLAUDE.template.md) — personal-global persona + lab operating philosophy (→ `~/.claude/CLAUDE.md`)
@@ -33,7 +39,7 @@ by agents and CI.
 
 ## How repos consume it
 
-**Locally (Cowork)**: the default onboarding path forks lab-os as your dev home, where the rules live natively (`git pull upstream` to stay current) — see the handbook's [Getting Started](https://watsonwblair.github.io/lab-os/docs/getting-started). The multi-repo power-user pattern instead clones lab-os under a neutral `<DEV_ROOT>` and links its rules up with a junction/symlink:
+**Locally (Cowork)**: the default onboarding path forks lab-os as your dev home, where the rules live natively (`git pull upstream` to stay current) — see the handbook's [Getting Started](https://camels-research-group.github.io/lab-os/docs/getting-started). The multi-repo power-user pattern instead clones lab-os under a neutral `<DEV_ROOT>` and links its rules up with a junction/symlink:
 
 ```powershell
 # Windows (PowerShell) — junction, no admin required
@@ -52,7 +58,7 @@ ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
   with: { path: pr-repo }
 - uses: actions/checkout@v4
   with:
-    repository: WatsonWBlair/lab-os
+    repository: CAMELS-Research-Group/lab-os
     path: lab-os
 ```
 

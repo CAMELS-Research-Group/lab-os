@@ -12,10 +12,10 @@ group and still evolving: if a stage stops earning its keep, we change it. New m
 lifecycle **manually** once — feeling each stage — before working independently.
 
 It's the "how we work with Claude effectively" companion to the hard rules in
-[`.claude/rules/`](https://github.com/WatsonWBlair/lab-os/tree/main/.claude/rules); the operating
+[`.claude/rules/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/.claude/rules); the operating
 *philosophy* — PRD (product requirements document) first, pushback, reversibility, review mode —
 lives in the
-[global `CLAUDE.md` template](https://github.com/WatsonWBlair/lab-os/blob/main/templates/global-CLAUDE.template.md)
+[global `CLAUDE.md` template](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/global-CLAUDE.template.md)
 you personalized during setup. Several stages lean on the `superpowers` plugin's process skills
 (installed in [Getting Started](/docs/getting-started)); where a lab convention conflicts with a
 skill's default, the lab convention wins.
@@ -82,7 +82,7 @@ credential-path assumptions. Pre-merge review is **load-bearing, not optional**.
 
 - **Continuous capture.** Log decisions and open threads as they happen; load-bearing decisions get
   the *why*. Which log an entry belongs in, what earns one, the format — source of truth:
-  [`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md).
+  [`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md).
 - **Checkpoint** before switching domains, before a long chat is summarized to free up room
   (Claude Code calls this *compacting*), before a context-heavy subagent handoff.
 - **Long-lived facts go to auto-memory** — Claude Code's persistent memory directory. When you

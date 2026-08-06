@@ -55,7 +55,7 @@ The shared tooling your workspace relies on — wired in during setup:
   its `.claude/rules/` live here natively; `git pull upstream main` pulls rule updates from the source.
   Treat these as your **starting standards** — adapt or extend them as your project's needs diverge.
   (Prefer many repos under one neutral workspace? The junction/symlink consumption pattern is the
-  power-user alternative — see the handbook's Getting Started.) Source-of-truth: github.com/WatsonWBlair/lab-os.
+  power-user alternative — see the handbook's Getting Started.) Source-of-truth: github.com/CAMELS-Research-Group/lab-os.
 - **`lab-claude-plugins`** — the Claude Code plugins installed during setup (e.g. `pr-review-loop`),
   via the plugin marketplace. Source-of-truth: github.com/WatsonWBlair/lab-claude-plugins.
 - **`superpowers`** — workflow plugins from the official Claude Code marketplace (brainstorming,

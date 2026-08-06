@@ -18,10 +18,10 @@ not optional**.
   and harden the review.
 - **For a requested review, the review *is* the deliverable** — post it; don't ask permission to
   deliver what was asked. Unsolicited posts under your name still need the approval gate in the
-  [global `CLAUDE.md` template](https://github.com/WatsonWBlair/lab-os/blob/main/templates/global-CLAUDE.template.md).
+  [global `CLAUDE.md` template](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/global-CLAUDE.template.md).
 - **PR template, merge bar, and the documented exception for repos with a single maintainer:**
-  [`PR-LIFECYCLE.md`](https://github.com/WatsonWBlair/lab-os/blob/main/PR-LIFECYCLE.md) for the
+  [`PR-LIFECYCLE.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/PR-LIFECYCLE.md) for the
   lifecycle; hard rules in
-  [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md).
+  [`01-workflow.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/01-workflow.md).
 
 → Next: [Close](./index.md#close) the work · back to the [lifecycle overview](./index.md).

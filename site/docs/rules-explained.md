@@ -7,7 +7,7 @@ description: A human tour of the four lab-wide rule files — what each governs,
 # The Rules, Explained
 
 lab-os ships four lab-wide rule files under
-[`.claude/rules/`](https://github.com/WatsonWBlair/lab-os/tree/main/.claude/rules). Every Claude session
+[`.claude/rules/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/.claude/rules). Every Claude session
 loads them through the link you wired in [Getting Started](/docs/getting-started), the pull-request
 (PR) review tooling reads the same files at review time, and parts are enforced in CI — continuous
 integration, the checks run automatically on every PR (`log-lint`, `docs-budget`,
@@ -19,7 +19,7 @@ when the two disagree, the rule file wins.
 ## 01 — Workflow
 
 Source of truth:
-[`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md)
+[`01-workflow.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/01-workflow.md)
 
 Governs how work moves: commit conventions, the PR workflow, the merge bar (the checklist a change
 must clear before merging), and doc-update triggers.
@@ -38,7 +38,7 @@ Internalize two things:
 ## 02 — Data Protection
 
 Source of truth:
-[`02-data-protection.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/02-data-protection.md)
+[`02-data-protection.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/02-data-protection.md)
 
 The lab works with gated (license-restricted) human-subject datasets. This rule governs what may
 never enter a repo: raw content from those datasets, anything that could re-identify a participant,
@@ -56,7 +56,7 @@ Internalize two things:
 ## 03 — Logging
 
 Source of truth:
-[`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md)
+[`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md)
 
 Governs project logs: which of the three levels (lab-wide, per-repo, per-plan) an event belongs to,
 what earns an entry, the format, and immutability. It exists so a future session — human or agent —
@@ -73,7 +73,7 @@ Internalize two things:
 ## 04 — Docs
 
 Source of truth:
-[`04-docs.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/04-docs.md)
+[`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md)
 
 Governs the documentation system itself: one owning document per fact, docs tiered by reader
 (agent / engineering / public) with size budgets on the always-loaded tier, and defined shapes for
@@ -91,7 +91,7 @@ Internalize two things:
 
 | Question | Rule file |
 |---|---|
-| Where do commit conventions live? | [`01-workflow.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/01-workflow.md) |
-| What can I never commit? | [`02-data-protection.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/02-data-protection.md) |
-| When do I write a log entry? | [`03-logging.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/03-logging.md) |
-| Which doc owns a fact? | [`04-docs.md`](https://github.com/WatsonWBlair/lab-os/blob/main/.claude/rules/04-docs.md) |
+| Where do commit conventions live? | [`01-workflow.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/01-workflow.md) |
+| What can I never commit? | [`02-data-protection.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/02-data-protection.md) |
+| When do I write a log entry? | [`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md) |
+| Which doc owns a fact? | [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md) |

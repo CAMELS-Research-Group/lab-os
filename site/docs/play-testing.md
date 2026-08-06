@@ -27,7 +27,7 @@ Walk these in order, as if you were a brand-new lab member:
 ## Capturing friction
 
 Every snag gets a **friction issue** — file it through the
-[lab-os issue chooser](https://github.com/WatsonWBlair/lab-os/issues/new/choose) and pick the
+[lab-os issue chooser](https://github.com/CAMELS-Research-Group/lab-os/issues/new/choose) and pick the
 **Friction report** template. It asks four things and auto-labels the issue `playtest`:
 
 - **Where I was** — page and step

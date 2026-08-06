@@ -6,7 +6,7 @@
 #   - push to main touching site/** → build job uploads the Pages artifact,
 #     then the deploy job publishes via the official actions/deploy-pages flow.
 #
-# Site URL: https://watsonwblair.github.io/lab-os/
+# Site URL: https://camels-research-group.github.io/lab-os/
 # Requires Pages enabled with source "GitHub Actions" (Settings → Pages).
 # First push-to-main deploy will fail until Pages is enabled; re-run failed
 # jobs after enabling. Note: the build artifact expires after 1 day — if that
