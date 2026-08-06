@@ -15,3 +15,6 @@ site/.docusaurus/
 # with tools/build_deck.py; binaries are never committed)
 *.pptx
 *.odp
+
+# Python bytecode (scripts/ tools are run in place)
+__pycache__/
