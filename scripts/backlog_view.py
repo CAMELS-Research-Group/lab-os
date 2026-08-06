@@ -271,6 +271,15 @@ def _self_test() -> int:
     expect("mermaid graph present", "```mermaid" in md and "B2" in md and "-->" in md)
     expect("generated header present", _HEADER in md)
 
+    # Defense-in-depth behind the entry-point guard: fed a drifted backlog
+    # directly, the predicate must raise into the script-failure lane —
+    # never fall open to "this item has no dependencies".
+    try:
+        ready_unblocked(parse_backlog(fix.split("## B3 —")[0]))
+        expect("ready_unblocked raises on drifted input (no fail-open)", False)
+    except KeyError:
+        expect("ready_unblocked raises on drifted input (no fail-open)", True)
+
     # Title escaping (Watson review of PR #68, Important 3): the one output
     # defect a well-formed fixture cannot surface. A `"` in a title must not
     # terminate the quoted Mermaid label; a `|` must not split a table cell.
