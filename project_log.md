@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
 - 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
 - 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61
 - 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59
@@ -21,6 +22,22 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md
+
+**Decision:** Cross-repo / lab-level open work routes to a shared `BACKLOG.md` at the
+lab-os root (index → inbox → items per `templates/backlog-item.template.md`); repo-scoped
+work stays in that repo's issues. Retires the maintainer-personal backlog as the team
+mechanism, per the 2026-07-08 retrospective (Drop: "Watson as Backlog"; Try: "Lab Wide
+Backlog", assigned Kiara). Groomed at each 2-week sprint boundary.
+**Why:** Single-owner routing made open lab work invisible and ungroomable by the team;
+the format was already taught in the building-workshop answer key, so adoption cost is a
+promotion, not an invention. Full tradeoffs: `docs/proposals/2026-07-16-lab-wide-backlog.md`.
+**Alternatives:** GitHub Projects org board (new tooling surface, content leaves the
+repo); issues-only (cross-repo work homeless); status quo (voted down at the retro).
+**Refs:** #55, https://github.com/CAMELS-Research-Group/lab-os/blob/main/docs/proposals/2026-07-16-lab-wide-backlog.md
 
 ---
 

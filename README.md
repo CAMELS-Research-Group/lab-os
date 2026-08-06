@@ -19,6 +19,8 @@ by agents and CI.
 - `.claude/scripts/` — [`link-lab-assets.sh`](.claude/scripts/link-lab-assets.sh) symlinks the skills/commands into `~/.claude/` so they work from any repo, not just sessions opened in the dev home. Re-run per machine.
 - [`reference/specialist-dispatch.md`](reference/specialist-dispatch.md) — the owning dispatch contract for the specialist review panel (triggers, per-pass cap, model tier, finding schema, merge/dedup rules, degradation).
 - [`PR-LIFECYCLE.md`](PR-LIFECYCLE.md) — end-to-end PR lifecycle: merge bar, solo-maintainer bypass, pre-merge log cleanup.
+- [`BACKLOG.md`](BACKLOG.md) — the lab-wide backlog for cross-repo work (convention: [`docs/proposals/2026-07-16-lab-wide-backlog.md`](docs/proposals/2026-07-16-lab-wide-backlog.md)); repo-scoped work stays in that repo's issues.
+- `docs/proposals/` — dated convention proposals (`<YYYY-MM-DD>-<slug>.md`), e.g. the [lab-wide backlog proposal](docs/proposals/2026-07-16-lab-wide-backlog.md).
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — lab-level expensive findings and gotchas, indexed by symptom.
 - `templates/` — starter files for new repos and members:
   - [`global-CLAUDE.template.md`](templates/global-CLAUDE.template.md) — personal-global persona + lab operating philosophy (→ `~/.claude/CLAUDE.md`)
