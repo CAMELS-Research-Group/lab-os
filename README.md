@@ -16,6 +16,7 @@ by agents and CI.
   - [`04-docs.md`](.claude/rules/04-docs.md) — documentation standard (single-source, tiers, byte budgets, ENG doc standards, rules numbering)
 - [`PR-LIFECYCLE.md`](PR-LIFECYCLE.md) — end-to-end PR lifecycle: merge bar, solo-maintainer bypass, pre-merge log cleanup.
 - [`BACKLOG.md`](BACKLOG.md) — the lab-wide backlog for cross-repo work (convention: [`docs/proposals/2026-07-16-lab-wide-backlog.md`](docs/proposals/2026-07-16-lab-wide-backlog.md)); repo-scoped work stays in that repo's issues.
+- `docs/proposals/` — dated convention proposals (`<YYYY-MM-DD>-<slug>.md`), e.g. the [lab-wide backlog proposal](docs/proposals/2026-07-16-lab-wide-backlog.md).
 - [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — lab-level expensive findings and gotchas, indexed by symptom.
 - `templates/` — starter files for new repos and members:
   - [`global-CLAUDE.template.md`](templates/global-CLAUDE.template.md) — personal-global persona + lab operating philosophy (→ `~/.claude/CLAUDE.md`)

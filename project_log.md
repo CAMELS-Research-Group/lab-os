@@ -34,7 +34,7 @@ the format was already taught in the building-workshop answer key, so adoption c
 promotion, not an invention. Full tradeoffs: `docs/proposals/2026-07-16-lab-wide-backlog.md`.
 **Alternatives:** GitHub Projects org board (new tooling surface, content leaves the
 repo); issues-only (cross-repo work homeless); status quo (voted down at the retro).
-**Refs:** #55; docs/proposals/2026-07-16-lab-wide-backlog.md
+**Refs:** #55, https://github.com/CAMELS-Research-Group/lab-os/blob/main/docs/proposals/2026-07-16-lab-wide-backlog.md
 
 ---
 

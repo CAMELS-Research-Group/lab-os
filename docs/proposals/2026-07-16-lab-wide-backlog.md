@@ -33,7 +33,8 @@ retro quadrants) have nowhere to accumulate as actionable items.
   one item per block, additive edits); no per-item discussion threads (mitigated: an item
   that needs discussion links a GitHub issue and keeps only the pointer); manual grooming
   (mitigated: sprint-boundary cadence below). lab-os is public — items must be
-  public-tier safe: no gated-dataset details, no private-repo paths, no personal data.
+  public-tier safe: no gated-dataset details, no private-repo paths, no participant data
+  (attributing items to lab members by name is fine on a public conventions repo).
 - **Buys:** versioned, greppable, PR-reviewed like every other lab convention; zero new
   tooling; the format is already taught in the workshop, so onboarding cost is nil; the
   Drop item is retired the day this merges.

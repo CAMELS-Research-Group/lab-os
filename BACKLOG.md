@@ -38,6 +38,7 @@ has a Problem and a Done-when and an owner. -->
   for proposing, ratifying, and reinforcing them (retro "Longed for: conventions/runbooks")
 - **Who it helps:** every member and every agent session that inherits the rules
 - **Value:** the retro's most-demanded gap; unblocks consistent multi-agent workflows
+- **Owner:** Jean
 - **Rough size:** M
 - **Done when:** a convention-proposal template exists and one convention has gone
   proposal → ratified → written into a `.claude/rules/` or handbook page via it
@@ -50,21 +51,23 @@ has a Problem and a Done-when and an owner. -->
   no feedback loop from session to session
 - **Who it helps:** workshop facilitators and participants
 - **Value:** workshops are the lab's onboarding + convention surface; compounding return
+- **Owner:** Watson
 - **Rough size:** M
-- **Done when:** next workshop runs with a documented process change traced to collected
-  feedback
+- **Done when:** the next workshop's committed process notes (under `docs/workshops/`)
+  record a process change traced to the previous session's collected feedback
 - **Depends on:** —
 - **Status:** ready
 
-## B3 — Lab-wide backlog
+## B3 — Lab-wide backlog (this file)
 
 - **Problem:** open lab work routes through one maintainer's personal file (retro Drop:
   "Watson as Backlog")
 - **Who it helps:** whole team — shared visibility, anyone can groom or claim
 - **Value:** retires a voted-down bottleneck; standing home for the other retro items
+- **Owner:** Kiara
 - **Rough size:** S
-- **Done when:** this file merged to lab-os main and the first sprint-boundary grooming
-  has happened
+- **Done when:** the first sprint-boundary grooming commit touching this file is on
+  lab-os `main`
 - **Depends on:** —
 - **Status:** in-progress
 
@@ -73,8 +76,9 @@ has a Problem and a Done-when and an owner. -->
 - **Problem:** PRD drafting and working sessions run unbounded (retro Try, assigned Arya)
 - **Who it helps:** anyone running a planning or pairing session
 - **Value:** predictable sessions; complements the 2-week sprint Keep
+- **Owner:** Arya
 - **Rough size:** S
-- **Done when:** a time-box convention is written (target durations per session type) and
-  applied in one real PRD session
+- **Done when:** a time-box convention (target durations per session type) is committed
+  under `docs/` and one committed PRD cites the time-box it ran under
 - **Depends on:** —
 - **Status:** ready
