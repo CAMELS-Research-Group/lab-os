@@ -10,7 +10,7 @@ Every fact has one owning doc; others link to or visibly derive from it, naming 
 
 | Tier | Reader | Surfaces | Standard |
 |---|---|---|---|
-| AI | Agents | Always-loaded: `CLAUDE.md`, `.claude/rules/`. First-read: log head. Grep-only: archive, `TROUBLESHOOTING.md` | Dense, deterministic, count-free; grep-only unbudgeted |
+| AI | Agents | Always-loaded: `CLAUDE.md`, `.claude/rules/`. First-read: log head. Grep-only: archive, `TROUBLESHOOTING.md`, `.claude/skills/**` (loaded on invocation, never always-on) | Dense, deterministic, count-free; grep-only unbudgeted |
 | ENG | Lab members | PRDs, specs, plans, TRD/ADD, runbooks | Skimmable; stable anchors; explicit contracts; code-free plans |
 | Public | Stakeholders | Roadmaps, overviews, outreach | Jargon-free; no codenames; overclaim-scrubbed; single-sourced |
 
