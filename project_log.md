@@ -23,6 +23,30 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ---
 
+## 2026-08-06 14:00 — Backlog-lint fails closed on structural defects
+
+**Decision:** Remediating the #67 review round: Items-section text the parser cannot
+attribute to an item is now a hard error and stays leak-scanned (it was silently
+dropped between `## Items` and the first heading, and inside any block whose heading
+failed to parse), and `--write-index` refuses to regenerate while structural parse
+errors exist instead of deleting the unparsed blocks' Index rows under a success
+message. Same posture extended mechanically: `/home/` joins the leak tripwire, an
+unparseable `Depends on` value errors rather than reading as "no dependencies", a
+template rename of a rule-bearing field label fails the run, CI annotations anchor
+to file+line, and the workflow rejects unrecognized `enforce` values.
+**Why:** Both blockers silently inverted the module's own contract — the leak
+tripwire was disabled exactly where the file was malformed, and the documented
+repair command destroyed committed rows while reporting success. The generalizable
+rule: a derived projection is only safe to regenerate from a source that fully
+parsed, and ambiguous input fails closed, matching the schema path's existing
+posture.
+**Alternatives:** fix once on #68 and close this PR (rejected — the review that
+found the defects binds here; #68 rebases); warn on unattached text (rejected —
+unowned text is exactly what escapes every field-level check).
+**Refs:** #67; scripts/backlog_lint.py
+
+---
+
 ## 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI
 
 **Decision:** A `backlog_lint` CI check (sibling to `log-lint` / `docs-budget`) validates
