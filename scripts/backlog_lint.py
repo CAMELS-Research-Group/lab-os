@@ -21,7 +21,9 @@ docs-budget warn-until-first-green posture):
   - the Index is a GENERATED projection of the Item blocks: the committed
     Index table must byte-match render_index(items). Edit the Item blocks,
     then run `--write-index`; never hand-edit the Index. (This subsumes the
-    old orphan-row / missing-row / duplicate-Index-id checks.)
+    old orphan-row / missing-row / duplicate-Index-id checks.) `--write-index`
+    refuses to run while the file has structural parse errors — regenerating
+    from a partial parse would silently drop the unparsed blocks' rows.
   - `Depends on` referential integrity (ids exist) + acyclicity (no cycle)
   - structural integrity of the Items section: a `## ` heading that is not a
     well-formed item heading, and non-blank text no item or field owns (a
@@ -471,6 +473,15 @@ def _write_index(backlog_path: Path) -> int:
     if not backlog_path.exists():
         return _fail(f"{backlog_path} not found")
     text = backlog_path.read_text()
+    parsed = parse_backlog(text)
+    if parsed.parse_errors:
+        # Refuse to regenerate from a source that did not fully parse: the
+        # render sees only the blocks the parser owned, so writing it would
+        # silently delete the committed Index row of every block behind a
+        # structural error — and report success. Fix the structure first.
+        listing = "; ".join(parsed.parse_errors)
+        return _fail(f"refusing to regenerate: {len(parsed.parse_errors)} "
+                     f"structural error(s) must be fixed first: {listing}")
     lines = text.splitlines(keepends=True)
     start = end = None
     in_index = False
@@ -487,7 +498,7 @@ def _write_index(backlog_path: Path) -> int:
     if start is None:
         return _fail("no Index table found under `## Index` — add the header "
                      "row by hand once, then --write-index maintains it")
-    rendered = render_index(parse_backlog(text).items) + "\n"
+    rendered = render_index(parsed.items) + "\n"
     new = "".join(lines[:start]) + rendered + "".join(lines[end:])
     backlog_path.write_text(new)
     print(f"backlog-lint: wrote derived Index to {backlog_path}")
@@ -704,7 +715,18 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
            str(rendered_rows))
 
     # CLI exit-code contract through main()/_run (the Phase-2 flip surface).
+    # Fixture main() calls run with stdout captured so their deliberate
+    # findings do not land as stray ::error annotations on a real CI job.
+    import contextlib
+    import io
     import tempfile
+
+    def run_main(args: list[str]) -> tuple[int, str]:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = main(args)
+        return rc, buf.getvalue()
+
     with tempfile.TemporaryDirectory() as td:
         tdp = Path(td)
         good_b, bad_b = tdp / "GOOD.md", tdp / "BAD.md"
@@ -735,6 +757,19 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
         expect("--write-index handles | in a title; result lints clean",
                _write_index(piped_b) == 0
                and not lint(parse_backlog(piped_b.read_text()), req).errors)
+        # Blocker 2 (PR #67 review): --write-index must refuse on structural
+        # parse errors instead of silently deleting the unparsed blocks' rows.
+        mal = tdp / "MALFORMED.md"
+        mal_text = _GOOD.replace("## B2 — Second", "## B2 - Second")
+        mal.write_text(mal_text)
+        rc, out = run_main(["--check", str(mal), "--write-index"])
+        expect("--write-index on a structurally broken backlog exits non-zero",
+               rc == 1, out)
+        expect("--write-index refusal names the structural error",
+               "refusing to regenerate" in out
+               and "unrecognized item heading" in out, out)
+        expect("--write-index leaves the broken file byte-identical",
+               mal.read_text() == mal_text)
         unread_tpl = tdp / "unreadable-template.md"
         unread_tpl.write_text("- **Field:** x\n")
         unread_tpl.chmod(0)
