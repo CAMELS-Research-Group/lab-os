@@ -10,15 +10,25 @@ should look at when it grooms the backlog —
   - Ready & unblocked   (status ready, every dependency done)
 
 Status / owner / size / title come from the **Index table**, dependencies from
-the Item blocks' `Depends on` fields — safe to mix because backlog-lint
-enforces the Index as a byte-exact render of the Item blocks.
+the Item blocks' `Depends on` fields. backlog-lint's byte-exact Index check
+runs warn-only until its enforce flip, so the mix is NOT assumed safe: before
+rendering, the source-integrity guard shared with backlog_view.py refuses —
+exit 1 — any backlog with parse errors, zero Item blocks despite non-empty
+text, or Index rows drifting from the Item blocks. A digest that reads
+"nothing to groom" because the source was wreckage is the failure mode the
+guard exists to prevent. A missing backlog file is a clean one-line error,
+exit 1 (the scheduled workflow does no exit-code branching; any non-zero
+fails it).
 
 The scheduled workflow writes this to the Actions run summary every sprint
 boundary, and — only when explicitly armed — posts/updates a GitHub issue. This
 script just renders the text; the surface is the workflow's job.
 
-Reuses parse_backlog + parse_deps from backlog_lint (one parser, one
-dependency grammar — not copies). Stdlib only; Python 3.11+.
+Reuses parse_backlog from backlog_lint (one parser, one dependency grammar —
+not copies) and ready_unblocked + source_integrity_errors from backlog_view
+(one predicate, one guard — their long-term home is backlog_lint beside the
+parser, kept out of it here so this branch does not fork PR #67's file).
+Stdlib only; Python 3.11+.
 """
 from __future__ import annotations
 
@@ -27,26 +37,30 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from backlog_lint import Backlog, parse_backlog, parse_deps  # noqa: E402
+from backlog_lint import Backlog, _in_ci, parse_backlog  # noqa: E402
+from backlog_view import ready_unblocked, source_integrity_errors  # noqa: E402
 
 
 def _blank_owner(o: str) -> bool:
     return o.strip() in ("", "—", "-", "TBD", "tbd")
 
 
-def render_digest(backlog: Backlog) -> str:
-    status = {r["id"]: r["status"] for r in backlog.index}
-    deps = {it.id: parse_deps(it.fields.get("Depends on", "—")) for it in backlog.items}
+def _size_token(r: dict[str, str]) -> str:
+    """First whitespace token of the size cell — backlog_lint's convention
+    (`split()[0]` checked against SIZES), not a prefix match: "Large-ish"
+    must not count as L."""
+    parts = r["size"].split()
+    return parts[0] if parts else ""
 
+
+def render_digest(backlog: Backlog) -> str:
     def line(r: dict[str, str]) -> str:
         return f"- {r['id']} — {r['title']} ({r['owner']}, {r['size']})"
 
     ready_no_owner = [r for r in backlog.index if r["status"] == "ready" and _blank_owner(r["owner"])]
     in_progress = [r for r in backlog.index if r["status"] == "in-progress"]
-    size_l = [r for r in backlog.index if r["size"].upper().startswith("L")]
-    unblocked = [r for r in backlog.index
-                 if r["status"] == "ready"
-                 and all(status.get(d) == "done" for d in deps.get(r["id"], []))]
+    size_l = [r for r in backlog.index if _size_token(r) == "L"]
+    unblocked = ready_unblocked(backlog)
 
     out = ["# Backlog grooming digest", "",
            "_Sprint-boundary grooming surface, generated from `BACKLOG.md`._", ""]
@@ -73,7 +87,26 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     if args.self_test:
         return _self_test()
-    print(render_digest(parse_backlog(Path(args.backlog).read_text())))
+    path = Path(args.backlog)
+    if not path.exists():
+        # Clean one-line error, matching backlog_lint's missing-file report —
+        # not a raw FileNotFoundError traceback.
+        msg = f"{path} not found"
+        print(f"::error::backlog-digest: {msg}" if _in_ci() else f"ERROR {msg}")
+        return 1
+    backlog = parse_backlog(path.read_text())
+    errs = source_integrity_errors(backlog)
+    if errs:
+        # A broken source must not render as an empty "nothing to groom"
+        # digest (run summary / standing issue). Guard shared with
+        # backlog_view — see its docstring for the three refusal classes.
+        for e in errs:
+            print(f"::error::backlog-digest: {path}: {e}" if _in_ci()
+                  else f"ERROR {path}: {e}")
+        msg = f"{path} failed source integrity — refusing to render a digest"
+        print(f"::error::backlog-digest: {msg}" if _in_ci() else f"ERROR {msg}")
+        return 1
+    print(render_digest(backlog))
     return 0
 
 
@@ -128,6 +161,55 @@ def _self_test() -> int:
     expect("no-dep ready B2 unblocked", "B2" in unblocked)
     expect("B6 NOT unblocked (dep B3 not done)", "B6" not in unblocked)
     expect("non-ready B3/B4 not in unblocked", "B3" not in unblocked and "B4" not in unblocked)
+
+    # Every documented blank-owner sentinel arm, not just the "—" the fixture
+    # happens to use.
+    for v in ("", "—", "-", "TBD", "tbd"):
+        expect(f"_blank_owner({v!r}) is blank", _blank_owner(v))
+    expect("_blank_owner('Kiara') is not blank", not _blank_owner("Kiara"))
+
+    # Size is backlog_lint's token convention, not a prefix match.
+    largish = fix.replace("| Arya | L |", "| Arya | Large-ish |") \
+                 .replace("**Rough size:** L\n", "**Rough size:** Large-ish\n")
+    expect("size filter is token-exact, not startswith('L')",
+           "B4" not in render_digest(parse_backlog(largish))
+           .split("## Size L")[1].split("## ")[0])
+
+    # The CLI entry point — the argparse wiring and stdout path the scheduled
+    # workflow runs, plus the fail-closed lanes main() owns.
+    import contextlib
+    import io
+    import tempfile
+
+    def run_main(path: Path) -> tuple[int, str]:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = main(["--backlog", str(path)])
+        return rc, buf.getvalue()
+
+    with tempfile.TemporaryDirectory() as td:
+        src = Path(td) / "BACKLOG.md"
+        src.write_text(fix)
+        rc, out_text = run_main(src)
+        expect("CLI renders a valid backlog to stdout (exit 0)",
+               rc == 0 and "# Backlog grooming digest" in out_text)
+        rc, out_text = run_main(Path(td) / "absent.md")
+        expect("missing backlog: clean one-line error, exit 1",
+               rc == 1 and "not found" in out_text)
+        # Destroyed source: must refuse, never print "nothing to groom".
+        src.write_text("<<<<<<< HEAD\ntotal wreckage\n=======\nother side\n"
+                       ">>>>>>> theirs\n")
+        rc, out_text = run_main(src)
+        expect("destroyed source refuses a digest (exit 1)",
+               rc == 1 and "refusing" in out_text
+               and "grooming digest" not in out_text)
+        # Index row with no Item block (drop B6's block, keep its row): the
+        # old predicate advertised B6 as ready & unblocked despite
+        # `Depends on: B3` (B3 is in-progress, not done).
+        src.write_text(fix.split("## B6 —")[0])
+        rc, out_text = run_main(src)
+        expect("Index/Item drift refuses a digest, names the id",
+               rc == 1 and "B6" in out_text)
 
     print("backlog-digest self-test:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
