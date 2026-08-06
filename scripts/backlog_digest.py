@@ -77,89 +77,18 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-# A lint-valid fixture (backlog_lint reports zero errors on it — asserted in
-# the self-test): every Item block carries the full template schema, and the
-# Index is the byte-exact render of the blocks. B5/B6 differ only in whether
-# their dependency is done, which is what exercises the unblocked predicate.
-_FIX = """## Index
+# The self-test fixture lives at tests/backlog_digest/BACKLOG.md — the house
+# pattern (cf. tests/log_lint/, tests/merge_bar_check/, tests/docs_budget/):
+# a reviewable, diffable file rather than an in-module literal. It is
+# lint-valid (zero errors — asserted in the self-test): every Item block
+# carries the full template schema, and the Index is the byte-exact render of
+# the blocks. B5/B6 differ only in whether their dependency is done, which is
+# what exercises the unblocked predicate.
+_FIXTURE = Path(__file__).resolve().parent.parent / "tests/backlog_digest/BACKLOG.md"
 
-| id | title | owner | size | status |
-|---|---|---|---|---|
-| B1 | Done thing | Kiara | S | done |
-| B2 | Orphan ready | — | M | ready |
-| B3 | Working | Watson | M | in-progress |
-| B4 | Big one | Arya | L | inbox |
-| B5 | Ready unblocked | Kiara | S | ready |
-| B6 | Ready blocked | Jean | S | ready |
 
-## Items
-
-## B1 — Done thing
-
-- **Problem:** was broken
-- **Who it helps:** the team
-- **Value:** shipped value
-- **Owner:** Kiara
-- **Rough size:** S
-- **Done when:** `scripts/a.py` exists
-- **Depends on:** —
-- **Status:** done
-
-## B2 — Orphan ready
-
-- **Problem:** nobody owns it
-- **Who it helps:** groomers
-- **Value:** visibility
-- **Owner:** —
-- **Rough size:** M
-- **Done when:** `docs/b.md` merged
-- **Depends on:** —
-- **Status:** ready
-
-## B3 — Working
-
-- **Problem:** in flight
-- **Who it helps:** the team
-- **Value:** steady
-- **Owner:** Watson
-- **Rough size:** M
-- **Done when:** `scripts/c.py --check` passes
-- **Depends on:** —
-- **Status:** in-progress
-
-## B4 — Big one
-
-- **Problem:** too large
-- **Who it helps:** future us
-- **Value:** big payoff
-- **Owner:** Arya
-- **Rough size:** L
-- **Done when:** `docs/d.md` split into items
-- **Depends on:** —
-- **Status:** inbox
-
-## B5 — Ready unblocked
-
-- **Problem:** next up
-- **Who it helps:** the team
-- **Value:** quick win
-- **Owner:** Kiara
-- **Rough size:** S
-- **Done when:** `scripts/e.py` lands
-- **Depends on:** B1
-- **Status:** ready
-
-## B6 — Ready blocked
-
-- **Problem:** waiting on B3
-- **Who it helps:** the team
-- **Value:** sequenced
-- **Owner:** Jean
-- **Rough size:** S
-- **Done when:** `docs/f.md` lands
-- **Depends on:** B3
-- **Status:** ready
-"""
+def _fixture() -> str:
+    return _FIXTURE.read_text()
 
 
 def _self_test() -> int:
@@ -172,13 +101,15 @@ def _self_test() -> int:
         print(f"  [{'ok' if cond else 'FAIL'}] {name}")
         ok = ok and cond
 
+    fix = _fixture()
+
     # The fixture must model a real input: backlog_lint accepts it with zero
     # errors (full schema, Index == render of the blocks).
     template = Path(__file__).resolve().parent.parent / "templates/backlog-item.template.md"
-    errs = lint(parse_backlog(_FIX), required_fields(template.read_text())).errors
+    errs = lint(parse_backlog(fix), required_fields(template.read_text())).errors
     expect("fixture is lint-valid (zero errors)", not errs)
 
-    d = render_digest(parse_backlog(_FIX))
+    d = render_digest(parse_backlog(fix))
 
     def sec(title: str) -> str:
         return d.split(f"## {title}")[1].split("## ")[0]

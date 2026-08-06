@@ -142,54 +142,18 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-# A lint-valid fixture (backlog_lint reports zero errors on it — asserted in
-# the self-test, matching the digest fixture's bar): every Item block carries
-# the full template schema, and the Index is the byte-exact render of the
-# blocks. B2/B3 differ only in whether their dependency is done, which is
-# what exercises the unblocked predicate.
-_FIX = """## Index
+# The self-test fixture lives at tests/backlog_view/BACKLOG.md — the house
+# pattern (cf. tests/log_lint/, tests/merge_bar_check/, tests/docs_budget/):
+# a reviewable, diffable file rather than an in-module literal. It is
+# lint-valid (zero errors — asserted in the self-test, matching the digest
+# fixture's bar): every Item block carries the full template schema, and the
+# Index is the byte-exact render of the blocks. B2/B3 differ only in whether
+# their dependency is done, which is what exercises the unblocked predicate.
+_FIXTURE = Path(__file__).resolve().parent.parent / "tests/backlog_view/BACKLOG.md"
 
-| id | title | owner | size | status |
-|---|---|---|---|---|
-| B1 | Done thing | Kiara | S | done |
-| B2 | Ready thing | Watson | M | ready |
-| B3 | Blocked thing | Arya | S | ready |
 
-## Items
-
-## B1 — Done thing
-
-- **Problem:** was broken
-- **Who it helps:** the team
-- **Value:** shipped value
-- **Owner:** Kiara
-- **Rough size:** S
-- **Done when:** `scripts/a.py` exists
-- **Depends on:** —
-- **Status:** done
-
-## B2 — Ready thing
-
-- **Problem:** next up
-- **Who it helps:** the team
-- **Value:** quick win
-- **Owner:** Watson
-- **Rough size:** M
-- **Done when:** `scripts/b.py` lands
-- **Depends on:** B1
-- **Status:** ready
-
-## B3 — Blocked thing
-
-- **Problem:** waiting on B2
-- **Who it helps:** the team
-- **Value:** sequenced
-- **Owner:** Arya
-- **Rough size:** S
-- **Done when:** `docs/c.md` lands
-- **Depends on:** B2
-- **Status:** ready
-"""
+def _fixture() -> str:
+    return _FIXTURE.read_text()
 
 
 def _self_test() -> int:
@@ -200,14 +164,16 @@ def _self_test() -> int:
         print(f"  [{'ok' if cond else 'FAIL'}] {name}")
         ok = ok and cond
 
+    fix = _fixture()
+
     # The fixture must model a real input: backlog_lint accepts it with zero
     # errors (full schema, Index == render of the blocks).
     from backlog_lint import lint, required_fields
     template = Path(__file__).resolve().parent.parent / "templates/backlog-item.template.md"
     expect("fixture is lint-valid (zero errors)",
-           not lint(parse_backlog(_FIX), required_fields(template.read_text())).errors)
+           not lint(parse_backlog(fix), required_fields(template.read_text())).errors)
 
-    md = render(parse_backlog(_FIX))
+    md = render(parse_backlog(fix))
     # B2 is ready and its only dep (B1) is done -> unblocked; B3 depends on B2 (ready) -> blocked.
     ready_section = md.split("## By owner")[0]
     expect("B2 shown ready&unblocked", "| B2 |" in ready_section)
@@ -222,10 +188,10 @@ def _self_test() -> int:
     with tempfile.TemporaryDirectory() as td:
         src = Path(td) / "BACKLOG.md"
         out = Path(td) / "views.md"
-        src.write_text(_FIX)
+        src.write_text(fix)
         expect("--write exits 0", _write(src, out) == 0)
         expect("fresh dashboard passes --check (exit 0)", _check(src, out) == 0)
-        src.write_text(_FIX.replace("Ready thing", "Renamed thing"))
+        src.write_text(fix.replace("Ready thing", "Renamed thing"))
         expect(f"stale dashboard fails --check (exit {_STALE_EXIT})",
                _check(src, out) == _STALE_EXIT)
         expect(f"missing dashboard is stale, fails closed (exit {_STALE_EXIT})",
