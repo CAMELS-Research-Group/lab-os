@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Conventions Collection — Lab-OS Promotion Review</title>
+<style>
+  :root {
+    --bg: #0e1014; --surface: #15181e; --raised: #1b1f27;
+    --edge: rgba(255,255,255,.08); --edge-strong: rgba(255,255,255,.16);
+    --fg: #e7e9ee; --fg-muted: #a2a8b4; --fg-faint: #6c7280;
+    --accent: #3fb950; --warning: #d29922; --danger: #f85149;
+    --blue: #58a6ff; --purple: #bc8cff;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; line-height: 1.55; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px 64px; }
+
+  /* Top bar */
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 4px 2px 16px; flex-wrap: wrap; }
+  .topbar .logo { font-weight: 600; font-size: 16px; letter-spacing: -.01em; }
+  .topbar .env { margin-left: auto; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 999px; padding: 2px 10px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--edge); margin-bottom: 24px; flex-wrap: wrap; }
+  .tab { font-size: 13px; color: var(--fg-faint); padding: 8px 14px; border-bottom: 2px solid transparent;
+    cursor: pointer; white-space: nowrap; transition: color .15s, border-color .15s; user-select: none; }
+  .tab:hover { color: var(--fg-muted); }
+  .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Source badge */
+  .source-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .source-badge { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+    border-radius: 999px; padding: 2px 10px; border: 1px solid; }
+  .badge-watson { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 40%, transparent); }
+  .badge-jean { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .badge-kiara { color: var(--purple); border-color: color-mix(in srgb, var(--purple) 40%, transparent); }
+  .badge-arya { color: #cf6a9c; border-color: color-mix(in srgb, #cf6a9c 40%, transparent); }
+  .badge-needs { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 40%, transparent); }
+  .badge-upstream { color: var(--fg-faint); border-color: var(--edge); }
+  .badge-sharpen { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 30%, transparent); }
+
+  /* Cards */
+  .card { background: var(--raised); border: 1px solid var(--edge); border-radius: 12px;
+    overflow: hidden; margin-bottom: 16px; }
+  .card > header { display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+    border-bottom: 1px solid var(--edge); }
+  .card > header h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--fg); font-weight: 600; }
+  .card > header .count { margin-left: auto; font-family: var(--mono); font-size: 11px;
+    color: var(--fg-faint); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 9px; }
+
+  /* Convention entries */
+  .entry { padding: 14px 16px; border-top: 1px solid var(--edge); }
+  .entry:first-child { border-top: none; }
+  .entry-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .entry-id { font-family: var(--mono); font-size: 12px; color: var(--fg-faint); min-width: 32px; }
+  .entry-title { font-size: 14px; font-weight: 600; }
+  .entry-tag { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
+    border-radius: 4px; padding: 1px 6px; }
+  .tag-needs { background: color-mix(in srgb, var(--warning) 15%, transparent); color: var(--warning); }
+  .tag-sharpen { background: color-mix(in srgb, var(--blue) 15%, transparent); color: var(--blue); }
+  .tag-copy { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+  .tag-author { background: color-mix(in srgb, var(--purple) 12%, transparent); color: var(--purple); }
+  .entry-body { font-size: 13px; color: var(--fg-muted); line-height: 1.6; }
+  .entry-body strong { color: var(--fg); font-weight: 500; }
+  .entry-sources { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .entry-tradeoff { margin-top: 8px; font-size: 12px; color: var(--fg-faint); padding-left: 12px;
+    border-left: 2px solid var(--edge-strong); }
+
+  /* Stats bar */
+  .stats { display: flex; gap: 20px; flex-wrap: wrap; padding: 16px 0; margin-bottom: 20px;
+    border-bottom: 1px solid var(--edge); }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: var(--fg-faint); text-transform: uppercase; letter-spacing: .08em; }
+
+  /* Legend */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; font-size: 12px; color: var(--fg-faint); }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Prose blocks (for operator docs) */
+  .prose { padding: 16px; font-size: 13.5px; line-height: 1.7; color: var(--fg-muted); }
+  .prose h2 { font-size: 14px; font-weight: 600; color: var(--fg); margin: 18px 0 8px; text-transform: uppercase;
+    letter-spacing: .05em; }
+  .prose h2:first-child { margin-top: 0; }
+  .prose ul { padding-left: 18px; }
+  .prose li { margin-bottom: 6px; }
+  .prose li strong { color: var(--fg); }
+  .prose p { margin-bottom: 8px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .wrap { padding: 16px 12px 48px; }
+    .stat-val { font-size: 18px; }
+    .entry { padding: 12px; }
+  }
+
+  /* Footer */
+  .foot { margin-top: 28px; font-size: 12px; color: var(--fg-faint); line-height: 1.7; }
+  .foot code { font-family: var(--mono); color: var(--fg-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <span class="logo">Conventions Collection</span>
+    <span class="env">local preview</span>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <span class="tab active" data-tab="overview">Overview</span>
+    <span class="tab" data-tab="operator">Steering · Jean · Kiara · Arya · Watson</span>
+    <span class="tab" data-tab="structural">Structural &amp; Engineering</span>
+    <span class="tab" data-tab="verification">Verification &amp; Honesty</span>
+    <span class="tab" data-tab="gates">Gates &amp; Authority</span>
+    <span class="tab" data-tab="coordination">Coordination</span>
+    <span class="tab" data-tab="tools">Skills &amp; Tools</span>
+    <span class="tab" data-tab="ci">CI &amp; Release</span>
+    <span class="tab" data-tab="data">Data &amp; Reproducibility</span>
+    <span class="tab" data-tab="docs">Docs &amp; Templates</span>
+    <span class="tab" data-tab="upstream">Already Upstream</span>
+  </nav>
+
+  <!-- ====== OVERVIEW ====== -->
+  <div class="panel active" id="panel-overview">
+    <div class="stats">
+      <div class="stat"><span class="stat-val">7</span><span class="stat-label">Source docs</span></div>
+      <div class="stat"><span class="stat-val">4</span><span class="stat-label">Contributors</span></div>
+      <div class="stat"><span class="stat-val" id="total-count">~85</span><span class="stat-label">Total entries</span></div>
+      <div class="stat"><span class="stat-val" id="needs-count">~30</span><span class="stat-label">Needs authoring</span></div>
+      <div class="stat"><span class="stat-val" id="converge-count">~12</span><span class="stat-label">Convergent (2+ sources)</span></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Jean (fleet/CAMELS)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Watson (fork)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Kiara (steering)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#cf6a9c"></div> Arya (steering)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div> Needs authoring</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--fg-faint)"></div> Already upstream</div>
+    </div>
+
+    <section class="card">
+      <header><h2>Source Documents</h2><span class="count">7</span></header>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">1</span>
+          <span class="entry-title">conventions-to-promote-2026-07-16.md</span>
+          <span class="source-badge badge-jean">Jean</span>
+          <span class="entry-tag tag-needs">Deep extraction</span>
+        </div>
+        <div class="entry-body">Deep-prompt extraction from two internal application project records. Five parallel readers, cross-checked against upstream. <strong>The deeper prompt.</strong> 13 entries across 4 themes (Structural Resilience, Correctness by Construction, Verification Honesty, Git). Highest-confidence promotes: A1 (dependency seam), A2 (soft-degrade), B1 (fail-fast guards).</div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">2</span>
+          <span class="entry-title">lab-os-promotion-review.md</span>
+          <span class="source-badge badge-watson">Watson</span>
+          <span class="entry-tag tag-copy">Full review</span>
+        </div>
+        <div class="entry-body">Full fork-vs-upstream diff + machine-wide sweep of all lab codebases. <strong>38 entries</strong> across conventions, skills, tools, patterns, security, CI, release, data, docs, and agent orchestration. Includes the reusable prompt that generated it.</div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">3</span>
+          <span class="entry-title">lab-os-promotion-review (1).md</span>
+          <span class="source-badge badge-watson">Watson</span>
+          <span class="entry-tag tag-sharpen">Fork only</span>
+        </div>
+        <div class="entry-body">Fork-only subset of the full review — 17 entries from the Agentic_Workspace fork. <strong>Subset of doc #2</strong> (identical entries 1–17; the machine-wide addendum entries 18–38 are absent). Includes the simpler prompt.</div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">4</span>
+          <span class="entry-title">lab-os-promotion-review-jean.md</span>
+          <span class="source-badge badge-jean">Jean</span>
+          <span class="entry-tag tag-needs">Workspace review</span>
+        </div>
+        <div class="entry-body">Jean's CAMELS agentic-workspace review — <strong>28 entries</strong> from fleet/coordination, .claude config, project logs, memory, and plans. Four parallel read-only reviewers + a second independent pass. Covers verification, gates, coordination, engineering discipline, data handling, reusable methods.</div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">5</span>
+          <span class="entry-title">claude-conventions-jean (1).md</span>
+          <span class="source-badge badge-jean">Jean</span>
+          <span class="entry-tag tag-author">Operator side</span>
+        </div>
+        <div class="entry-body">Jean's "my side of the keyboard" — operator steering conventions. Mode-setting, authorization, delegation, interview style, honesty moves, commands/rituals. <strong>A worked example for the team survey.</strong></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">6</span>
+          <span class="entry-title">steering-conventions.md</span>
+          <span class="source-badge badge-kiara">Kiara</span>
+          <span class="entry-tag tag-author">Operator side</span>
+        </div>
+        <div class="entry-body">Kiara's operator-side conventions. Mode-setting ("resume," "autonomous task-by-task"), authorization ("go" / "go + rider"), delegation, interview style, honesty ("confirm with evidence"), commands/rituals ("full sprint-close verification").</div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">7</span>
+          <span class="entry-title">arya-steering.md</span>
+          <span class="source-badge badge-arya">Arya</span>
+          <span class="entry-tag tag-author">Operator side</span>
+        </div>
+        <div class="entry-body">Arya's operator-side conventions. Mode-setting ("review this as an outsider," plan-mode-before-writes), authorization ("go" / "just create X and save"), delegation (checkpoint-before-handoff, fresh no-context subagent), interview style ("things changed"), honesty (show the losers, contradiction = stop, zero-findings audit), commands/rituals (/log, PRD-before-code, corrections become standing orders).</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <header><h2>De-duplication Notes</h2></header>
+      <div class="entry">
+        <div class="entry-body">
+          <strong>Doc #3 is a strict subset of Doc #2</strong> — entries 1–17 are identical. The machine-wide addendum (entries 18–38) exists only in Doc #2. De-dupe: use Doc #2 as the canonical Watson source; Doc #3 is the simpler prompt version.<br><br>
+          <strong>Doc #5 has an exact duplicate</strong> — <code>claude-conventions-jean.md</code> and <code>claude-conventions-jean (1).md</code> are byte-identical (2546 bytes each). One copy suffices.<br><br>
+          <strong>Convergent findings across Jean + Watson (strongest promotes):</strong><br>
+          • Dependency seam (Jean A1 ↔ Watson entry implicit in fork-and-own)<br>
+          • Soft-degrade by default (Jean A2 ↔ Watson convention patterns)<br>
+          • Mocked tests ≠ live verification (Jean C1 ↔ Watson #21 ↔ Jean-workspace #1)<br>
+          • Evidence over assertion (Jean C3 ↔ Jean-workspace #3 ↔ Watson verify convention)<br>
+          • Done = pushed (Jean D1 ↔ Watson #5 squash-merge ↔ Jean-workspace #6 gate)<br>
+          • One-writer-per-tree (Jean-workspace #10 ↔ fleet coordination)<br>
+          • Fail-fast config guards (Jean B1 ↔ Watson #21 local verify gate)<br>
+          • 4-part status summary (Jean-workspace #21 — recurs verbatim in 3 surfaces)
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== STRUCTURAL & ENGINEERING ====== -->
+  <div class="panel" id="panel-structural">
+    <section class="card">
+      <header><h2>Structural Resilience &amp; Engineering Discipline</h2><span class="count">10</span></header>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">A1</span>
+          <span class="entry-title">Dependency seam — every external dep behind one config-swappable interface</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Every call to an external service goes through a single stable interface chosen by config. Swapping providers is a config change, never a call-site change. Enforced by construction (grep-the-tree test forbids SDK calls outside the seam). <strong>Convergent:</strong> independently derived in both internal applications without either naming it.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span></div>
+        <div class="entry-tradeoff">Upfront indirection + adapter/factory layer for deps you may never swap. One application built it seven sprints before the first alternate provider.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">A2</span>
+          <span class="entry-title">Soft-degrade by default — failure degrades, never crashes</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">When an external dep fails or is absent, the feature falls back to a deterministic/manual path and stays usable. Failures logged, not surfaced as errors. <strong>Convergent:</strong> derived independently in both internal applications.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span></div>
+        <div class="entry-tradeoff"><strong>Load-bearing:</strong> resilience can <em>mask</em> whether the premium path ever works. One application stayed usable on a dead provider key for four sprints while the premium path was never verified live. Must pair with a live-verification harness (C1) and a visible "degraded" signal.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">B1</span>
+          <span class="entry-title">Fail-fast config guards — invariants as hard boot errors</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">A dangerous misconfiguration refuses to boot, names the flag, states the rule. The invariant is enforced in code, not left as a convention to remember.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span></div>
+        <div class="entry-tradeoff">The guard is a moving target — every posture change means re-scoping it and updating tests in lockstep.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">B2</span>
+          <span class="entry-title">Deletion completeness — real delete purges all stores + external identity</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">"Delete" purges all stores (DB + object storage + auth identity), ordered so mid-failure is retryable, fails loud (502) rather than claiming success on partial. Every new table added to purge paths. Extends <code>02-data-protection.md</code>.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span></div>
+        <div class="entry-tradeoff">Deletion can now hard-fail when infra creds missing; requires live smoke tests.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">B3</span>
+          <span class="entry-title">LLM provider choice is a data-protection decision</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Local/self-hosted inference eliminates the data-egress + training question entirely. The privacy story becomes provider-conditional. Extends <code>02-data-protection.md</code>.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span></div>
+        <div class="entry-tradeoff">Local-first trades privacy simplicity for compute/quality limits.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J5</span>
+          <span class="entry-title">Structural-invariant-over-promise</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Enforce a security/integrity property by construction (a surface that never holds a value can't leak it; tooling with no write path can't post). Audit recovery/rerun paths against the same invariant.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J13</span>
+          <span class="entry-title">Enforce-at-authoring-time — guards over sweeps</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">A convention worth having is a self-executing write-time guard (PreToolUse), not a recurring cleanup sweep. "A convention enforced after the fact generates cleanup work forever."</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+        <div class="entry-tradeoff">Upfront guard-building + false-positive risk. Mitigate by matching structural shape.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J14</span>
+          <span class="entry-title">Multi-writer JSON-store hardening contract</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">flock (EX write / SH read) + atomic temp-file + <code>os.replace</code> + strict-load-on-write (corrupt aborts, never wipes) + tolerant-load-on-read. Six internal coordination modules independently re-derived the same discipline.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+        <div class="entry-tradeoff">Author as both a rule AND a shared helper — prose-only promotion invites copy-paste drift.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J15</span>
+          <span class="entry-title">Hardcode-then-parameterize</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Spike with literals to verify a path, then lift every dynamic value to config before it counts as done.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J16</span>
+          <span class="entry-title">Local-LLM structured-JSON output contract</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Never parse free-text-with-markers from a small local model: call with <code>format: json</code>, make needed fields required, validate leniently, sanitize extracted values after parse, fail soft.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== VERIFICATION & HONESTY ====== -->
+  <div class="panel" id="panel-verification">
+    <section class="card">
+      <header><h2>Verification &amp; Honesty</h2><span class="count">8</span></header>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">C1</span>
+          <span class="entry-title">Mocked tests are green-but-meaningless for the live path</span>
+          <span class="entry-tag tag-sharpen">Sharpen</span>
+        </div>
+        <div class="entry-body">Tests mock external providers → green proves wiring/fallback, never live integration. Each integration needs a named operator smoke recipe AND a live-verification harness that exits non-zero on degrade. <strong>Strongest convergent signal — near-identical wording in both repos.</strong></div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span><span class="source-badge badge-jean">Jean workspace</span></div>
+        <div class="entry-tradeoff">A permanently-manual step CI can't gate; the harness is built so it's harder to claim success.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">C2</span>
+          <span class="entry-title">Mutation-prove a lock/regression test actually "bites"</span>
+          <span class="entry-tag tag-sharpen">Sharpen</span>
+        </div>
+        <div class="entry-body">A test meant to lock a behavior isn't trusted until you mutate the code to break it and confirm the test goes red, then revert. Hazard: don't run mutation via <code>git checkout &lt;file&gt;</code> — that clobbered uncommitted edits in Sprint 7.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">C3</span>
+          <span class="entry-title">Evidence over assertion — including the agent's own claims</span>
+          <span class="entry-tag tag-sharpen">Sharpen</span>
+        </div>
+        <div class="entry-body">Before planning around a status/failure claim, probe the primary source. Apply the same skepticism to the agent's own statements. <strong>Most-cited principle in the entire record.</strong></div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span><span class="source-badge badge-jean">Jean workspace</span></div>
+        <div class="entry-tradeoff">Probing costs a step before acting on any claim; on quota-bound keys the probe spends the scarce resource.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J1</span>
+          <span class="entry-title">Watched-live bar — green tests are not the greenlight</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">A human-watched live run (zero freeze, real behavior observed) is the ship gate for any interactive surface. <strong>Single most-cited convention in Jean's record</strong> (174/268 tests green while 2 camera-breaking live bugs shipped, three separate times).</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+        <div class="entry-tradeoff">Someone must actually watch a live run before every ship — slower than trusting CI.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J2</span>
+          <span class="entry-title">Adversarial pre-ship second-set-of-eyes</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Anything shippable gets an independent adversarial pass first (different model or non-author), returning questions-to-verify, never verdicts — evidence decides. <code>skeptic.py</code> enforces questions-only in code.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+        <div class="entry-tradeoff">A warm second model (~25s/call) + discipline to run it by default.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J4</span>
+          <span class="entry-title">Honesty labels — ship the real, label the rest</span>
+          <span class="entry-tag tag-sharpen">Partial</span>
+        </div>
+        <div class="entry-body">Real surfaces ship; prototype/snapshot surfaces carry a provenance chip. "Danger" tone reserved for genuinely broken. Currently <code>04-docs.md</code> covers overclaim-scrub for Public tier only — needs extension.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J16b</span>
+          <span class="entry-title">Local-vs-hosted model selection rule</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Local small model for cheap, high-frequency facilitation work; hosted model for real reasoning; and anything deterministic (roster lookup, owner matching) must actually be deterministic, not model-generated.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J16c</span>
+          <span class="entry-title">A review loop cannot audit taste</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Correctness questions route to an auditor; editorial and taste calls stay with the owner. A loop will never converge on taste.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== GATES & AUTHORITY ====== -->
+  <div class="panel" id="panel-gates">
+    <section class="card">
+      <header><h2>Gates &amp; Authority</h2><span class="count">5</span></header>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">D1</span>
+          <span class="entry-title">"Done" means pushed — commit-and-push together</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Git-authoritative completion means the commit is on <code>origin</code>, not merely local. Convergent: Sprint 4 incident (work reported "merged + pushed" was local-only).</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span><span class="source-badge badge-watson">Watson #5</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J6</span>
+          <span class="entry-title">Machine-boundary per-action gate / local-private default</span>
+          <span class="entry-tag tag-sharpen">Partial</span>
+        </div>
+        <div class="entry-body">Anything leaving the machine (push, <code>gh</code> writes, merge, deploy, publish) needs explicit per-action go AND a reason. Local commits are free. <code>01-workflow</code> covers PR mechanics; the outbound gate itself is unwritten.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J7</span>
+          <span class="entry-title">Agent authority ladder</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Coordinators route/flag and never build; builders draft and never self-merge; "run a queued task" is not "execute it." Prevents false-greens where a coordinator "owns" a build.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J8</span>
+          <span class="entry-title">Gated-builder contract</span>
+          <span class="entry-tag tag-copy">Copy</span>
+        </div>
+        <div class="entry-body">A code-writing agent opens draft PRs only, never self-approves/merges/marks-ready, never writes under the owner's identity without per-action go. Bot identity fine for non-identity actions.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J9</span>
+          <span class="entry-title">Subscription-token automation boundary</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">A personal Claude subscription (OAuth) must not power automated/CI/bot runs (consumer ToS). Product-native scheduling or human-triggered local runs are the compliant $0 path.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== COORDINATION ====== -->
+  <div class="panel" id="panel-coordination">
+    <section class="card">
+      <header><h2>Coordination Conventions</h2><span class="count">5</span></header>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J10</span>
+          <span class="entry-title">One-writer-per-tree / one-owner-per-concern</span>
+          <span class="entry-tag tag-needs">Needs authoring at lab altitude</span>
+        </div>
+        <div class="entry-body">Each tree and each concern has exactly one owner; a need in a tree you don't own is a handoff, never a co-edit. Born from a real incident (two sessions silently reverted each other). Enforced structurally by claim registry + PreToolUse hook.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+        <div class="entry-tradeoff">Parallelism serialized at tree granularity.</div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J11</span>
+          <span class="entry-title">Pull-not-push + "suggested owner ≠ claimed owner"</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Work is pulled by the named owner on its own turn; a status that asserts "someone is working this" may only be written by the real actor.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">J12</span>
+          <span class="entry-title">Hub-not-mesh manager charter</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">One human interface (Jean → manager → agents); the manager absorbs everything except gated categories (gates/sign-offs/taste calls) surfaced up; decisions batched, wakes serialized.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">W15</span>
+          <span class="entry-title">Fork-and-own extraction posture</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">When reusable value is trapped in a bespoke codebase, snapshot-copy it out and own the copy — no shared core, no backport obligation, drift accepted. Applied at least 3 times in the fork's logs.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-id">W16</span>
+          <span class="entry-title">Gate-sitting pattern for autonomous runs</span>
+          <span class="entry-tag tag-needs">Needs authoring</span>
+        </div>
+        <div class="entry-body">Open questions are batched into scheduled "gate sittings" rather than blocking work piecemeal. Autonomous work proceeds on defaults that get ratified (or corrected) at the next sitting.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== SKILLS & TOOLS ====== -->
+  <div class="panel" id="panel-tools">
+    <section class="card">
+      <header><h2>Skills, Tools &amp; Starters</h2><span class="count">12</span></header>
+
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W1</span><span class="entry-title">Agent-runtime guardrail rule (rule 05)</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Per-run caps, controlled-vocabulary halt tokens, fail-closed permission allowlists, worktree-isolated commit destinations, deny-by-default approval gates.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W6</span><span class="entry-title">pr-review-loop skill + <code>/pr-review-loop</code></span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Drives a PR through repeated review → remediate → re-review cycles until merge bar (0 blockers). Self-contained — no external loop framework.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W7</span><span class="entry-title">logging-automation skill + <code>/log</code></span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Classifies a loggable moment against rule-03 triggers, routes to the right altitude, drafts in standard format. Tightly coupled to rule 03.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W8</span><span class="entry-title">Code-quality taxonomy + planning/execution pair</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Three-part system: finding taxonomy + standards-aware-planning skill + execution-writing-disposition skill. Must promote as a single unit.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W9</span><span class="entry-title">prompt-optimization skill + <code>/optimize-prompt</code></span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Augment (append clauses from a curated library) or rewrite (restructure against a 4-element rubric). Review clause library as lab defaults before landing.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W10</span><span class="entry-title">Vendored engineering-discipline skills (8, MIT)</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">codebase-design, diagnosing-bugs, domain-modeling, grilling/grill-me/grill-with-docs, handoff, improve-codebase-architecture. MIT license + ATTRIBUTION.md must travel with them.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W11</span><span class="entry-title">slop-review skill</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Review skill with a taxonomy of AI-generated-text failure modes ("slop") and a structured report format. Standalone.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W12</span><span class="entry-title">context-gc plugin</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">SessionStart hook re-injects state auto-compaction dropped: files in flight, active task list, enriched layer via local Ollama. Deterministic floor works without Ollama.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W13</span><span class="entry-title">Reusable workflow scripts + tracking convention</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">packet-fanout.js + pr-review-cycle.js. Convention: <code>.claude/workflows/*</code> gitignored as session scratch with per-file <code>!</code> negations for vetted keepers.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W17</span><span class="entry-title">Overnight handoff brief convention</span><span class="entry-tag tag-needs">Needs authoring</span></div>
+        <div class="entry-body">Unattended runs launch from a written brief — scope, per-PR quality bar, consent boundaries, morning-review expectations — durable enough to survive cold starts.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W38</span><span class="entry-title">Edge/service starter (hardware-flexible inference)</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Env-driven config with CUDA→CPU auto-detect, three-way compose split (GPU/CPU/dev), checksummed model-registry fetch. Complements the promoted desktop starter.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">FT</span><span class="entry-title">Fleet tools (read-only bridge, PreToolUse hook)</span><span class="entry-tag tag-sharpen">Principle only</span></div>
+        <div class="entry-body">An internal loopback service is the reference implementation of 07-network-boundaries.md. The PreToolUse hook idea (resolve <code>git -C</code>/cd so the write-gate keys on the real tree, fail-open on error) is the promotable principle — not the plumbing.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== CI & RELEASE ====== -->
+  <div class="panel" id="panel-ci">
+    <section class="card">
+      <header><h2>CI, Release &amp; Verification Gates</h2><span class="count">7</span></header>
+
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W18</span><span class="entry-title">Bot-identity subsystem (short-lived token mint, OS-level secret wrapping, audit runbook)</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">App-signed short-lived installation tokens with an append-only mint log, OS-level secret wrapping at rest, secrets-by-pattern gitignore, and a short audit-and-rotate runbook. The lab's canonical bot-identity pattern; the implementing repo holds the specifics.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W19</span><span class="entry-title">Comms-authorization tier policy</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Tier 1 (factual/status — auto), Tier 2 (substantive opinion — attended only), Tier 3 (human-facing/committal — always human). Forward-references a <code>06-comms-authorization.md</code>. Highest-priority item in the machine-wide addendum.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W21</span><span class="entry-title">Local verification-gate convention (<code>invoke check</code>)</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Uniform local pre-merge entrypoint: <code>invoke check</code> as the front door, backed by a chained gate script. Exit code is the source of truth.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W22</span><span class="entry-title">Hygiene gates: commit hook + PR-scoped quality CI</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">commit-msg hook enforcing conventional-commit rules + quality-pr.yml with gitleaks, 5MB guard, commit-format check — PR-range scoped so pre-existing content never blocks.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W24</span><span class="entry-title">Fixture-lock drift-guard gate</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body"><code>--write</code>/<code>--check</code> pattern for generated artifacts: refresh tracked output vs re-derive and diff. Hermetic unit gate + live drift guard separation.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W25</span><span class="entry-title">Architectural-fitness test: import-boundary guard</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">AST-parses every module and fails if any executable import crosses a named forbidden boundary. Codifies an extraction cut-line as a test.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W26</span><span class="entry-title">Gated, digest-verified release template</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">workflow_dispatch publish with dry_run default true, SHA-256 cross-check, no-clobber tag immutability, served-digest verification with bounded retry.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== DATA & REPRODUCIBILITY ====== -->
+  <div class="panel" id="panel-data">
+    <section class="card">
+      <header><h2>Data, Reproducibility &amp; Handling</h2><span class="count">5</span></header>
+
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W27</span><span class="entry-title">Training-run reproducibility conventions</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Deterministic checkpoint naming, ablation-result isolation, auto-resume, committed training-history JSON, immutable per-run output snapshots. Tool-free experiment provenance.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W28</span><span class="entry-title">Idempotent data-wrangling contract</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Wranglers are idempotent + resumable; JSON sidecar written last as success marker; deterministic ordering + strict row/index alignment.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W29</span><span class="entry-title">Checksummed data/model manifest + verified setup</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Tracked config (URL/size/checksum per external source) + a <code>--check</code> that downloads, verifies, and self-audits. Two independent inventions = promotion signal. Must mandate populated checksums.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">J17</span><span class="entry-title">Sensitive-values single-store contract</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Values live in exactly one <code>0600</code> vault file, read over loopback, held in memory, never cached. Hard-exclusion list names every surface they may never touch. Deletion is one file edit.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">J18</span><span class="entry-title">Provenance / attestation standard</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Entries carry id/status/attestation/sha; write surface closed over human-originated events; version hash bumps on mutation; restore fails closed on unrecognized shape.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== DOCS & TEMPLATES ====== -->
+  <div class="panel" id="panel-docs">
+    <section class="card">
+      <header><h2>Docs, Templates &amp; Formats</h2><span class="count">10</span></header>
+
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W2</span><span class="entry-title">Spec-log altitude + dated planning bundles + lifecycle</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Third log altitude (<code>_specs/</code>), dated bundle layout, PRD-header lifecycle Status: enum. Solves planning-history evaporation. <strong>Land first</strong> — downstream entries depend on it.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W3</span><span class="entry-title">GLOSSARY.md as a first-read doc type</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Per-repo ubiquitous-language glossary, registered as AI-tier doc in rule 04. Doc-side half of domain-modeling skill.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div name="entry-head"><span class="entry-id">W4</span><span class="entry-title">Cross-platform peer-clone convention</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body"><code>&lt;DEV_ROOT&gt;</code> placeholders, eol=lf gitattributes, per-machine config untracked, CROSS-PLATFORM.md onboarding. Pairs with lab-os#53.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W30</span><span class="entry-title">Evidence-first status + demo-honesty doc conventions</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Status docs leading with verdict + Check/Command/Result table; demo runbooks with "live vs stubbed" honest line; canary test tier; EXTENSION-POINTS doc.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W31</span><span class="entry-title">Integration-contract doc type</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Cross-repo boundary doc: frozen channel names/flags/version-discovery, single owning artifact as source of truth, staleness trigger.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">W33</span><span class="entry-title">Cost-tracking ledger format</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Append-only weekly inference-spend table + worst-case forecast + trigger conditions for reassessment. One template.</div>
+        <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">J21</span><span class="entry-title">4-part status-summary format</span><span class="entry-tag tag-needs">Needs authoring</span></div>
+        <div class="entry-body">"Verified now / Not yet verified / Remaining caveats / Next concrete step." Recurs verbatim across routine.md, the fleet skill, and global CLAUDE.md. Trivially generic with no tracked home.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">J25</span><span class="entry-title">Adversarial verdict-doc format</span><span class="entry-tag tag-copy">Copy</span></div>
+        <div class="entry-body">Method stated up front, explicit PASS/FAIL lists with numbered evidence, root cause at file:line (flagged not edited), numbered fix list, cleanup section.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">J26</span><span class="entry-title">Prompt-quality bar for agent-emitted work items</span><span class="entry-tag tag-needs">Needs authoring</span></div>
+        <div class="entry-body">Action items start with a concrete verb, name the artifact, end with a runnable "done when" check. Anti-echo guard on format examples.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+      <div class="entry">
+        <div class="entry-head"><span class="entry-id">J24</span><span class="entry-title">Journaling-compliance staleness check</span><span class="entry-tag tag-needs">Needs authoring</span></div>
+        <div class="entry-body">A repo with real work (recent commits) but stale/no project_log.md is a journaling gap. Makes 03-logging enforceable. Optional review-check addendum.</div>
+        <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== OPERATOR CONVENTIONS ====== -->
+  <div class="panel" id="panel-operator">
+    <section class="card">
+      <header><h2>Operator-Side Conventions — Jean</h2></header>
+      <div class="prose">
+        <h2>Setting the mode</h2>
+        <ul>
+          <li><strong>"do it for me"</strong> — flips from advisor to runtime; stops counseling, starts executing.</li>
+          <li><strong>"don't act, tell me" / "just tell me"</strong> — holds all execution; answer only.</li>
+          <li><strong>"review this" vs "help me build this"</strong> — outside-critic vs collaborator.</li>
+          <li><strong>"did we actually…" / "verify"</strong> — check live state, not memory.</li>
+        </ul>
+        <h2>Authorizing an action</h2>
+        <ul>
+          <li><strong>"go" / "yes" / "submit" / "proceed"</strong> — per-action authorization. Silence ≠ yes.</li>
+          <li><strong>"in advance the answer is yes"</strong> — standing authorization.</li>
+        </ul>
+        <h2>Delegating</h2>
+        <ul>
+          <li><strong>"make me a prompt for FM"</strong> — paste-ready routing block.</li>
+          <li><strong>Batch it</strong> — approve multiple in one message.</li>
+          <li><strong>Name the agent</strong> — "have GC look it over."</li>
+        </ul>
+        <h2>Being interviewed</h2>
+        <ul>
+          <li><strong>"ask me one question at a time"</strong> — wall-of-questions → real interview.</li>
+          <li>Quick pick + a note; "Other" is always there.</li>
+        </ul>
+        <h2>Keeping it honest</h2>
+        <ul>
+          <li><strong>Push back when it sounds too clean</strong> — "why are you celebrating."</li>
+          <li><strong>"lets not get ahead of ourselves"</strong> — parks projecting.</li>
+          <li><strong>Correct scope in my own words</strong> — becomes a durable rule.</li>
+        </ul>
+        <h2>Commands &amp; rituals</h2>
+        <ul>
+          <li><strong>/roundtable</strong> for team meetings → owned work; <strong>/broadcast</strong> for all-agents; <strong>/fleet</strong> and <strong>/routine</strong> for the board; <strong>/compact</strong> with keep-list.</li>
+        </ul>
+        <p><em>Through-line: short and explicit beats long and hedged. Best inputs are three words.</em></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <header><h2>Operator-Side Conventions — Kiara</h2></header>
+      <div class="prose">
+        <h2>Setting the mode</h2>
+        <ul>
+          <li><strong>"resume"</strong> — pick up from logs/state, no re-briefing.</li>
+          <li><strong>"autonomous, task-by-task, same mode as last sprint"</strong> — run the plan, don't check in per step.</li>
+          <li><strong>"planning only — one question at a time, confidence % each turn, no code until go"</strong> — brainstorm; hold implementation.</li>
+          <li><strong>"ground yourself on current truth first"</strong> — re-verify before proposing.</li>
+        </ul>
+        <h2>Authorizing an action</h2>
+        <ul>
+          <li><strong>"go"</strong> (or "go —") — single green light. Silence ≠ yes.</li>
+          <li><strong>"yes"</strong> — approve exactly the thing proposed, nothing extra.</li>
+          <li><strong>"go + rider: stop only for genuine forks"</strong> — full autonomy, bounded.</li>
+          <li><strong>"consider that a standing instruction going forward"</strong> — promote one-off to default.</li>
+        </ul>
+        <h2>Delegating</h2>
+        <ul>
+          <li><strong>Terse target + trust:</strong> "put this project on the lab-os fork" — work out mechanics from precedent.</li>
+          <li><strong>"walk me through it at that point"</strong> — operator/hands-on step is mine.</li>
+        </ul>
+        <h2>Being interviewed</h2>
+        <ul>
+          <li>Pick-one + rider: "option 2 — but don't block X on it."</li>
+          <li><strong>"hold on —"</strong> — stop; the question is built on a wrong assumption.</li>
+          <li><strong>"both"</strong> — the either/or is false.</li>
+        </ul>
+        <h2>Keeping it honest</h2>
+        <ul>
+          <li><strong>"confirm with evidence before I retry"</strong> / <strong>"worktree, unmerged branch, or uncommitted?"</strong></li>
+          <li><strong>"tell me what correct looks like, so I can verify against expectations, not vibes"</strong></li>
+          <li><strong>Repeating the symptom flatly</strong> — an explanation isn't a fix.</li>
+        </ul>
+        <h2>Commands &amp; rituals</h2>
+        <ul>
+          <li><strong>"full sprint-close verification, evidence at every close"</strong></li>
+          <li><strong>"log this / add it to the deviation log"</strong></li>
+          <li><strong>The rhythm:</strong> plan file → task-by-task → close verification → log.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <header><h2>Operator-Side Conventions — Arya</h2><span class="source-badge badge-arya" style="margin-left:auto">Arya</span></header>
+      <div class="prose">
+        <h2>Setting the mode</h2>
+        <ul>
+          <li><strong>"Review this as an outsider"</strong> — flips Claude from co-author to cold reviewer; if it helped write the thing, it declares that and hardens the review.</li>
+          <li><strong>"Take into account established best practices, as someone experienced in this field"</strong> — a partial rejection that keeps the artifact alive while resetting the register to named, citable practice, not home-grown rules.</li>
+          <li><strong>Plan mode before file writes</strong> — when the first attempt lands wrong, force a plan instead of letting it iterate on the artifact.</li>
+        </ul>
+        <h2>Authorizing an action</h2>
+        <ul>
+          <li><strong>"go"</strong> — the only word that counts as sign-off. Silence is not approval; a finished PRD waits until I say it.</li>
+          <li><strong>"just create X and save"</strong> — the un-stick command. When Claude is still weighing options I've already decided, this ends deliberation and executes.</li>
+          <li><strong>Destructive-action protocol</strong> — it must show what / what's reversible / what isn't / what it needs from me, then wait for an explicit "proceed."</li>
+        </ul>
+        <h2>Delegating</h2>
+        <ul>
+          <li><strong>Checkpoint to project_log.md before any handoff</strong> — subagents get the log (decision + why), never chat memory.</li>
+          <li><strong>"Fresh Opus subagent, no session context"</strong> — an agent that didn't co-author, so the review can't be softened by shared context.</li>
+        </ul>
+        <h2>Being interviewed</h2>
+        <ul>
+          <li><strong>"Things changed"</strong> — a standing trigger to drop assumptions and re-interview me before continuing.</li>
+          <li><strong>Vague asks are interview bait</strong> — "make it better" is supposed to bounce back as goal / success criterion / out-of-scope before anything runs.</li>
+        </ul>
+        <h2>Keeping it honest</h2>
+        <ul>
+          <li><strong>Every recommendation shows its losers</strong> — why X beat Y and Z, what it costs, what's uncertain. A conclusion without the dropped options gets sent back.</li>
+          <li><strong>Contradiction = stop</strong> — if a new ask conflicts with a logged decision or in-flight PRD, Claude names the conflict and asks which wins; never silently overwrites.</li>
+          <li><strong>Zero findings = rubber-stamp risk</strong> — a clean first-pass review triggers an Opus audit pass, not a merge.</li>
+        </ul>
+        <h2>Commands &amp; rituals</h2>
+        <ul>
+          <li><strong>/log</strong> — capture load-bearing decisions when they happen, not at session end.</li>
+          <li><strong>PRD before code</strong> — Problem / Success criteria / Scope / Constraints / Plan / Open questions, on every non-trivial build, before keys get touched.</li>
+          <li><strong>Corrections become standing orders</strong> — anything I've had to say twice gets written into global CLAUDE.md, so it's enforced by config, not by me repeating it.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <header><h2>Operator-Side Conventions — Watson</h2><span class="source-badge badge-watson" style="margin-left:auto">Watson</span></header>
+      <div class="prose">
+        <p style="color:var(--fg-faint);font-size:12.5px;margin-bottom:4px;">Watson contributed a read-only workspace review (2026-07-18) rather than a keyboard-phrase list, so these are the operator-facing safety conventions his audit surfaced, cited to the review, not quotes of his own phrasing. This is the densest section to go over.</p>
+        <h2>Authorizing an action</h2>
+        <ul>
+          <li><strong>Fail-closed consent gate on identity actions</strong> — any action under the operator's identity (PR comment, filed issue, log write) proceeds only on consent resolved per target. Default is deny.</li>
+          <li><strong>Never batched, withheld-never-dropped</strong> — consent is not flattened across a batch; a withheld action is listed for manual handling, never silently skipped.</li>
+          <li><strong>Standing grants are narrowly scoped</strong> — a standing auto-grant covers only your own PR on an admin repo; every other target is asked.</li>
+        </ul>
+        <h2>Delegating to autonomous runs</h2>
+        <ul>
+          <li><strong>Deterministic per-run caps</strong> — every run carries a request cap, a dollar cap, and a wall-clock deadline that trip before overspend.</li>
+          <li><strong>Named halt tokens from a closed set</strong> — a run ends on one of a fixed vocabulary (cap:requests, cap:cost, max-quota, deadline, cancelled, gate-red, merge-needed, error), recoverable from the run row alone.</li>
+          <li><strong>Max-quota exhaustion is a planned halt</strong> — never a silent re-route to a metered key.</li>
+          <li><strong>Merge-to-head by default</strong> — the run works in an isolated worktree off HEAD and integrates only at a green self-gate; a non-fast-forward ends halted (merge-needed) with the branch preserved.</li>
+        </ul>
+        <h2>Keeping it honest</h2>
+        <ul>
+          <li><strong>Unbypassable by construction, not by memory</strong> — a report-only tool cannot write because Write is left out of its allowlist. A default you cannot reach beats a rule you can forget.</li>
+          <li><strong>Auditable gate result, run unpiped</strong> — a gate returns {command, passed, exitCode, summary}, never a trusted boolean.</li>
+          <li><strong>Fail-closed on a missing precondition</strong> — when input, consent, or repo context is absent, take the safe branch (skip, deny, no-op-with-guidance), never guess.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ====== ALREADY UPSTREAM ====== -->
+  <div class="panel" id="panel-upstream">
+    <section class="card">
+      <header><h2>Already Upstream — Do Not Re-Promote</h2></header>
+      <div class="prose">
+        <ul>
+          <li><strong>SDD lifecycle</strong> — Brainstorm→Specify→Plan→Build→Verify→Review→Close (<code>site/docs/working-with-claude/index.md</code>)</li>
+          <li><strong>PRD / Design-doc / Plan formats</strong> — seven-element, code-free task plan (<code>.claude/rules/04-docs.md</code>; templates)</li>
+          <li><strong>Verification checkpoint</strong> — self-report ≠ evidence (<code>verify.md</code>; <code>01-workflow.md</code>)</li>
+          <li><strong>Review checkpoint</strong> — multi-agent first pass + audit pass (<code>review.md</code>)</li>
+          <li><strong>Build = delegate to subagents</strong> — git-authoritative completion, backlog with stable IDs (<code>build.md</code>)</li>
+          <li><strong>Autonomous-loop safety contract</strong> — halt-and-report, hard caps, test the halt path first (<code>autonomous-loops.md</code>)</li>
+          <li><strong>Merge bar + PR lifecycle + commits</strong> — 6 merge conditions, conventional commits (<code>01-workflow.md</code>; <code>PR-LIFECYCLE.md</code>)</li>
+          <li><strong>Logging / project-log standard</strong> — three altitudes, entry triggers, immutability (<code>03-logging.md</code>)</li>
+          <li><strong>Docs standard</strong> — single-source-of-truth, tier system, byte budgets (<code>04-docs.md</code>)</li>
+          <li><strong>Data protection</strong> — gated datasets, synthetic-only dev fixtures (<code>02-data-protection.md</code>)</li>
+          <li><strong>Operating philosophy</strong> — Ethics, PRD-first, Pushback, Reversibility (<code>global-CLAUDE.template.md</code>)</li>
+          <li><strong>White-label desktop starter</strong> — merged upstream via lab-os PR #41</li>
+          <li><strong>CLAUDE.local.md overlay</strong> — filed as lab-os#53</li>
+          <li><strong>.claude/rules/01-05</strong> — byte-identical to lab-os via symlink (Jean's workspace)</li>
+          <li><strong>07-network-boundaries.md</strong> — promoted FROM Jean's workspace; rule cites 2026-07-03 audit</li>
+          <li><strong>Overclaim-scrub / "gate green, run unpiped"</strong> — <code>04-docs.md</code> + <code>01-workflow.md</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <header><h2>Housekeeping Items (Fix, Don't Promote)</h2></header>
+      <div class="prose">
+        <ul>
+          <li><strong>Model contradiction:</strong> <code>settings.json</code> pins <code>claude-fable-5[1m]</code> but ratified model-defaults describe Sonnet-first/Opus-audit.</li>
+          <li><strong>Stale memory:</strong> <code>project_dev_home.md</code> says lab-claude-plugins doesn't exist — it is installed now from <code>WatsonWBlair/lab-claude-plugins</code>.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<p class="foot" style="max-width:960px;margin:0 auto;padding:0 20px 48px;">
+  Local preview · no server needed · open directly in a browser<br>
+  Sources: 7 documents (2 Watson, 2 Jean-extraction, 1 Jean-operator, 1 Kiara-operator, 1 Arya-operator)<br>
+  Built by Cursor Fleet Agent · <code>2026-07-17</code> · no git operations performed
+</p>
+
+<script>
+  // Tab switching
+  document.getElementById('tabs').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+</script>
+</body>
+</html>

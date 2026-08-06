@@ -1,0 +1,167 @@
+<title>Conventions Gathering — Findings</title>
+<style>
+  :root {
+    --paper:#16150f; --card:#1e1c15; --ink:#ece8dc; --muted:#a39d8c;
+    --line:#3330263f; --accent:#5fbf98; --signal:#d99a52;
+    --serif:Georgia,"Iowan Old Style",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+  }
+  .deck{height:100vh;width:100vw;position:relative;}
+  .slide{
+    position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:clamp(2rem,7vw,7rem);opacity:0;transition:opacity .35s ease;
+  }
+  .slide.on{display:flex;opacity:1;}
+  .kicker{
+    font-family:var(--mono);font-size:clamp(.7rem,1.4vw,.85rem);letter-spacing:.2em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:1.4rem;
+  }
+  h1{
+    font-family:var(--serif);font-weight:600;letter-spacing:-.02em;line-height:1.02;
+    font-size:clamp(2.4rem,7vw,5rem);text-wrap:balance;margin-bottom:1.2rem;
+  }
+  h2{
+    font-family:var(--serif);font-weight:600;letter-spacing:-.015em;line-height:1.06;
+    font-size:clamp(1.8rem,4.6vw,3.2rem);text-wrap:balance;margin-bottom:1.6rem;
+  }
+  .lede{font-size:clamp(1.05rem,2.4vw,1.5rem);line-height:1.5;color:var(--muted);max-width:34ch;}
+  .big{color:var(--ink);}
+  .sig{color:var(--signal);}
+  .acc{color:var(--accent);}
+  ul{list-style:none;display:flex;flex-direction:column;gap:.9rem;max-width:40ch;}
+  li{font-size:clamp(1rem,2.2vw,1.45rem);line-height:1.4;padding-left:1.4rem;position:relative;color:var(--ink);}
+  li::before{content:"";position:absolute;left:0;top:.62em;width:.5rem;height:.5rem;border-radius:2px;background:var(--accent);}
+  li span{color:var(--muted);}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem 2.4rem;max-width:52ch;}
+  .grid li{font-size:clamp(.95rem,1.9vw,1.2rem);}
+  .stat-row{display:flex;gap:clamp(2rem,6vw,5rem);flex-wrap:wrap;margin-top:.6rem;}
+  .stat b{font-family:var(--mono);font-size:clamp(2.2rem,6vw,4rem);font-weight:700;color:var(--accent);display:block;line-height:1;}
+  .stat span{font-size:.9rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  .note{margin-top:2rem;font-size:clamp(.95rem,1.9vw,1.2rem);color:var(--muted);max-width:44ch;
+    border-left:2px solid var(--signal);padding-left:1rem;line-height:1.5;}
+  .note b{color:var(--ink);font-weight:600;}
+  .prog{position:fixed;bottom:1.4rem;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:1rem;
+    font-family:var(--mono);font-size:.8rem;color:var(--muted);}
+  .dots{display:flex;gap:.5rem;}
+  .dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--line);transition:background .2s;}
+  .dot.on{background:var(--accent);}
+  .hint{position:fixed;bottom:1.4rem;right:1.6rem;font-family:var(--mono);font-size:.72rem;color:var(--muted);opacity:.6;}
+  @media (max-width:640px){.grid{grid-template-columns:1fr;}.hint{display:none;}}
+</style>
+
+<div class="deck" id="deck">
+
+  <section class="slide on">
+    <div class="kicker">Lab-OS · Conventions Gathering</div>
+    <h1>What the gathering<br>surfaced</h1>
+    <p class="lede">Four operators, two lenses, seven source documents. The findings, not the full sheet.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">The exercise</div>
+    <h2>Two questions, asked of everyone</h2>
+    <ul>
+      <li><span class="acc">Steering</span> — how do you actually drive Claude? The phrases on your side of the keyboard.</li>
+      <li><span class="acc">Promotion</span> — read-only audit of a real workspace for patterns worth lifting into the handbook.</li>
+    </ul>
+    <div class="stat-row">
+      <div class="stat"><b>4</b><span>Contributors</span></div>
+      <div class="stat"><b>7</b><span>Source docs</span></div>
+      <div class="stat"><b>2</b><span>Lenses each</span></div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Finding 01 · the human signal</div>
+    <h2>The steering vocabulary <span class="acc">converged</span></h2>
+    <p class="lede">Jean, Kiara, and Arya wrote their operator conventions independently. All three landed on the same six buckets.</p>
+    <ul class="grid" style="margin-top:2rem">
+      <li>Setting the mode</li>
+      <li>Authorizing an action</li>
+      <li>Delegating</li>
+      <li>Being interviewed</li>
+      <li>Keeping it honest</li>
+      <li>Commands &amp; rituals</li>
+    </ul>
+    <p class="note">Three people, one structure, no coordination. That is the argument for adopting it as a <b>shared vocabulary</b>, not a personal habit.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Finding 02 · the engineering signal</div>
+    <h2>The strongest promotes are the <span class="acc">convergent</span> ones</h2>
+    <p class="lede">Patterns that showed up in two or more sources without either naming the other:</p>
+    <ul class="grid" style="margin-top:1.6rem">
+      <li>Dependency seam <span>· swap by config</span></li>
+      <li>Soft-degrade by default</li>
+      <li>Mocked tests ≠ live verification</li>
+      <li>Evidence over assertion</li>
+      <li>Done = pushed</li>
+      <li>One writer per tree</li>
+      <li>Fail-fast config guards</li>
+      <li>4-part status summary <span>· 3 surfaces</span></li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Finding 03 · the load-bearing tension</div>
+    <h2>Resilience can <span class="sig">hide</span> a broken feature</h2>
+    <p class="lede">Soft-degrade keeps the app usable when a dependency dies. It also masks whether the premium path ever worked.</p>
+    <p class="note"><b>An internal application ran four sprints on a dead provider key</b> and stayed usable the whole time. The premium path was never verified live. Soft-degrade only ships paired with a live-verification harness and a visible "degraded" signal.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Finding 04 · the through-line</div>
+    <h2>Enforce by <span class="acc">construction</span>, at authoring time</h2>
+    <ul>
+      <li><span class="acc">Guards, not sweeps</span> — a write-time PreToolUse guard beats cleanup that recurs forever.</li>
+      <li><span class="acc">Invariant over promise</span> — a surface that never holds a value can't leak it.</li>
+      <li><span class="acc">Rule and helper together</span> — prose-only promotion invites copy-paste drift.</li>
+    </ul>
+    <p class="note">Six internal coordination modules independently re-derived the same file-locking discipline. The lesson: ship it as shared code, not a paragraph to remember.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Where it goes</div>
+    <h2>The recommendation</h2>
+    <ul>
+      <li>Adopt the <span class="acc">six-part steering grammar</span> as a handbook page.</li>
+      <li>Author the <span class="acc">convergent promotes first</span> — cross-source agreement is the ranking.</li>
+      <li>Pair every soft-degrade with <span class="acc">live verification</span> before it counts as done.</li>
+      <li>Arya's conventions are <span class="acc">folded into the collection</span> as of today.</li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="prog"><span id="count">1 / 7</span><div class="dots" id="dots"></div></div>
+<div class="hint">← → to navigate</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dotsWrap=document.getElementById('dots');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((_,n)=>{const d=document.createElement('div');d.className='dot'+(n===0?' on':'');dotsWrap.appendChild(d);});
+  const dots=[...document.querySelectorAll('.dot')];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+    count.textContent=(i+1)+' / '+slides.length;
+  }
+  window.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  document.getElementById('deck').addEventListener('click',e=>{
+    const x=e.clientX/window.innerWidth; go(x>0.5?i+1:i-1);
+  });
+</script>
