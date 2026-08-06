@@ -7,6 +7,8 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
+- 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61
 - 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59
 - 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
 - 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
@@ -19,6 +21,45 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time
+
+**Decision:** The ENG doc-tier specialist (`spec-plan-analyzer`, planning-bundle review) lands with
+the vendored four instead of waiting for its Phase-2 slot, and is **lab-authored here** — the first
+agent body lab-os originates rather than vendors; the fork inherits it by `pull upstream`. It
+restates no checklist: it resolves `04-docs.md` § ENG and `03-logging.md` in the repo under review
+and derives its checks, returning a named not-run dimension where neither resolves. Dispatch is
+path-based via a fail-closed per-repo ENG path registry.
+**Why:** Bundle shape is repo- and version-specific — lab-os defines PRD/design/plan under
+`docs/work/`, the fork a four-file `_specs/` bundle. A restated checklist would violate `04-docs.md`
+§ Single source and go stale at the next rules sync; read-time derivation is correct on both.
+**Alternatives:** Restate the fork's bundle shape — rejected: it would review lab-os bundles against
+criteria lab-os does not hold. Hold for Phase 2 behind the dry-run gate — rejected on request; that
+phasing de-risked the *lifted* bodies, and this one is authored.
+**Refs:** #61
+
+---
+
+## 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried
+
+**Decision:** The four vendored specialist review agents and their dispatch contract
+(`reference/specialist-dispatch.md`) are carried here, so a bare clone resolves the panel the review
+skills dispatch. `reference/code-quality-taxonomy.md` is **not carried by this slice** — ownership
+is unaffected: upstream lab-os owns its convention and canonical bytes like every other manifest
+asset, and the fork is only the staging surface where those bytes are edited and where the
+fork-side `scripts/rules_sync.py` (§ Manifest) vendors them into member repos. Wherever it does
+not resolve, the finding schema's taxonomy citation is absent and merge
+dedup falls back to the specialist's dimension. The agent bodies in `.claude/agents/**` are
+byte-owned **here** — the fork inherits them via `git pull upstream main`, never by back-port
+(`.claude/agents/ATTRIBUTION.md` § Byte ownership).
+**Why:** The agents were unreachable from a lab-os-rooted dev home. The taxonomy's absence is a
+carry gap, not an ownership split — its sync header already names lab-os as owner.
+**Alternatives:** Carry the taxonomy too — rejected on scope, not merits: it belongs with the
+rules-parity sync (#58) that lands the rules it cites. Omit the agents entirely —
+rejected: runtime `DEV_ROOT` resolution already makes them optional.
+**Refs:** #61, #59
 
 ---
 
