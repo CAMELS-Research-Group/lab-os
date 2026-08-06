@@ -3,6 +3,7 @@ Backlog item template. Copy one block per item into BACKLOG.md under ## Items.
 Keep each field to a line or two — a backlog item is a pointer to work, not the plan itself.
 The "Done when" line is load-bearing: if you can't state a single checkable condition, the item
 is too big or too vague to be ready. Delete this comment when you copy the block.
+Teaching copy. The live template is `templates/backlog-item.template.md` — edit that one.
 -->
 
 ## <id> — <one-line title>
