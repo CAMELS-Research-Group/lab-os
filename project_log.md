@@ -23,6 +23,27 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ---
 
+## 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced
+
+**Decision:** Per Watson's 2026-08-04 panel review of #68: both renderers refuse to render
+(exit 1, script-failure lane — never the staleness exit 3) any backlog with parse errors,
+zero Item blocks despite non-empty text, or Index/Item id drift. One shared
+`source_integrity_errors` + `ready_unblocked` copy lives in `backlog_view.py`, imported by
+`backlog_digest.py`; long-term home is `backlog_lint` beside the parser, deferred so this
+branch does not fork #67's in-flight file. Titles escaped in Mermaid/table output; digest
+CLI errors cleanly on a missing backlog and is self-tested; fixtures moved to `tests/`;
+dashboard regenerated; `standards.yml` flips `backlog-views` to `enforce: true`.
+**Why:** the review's fail-open Blockers all reduced to "a broken source renders as a
+plausible artifact on a green job"; guarding every entry point closes the class, not the
+instances. Enforce flip: warn-only-until-first-green is satisfied once the dashboard's
+`--check` is green at the same head (docs-budget precedent, 2026-06-10).
+**Alternatives:** land the guards in `backlog_lint` now (forks #67); bare `deps[id]`
+KeyError only (fails, but names nothing); keep warn-only until #67's lint flip (leaves the
+drift class open for the whole warn period).
+**Refs:** #68 (review at head 877c602); #67 (parser seam)
+
+---
+
 ## 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI
 
 **Decision:** A `backlog_lint` CI check (sibling to `log-lint` / `docs-budget`) validates
