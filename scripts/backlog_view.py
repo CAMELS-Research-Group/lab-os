@@ -5,9 +5,10 @@ Monday-style board, git-native: a derived projection of the single source
 (BACKLOG.md) into three glance-able surfaces — "ready & unblocked", a per-owner
 grouping, and a Mermaid dependency graph. The generated file is never
 hand-edited. `--check` detects a committed dashboard that differs from a fresh
-render; the reusable workflow runs it warn-only by default (`enforce: false`,
-and lab-os's own caller keeps it false), so a stale dashboard surfaces as a
-`::warning` — it blocks a PR only once a caller flips `enforce: true`.
+render; the reusable workflow runs it warn-only by default (`enforce: false`),
+so in a downstream caller a stale dashboard surfaces as a `::warning` until
+that caller flips `enforce: true`. lab-os's own caller runs it enforcing
+(flipped 2026-08-06, once the committed dashboard first went green).
 
 Reuses parse_backlog + parse_deps from backlog_lint (one parser, one
 dependency grammar — not copies).

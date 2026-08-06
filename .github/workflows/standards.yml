@@ -42,12 +42,16 @@ jobs:
       enforce: false
 
   backlog-views:
-    # lab-os-only: warn-only (enforce: false) — a stale docs/backlog-views.md
-    # surfaces as a ::warning, it does not fail the PR; a script/parse failure
-    # always fails, and the workflow's self-test step is unconditional either way.
+    # lab-os-only. enforce: true — flipped 2026-08-06 with the dashboard
+    # regenerated and `--check` green at the same head (PR #68 review,
+    # Blocker 1: warn-only let the check's first artifact land drifted, the
+    # exact class the tool exists to close). A stale docs/backlog-views.md
+    # now FAILS the PR; the remedy is `python3 scripts/backlog_view.py
+    # --write`. Script/parse/integrity failures always fail, and the
+    # workflow's self-test steps are unconditional either way.
     uses: ./.github/workflows/backlog-views.yml
     with:
-      enforce: false
+      enforce: true
 
 # ---------------------------------------------------------------------------
 # Downstream repo example
