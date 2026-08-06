@@ -50,6 +50,11 @@ jobs:
           SCRIPT=".lab-os/scripts/backlog_digest.py"
           if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/backlog_digest.py"; fi
           python3 "$SCRIPT" --self-test
+          # Also render against the REAL backlog: a PR that leaves BACKLOG.md
+          # producing a broken digest must fail here, not days later at the
+          # sprint boundary. Source-integrity failures exit non-zero; a repo
+          # without a BACKLOG.md no-ops green, same as the check step below.
+          if [ -f BACKLOG.md ]; then python3 "$SCRIPT" --backlog BACKLOG.md > /dev/null; fi
       - name: Check the dashboard is in sync
         env:
           ENFORCE: ${{ inputs.enforce }}
