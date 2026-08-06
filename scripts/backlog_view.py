@@ -109,6 +109,22 @@ def _refuse(backlog_path: Path, backlog: Backlog, verdict: str) -> bool:
     return True
 
 
+def _md_cell(v: str) -> str:
+    """Escape `|` for a Markdown table cell or list line (`\\|` renders as
+    `|`) — a raw pipe splits the row into extra cells. Same escape as
+    backlog_lint._cell; duplicated here only until the shared helpers move
+    to backlog_lint (see module docstring)."""
+    return v.replace("|", "\\|")
+
+
+def _mermaid_label(v: str) -> str:
+    """Escape `\"` inside a quoted Mermaid node label with `#quot;` (Mermaid's
+    entity escape): a raw quote terminates the label and invalidates the
+    whole diagram block on the rendered docs site. Nothing upstream
+    constrains titles — backlog_lint accepts any non-blank title text."""
+    return v.replace('"', "#quot;")
+
+
 def render(backlog: Backlog) -> str:
     title = {r["id"]: r["title"] for r in backlog.index}
     deps = {it.id: parse_deps(it.fields.get("Depends on", "—")) for it in backlog.items}
@@ -123,7 +139,8 @@ def render(backlog: Backlog) -> str:
     unblocked = ready_unblocked(backlog)
     if unblocked:
         out += ["| id | title | owner |", "|---|---|---|"]
-        out += [f"| {r['id']} | {r['title']} | {r['owner']} |" for r in unblocked]
+        out += [f"| {r['id']} | {_md_cell(r['title'])} | {_md_cell(r['owner'])} |"
+                for r in unblocked]
     else:
         out.append("_None ready and unblocked right now._")
     out.append("")
@@ -135,7 +152,8 @@ def render(backlog: Backlog) -> str:
         out.append(f"### {o}")
         for r in backlog.index:
             if r["owner"] == o:
-                out.append(f"- {r['id']} — {r['title']} ({r['size']}, {r['status']})")
+                out.append(f"- {r['id']} — {_md_cell(r['title'])} "
+                           f"({r['size']}, {r['status']})")
         out.append("")
 
     # Dependency graph
@@ -145,7 +163,8 @@ def render(backlog: Backlog) -> str:
         out.append("```mermaid")
         out.append("graph TD")
         for iid, d in edges:
-            out.append(f'  {iid}["{iid}: {title.get(iid, iid)}"] --> {d}')
+            label = _mermaid_label(f"{iid}: {title.get(iid, iid)}")
+            out.append(f'  {iid}["{label}"] --> {d}')
         out.append("```")
         out.append("")
         out.append("_Edge `A --> B` reads \"A depends on B\"._")
@@ -250,6 +269,17 @@ def _self_test() -> int:
     expect("per-owner has Watson", "### Watson" in md)
     expect("mermaid graph present", "```mermaid" in md and "B2" in md and "-->" in md)
     expect("generated header present", _HEADER in md)
+
+    # Title escaping (Watson review of PR #68, Important 3): the one output
+    # defect a well-formed fixture cannot surface. A `"` in a title must not
+    # terminate the quoted Mermaid label; a `|` must not split a table cell.
+    expect("_md_cell escapes |", _md_cell("a|b") == "a\\|b")
+    expect('_mermaid_label escapes "', _mermaid_label('a "b"') == "a #quot;b#quot;")
+    quoted = render(parse_backlog(fix.replace("Ready thing", 'Fix the "ready" bar')))
+    expect("quoted title survives in the mermaid label",
+           'B2["B2: Fix the #quot;ready#quot; bar"] --> B1' in quoted)
+    expect("no raw quote left inside a mermaid label",
+           '"B2: Fix the "' not in quoted)
 
     # The staleness detector is the workflow's whole contract — prove the
     # write -> check round-trip and both exit codes through _write/_check.
