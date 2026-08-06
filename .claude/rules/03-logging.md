@@ -31,7 +31,7 @@ Else routes:
 | Deviation from approved plan | Plan doc `## Execution Log` |
 | Expensive finding/gotcha | `TROUBLESHOOTING.md` or GitHub issue |
 | Open work, follow-ups, review findings (repo-scoped) | GitHub issues (trigger-meeting findings also logged) |
-| Cross-repo / lab-level open work | lab-os `BACKLOG.md` (item shape: lab-os `templates/backlog-item.template.md`) |
+| Cross-repo / lab-level open work | [upstream `BACKLOG.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/BACKLOG.md) (item shape: [`templates/backlog-item.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/backlog-item.template.md)) |
 | Bare status ("merged, smoke passed") | PR comment |
 | Session narrative/what-I-did | PR body |
 | Long-lived people/preference facts | Auto-memory |

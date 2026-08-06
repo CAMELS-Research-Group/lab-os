@@ -58,8 +58,8 @@ has a Problem and a Done-when and an owner. -->
 - **Value:** workshops are the lab's onboarding + convention surface; compounding return
 - **Owner:** Watson
 - **Rough size:** M
-- **Done when:** next workshop runs with a documented process change traced to collected
-  feedback
+- **Done when:** the next workshop's committed process notes (under `docs/workshops/`)
+  record a process change traced to the previous session's collected feedback
 - **Depends on:** —
 - **Status:** ready
 
@@ -71,8 +71,8 @@ has a Problem and a Done-when and an owner. -->
 - **Value:** retires a voted-down bottleneck; standing home for the other retro items
 - **Owner:** Kiara
 - **Rough size:** S
-- **Done when:** this file merged to lab-os main and the first sprint-boundary grooming
-  has happened
+- **Done when:** the first sprint-boundary grooming commit touching this file is on
+  lab-os `main`
 - **Depends on:** —
 - **Status:** in-progress
 
@@ -83,8 +83,8 @@ has a Problem and a Done-when and an owner. -->
 - **Value:** predictable sessions; complements the 2-week sprint Keep
 - **Owner:** Arya
 - **Rough size:** S
-- **Done when:** a time-box convention is written (target durations per session type) and
-  applied in one real PRD session
+- **Done when:** a time-box convention (target durations per session type) is committed
+  under `docs/` and one committed PRD cites the time-box it ran under
 - **Depends on:** —
 - **Status:** ready
 
