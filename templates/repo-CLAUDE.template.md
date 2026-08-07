@@ -68,7 +68,8 @@
 <!-- Pointer only — do not restate what the rules files already say. -->
 
 Shared conventions: `.claude/rules/01-workflow.md` (commits, PRs, merge bar),
-`02-data-protection.md`, `03-logging.md` (log format), `04-docs.md` (tiers, budgets).
+`02-data-protection.md`, `03-logging.md` (log format), `04-docs.md` (tiers, budgets),
+`06-timeboxing.md` (session boxes, calibration loop).
 
 Repo-local rules (this repo, `10+` numbering): `.claude/rules/10-<name>.md`
 

@@ -292,19 +292,22 @@ layers of context files Claude reads every session: who you are (global), your d
 model is the power-user alternative.) Plus two plugins. This is the surface; in a minute you stand it
 up.
 
-### S20 · The four rules
+### S20 · The rules
 
 **On-slide:**
-- *Four lab-wide rules load into every session so the agent works the way we do.*
+- *The lab-wide rules load into every session so the agent works the way we do.*
 - 01 Workflow — commit style, pull requests, and the bar a change clears to merge
 - 02 Data protection — license-restricted data never enters a repo; no secrets or binaries
 - 03 Logging — record decisions and their why, not a diary; merged entries are immutable
 - 04 Docs — every fact has exactly one owning document
+- 06 Timeboxing — a stated box and exit criterion before work starts; every box end recorded
 
 **Notes:** The rules every session loads. Workflow: commit and PR shape, and the merge bar. Data
 protection: license-restricted, human-subject data never enters a repo — the one to internalise first.
 Logging: record decisions and their why, not a diary; merged entries are immutable. Docs: every fact
-has one owning document. You don't memorise these — they load and the agent applies them.
+has one owning document. Timeboxing: say how long and what "done" means before you start, then record
+what actually happened so the estimates get corrected by evidence. You don't memorise these — they
+load and the agent applies them.
 
 ### S21 · We run it on ourselves
 
