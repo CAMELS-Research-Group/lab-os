@@ -1,6 +1,6 @@
 # Backlog-lint — PRD
 
-**Status:** draft <!-- draft | active | paused | complete -->
+**Status:** active <!-- draft | active | paused | complete -->
 **Date:** 2026-07-22 · **Repo:** lab-os
 
 > **Decisions live in `project_log.md`, not here.** When a decision is reached while executing

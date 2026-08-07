@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
 - 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
 - 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
 - 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61
@@ -53,15 +54,14 @@ unowned text is exactly what escapes every field-level check).
 ## 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI
 
 **Decision:** A `backlog_lint` CI check (sibling to `log-lint` / `docs-budget`) validates
-`BACKLOG.md` on PRs that touch it: required fields, a single-condition non-placeholder
-`Done when`, the status ladder, size (`L` never `ready`), the Index as a generated
-projection of the Item blocks (committed table must match the render; `--write-index`
-regenerates it), and `Depends on` referential integrity + acyclicity. Warn-only until
-first green, then enforcing; `backlog-lint:override` label for exceptions. Schema parsed
-from `templates/backlog-item.template.md` (single source, fail-closed); the `Done when`
-check is structural, treating "no concrete artifact reference" as a warning, not a
-failure; behavior documented in the tooling-tour, not a `.claude/rules/` file. Filed as
-backlog item B5.
+`BACKLOG.md` unconditionally on every PR (via `standards.yml`, like the sibling lints):
+required fields, a single-condition non-placeholder `Done when`, the status ladder, size
+(`L` never `ready`), the Index as a generated projection of the Item blocks (committed
+table must byte-match the render), and `Depends on` referential integrity + acyclicity.
+Warn-only until first green, then enforcing; `backlog-lint:override` label for exceptions.
+Schema parsed from `templates/backlog-item.template.md` (single source, fail-closed); the
+`Done when` check is structural, treating a missing artifact reference as a warning, not a
+failure; behavior documented in the tooling-tour, not a `.claude/rules/` file. B5.
 **Why:** the backlog's readiness bar was enforced only by grooming discipline; a CI check
 makes it true by construction, like the other lints. Warn-first + structural
 `Done when` avoid false-failing legitimate items. A derived Index kills the
