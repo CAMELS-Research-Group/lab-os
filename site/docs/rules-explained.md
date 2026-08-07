@@ -1,13 +1,14 @@
 ---
 sidebar_position: 4
 title: The Rules, Explained
-description: A human tour of the four lab-wide rule files — what each governs, why it exists, and what a new member should internalize first.
+description: A human tour of the lab-wide rule files — what each governs, why it exists, and what a new member should internalize first.
 ---
 
 # The Rules, Explained
 
-lab-os ships four lab-wide rule files under
-[`.claude/rules/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/.claude/rules). Every Claude session
+lab-os ships the lab-wide rule files under
+[`.claude/rules/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/.claude/rules) — that
+directory is the count, so this page never claims one. Every Claude session
 loads them through the link you wired in [Getting Started](/docs/getting-started), the pull-request
 (PR) review tooling reads the same files at review time, and parts are enforced in CI — continuous
 integration, the checks run automatically on every PR (`log-lint`, `docs-budget`,
@@ -87,6 +88,25 @@ Internalize two things:
 - **Write for the tier.** Agent docs are dense and budget-capped; engineering docs skimmable with
   explicit contracts; public docs free of internal jargon and codenames.
 
+## 06 — Timeboxing
+
+Source of truth:
+[`06-timeboxing.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/06-timeboxing.md)
+
+Governs how long a working session runs before it reports: a stated box and exit criterion before
+work starts, scope cut rather than the box overrun, and one calibration row per box end so the
+defaults get corrected by evidence instead of by feel. It exists because "I'll just finish this
+first" is how an afternoon disappears, and because a box nobody recorded teaches nothing.
+
+Internalize two things:
+
+- **State the box and the exit criterion before the work, not after.** A box with no exit criterion
+  is an alarm clock — it tells you time passed, not whether you got there.
+- **Record the row even when the box went badly.** The overruns are the data; a reference class of
+  only the wins recalibrates nothing.
+
+The `05` slot is deliberately empty — it is reserved for an in-flight rule, not a gap.
+
 ## Quick answers
 
 | Question | Rule file |
@@ -95,3 +115,4 @@ Internalize two things:
 | What can I never commit? | [`02-data-protection.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/02-data-protection.md) |
 | When do I write a log entry? | [`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md) |
 | Which doc owns a fact? | [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md) |
+| How long should this session run? | [`06-timeboxing.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/06-timeboxing.md) |

@@ -95,16 +95,29 @@ by [`timebox_calibration.md`](timebox_calibration.md):
   calibration should weigh that judgment accordingly.
 - **Target file: the repo where the task lives, where that repo has
   adopted the practice.** Rows are appended to the calibration file of the
-  repo the ticket/task belongs to — `docs/timebox_calibration.md` for
-  lab-os work, else that repo's `timebox_calibration.md` **if it already
-  exists**. Creating that file is a human's adoption act, not the agent's:
-  the agent never seeds the convention into a repo by side effect. Where the
-  task repo has no calibration file, rows fall back to lab-os's
-  `docs/timebox_calibration.md`. `TIMEBOX_CALIBRATION_FILE` env var
-  overrides everything when set. The reference class lives beside the work
-  it measures; a cross-repo roll-up is a grep away.
-- **Never `project_log.md`.** Rows are telemetry; the lab logging standard's
-  entry triggers exclude them, at every altitude.
+  repo the ticket/task belongs to, resolved in this order:
+  1. `TIMEBOX_CALIBRATION_FILE`, when set and permitted by the two
+     constraints below.
+  2. The task repo's `docs/timebox_calibration.md` — that exact path, **only
+     if it already exists**. Creating it is a human's adoption act, not the
+     agent's: the agent never seeds the convention into a repo by side
+     effect, and never probes a second location, so first rows cannot
+     scatter across per-repo variants.
+  3. Otherwise lab-os's `docs/timebox_calibration.md`.
+
+  The reference class lives beside the work it measures; a cross-repo
+  roll-up is a grep away.
+- **Never `project_log.md`, and the env var cannot make it so.** Rows are
+  telemetry; the lab logging standard's entry triggers exclude them, at every
+  altitude. This constraint outranks `TIMEBOX_CALIBRATION_FILE`: a value
+  whose basename is `project_log.md` is **rejected**, and resolution falls
+  through to step 2. Reject rather than obey, and say so in the handoff — an
+  env var that silently redirected appends would be a write primitive
+  pointed at the audit trail, and the skill now deploys user-scope into
+  repos that never adopted this convention.
+- **The env var names a file, not a directory tree.** A
+  `TIMEBOX_CALIBRATION_FILE` that resolves outside the task repo or lab-os
+  is likewise rejected with the same fall-through, for the same reason.
 
 ## The override flow (review gate)
 

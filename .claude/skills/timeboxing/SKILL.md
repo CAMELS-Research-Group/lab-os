@@ -125,20 +125,44 @@ Exactly one per box end. Match the target file's columns:
 - **Note:** optional — scope hammered, extended +N because …, interrupted.
 
 **Target file: the repo where the task lives, where it has adopted the
-practice.** Append to that repo's calibration file —
-`docs/timebox_calibration.md` for lab-os work, else the repo's
-`timebox_calibration.md` **only if it already exists** (creating it is a
-human adoption act — never seed the convention into a repo by side
-effect). Where the task repo has none, fall back to lab-os's
-`docs/timebox_calibration.md`. `TIMEBOX_CALIBRATION_FILE` env var
-overrides everything when set. **Never** write rows to any
-`project_log.md` — telemetry is not a log entry under the lab logging
-standard. (Derived from `docs/timebox_recording.md` § Logging rules, which
-owns the target-file rule; kept inline because resolving the target is the
-one step an agent must get right with no docs in reach.)
+practice.** Resolve in order: (1) `TIMEBOX_CALIBRATION_FILE` when set and
+permitted below; (2) the task repo's `docs/timebox_calibration.md` — that
+exact path, **only if it already exists** (creating it is a human adoption
+act — never seed the convention into a repo by side effect, and never probe
+a second location); (3) otherwise lab-os's `docs/timebox_calibration.md`.
+
+**Never** write rows to any `project_log.md`, and the env var cannot make
+you: a `TIMEBOX_CALIBRATION_FILE` whose basename is `project_log.md`, or
+which resolves outside the task repo or lab-os, is **rejected** — fall
+through to (2) and say so in the handoff. Telemetry is not a log entry
+under the lab logging standard, and this skill deploys user-scope into
+repos that never adopted the convention, so an env var that silently
+redirected appends would be a write primitive pointed at the audit trail.
+(Derived from `docs/timebox_recording.md` § Logging rules, which owns the
+target-file rule; kept inline because resolving the target is the one step
+an agent must get right with no docs in reach.)
 
 ## Handoff report contract
 
 Owned by `docs/timebox_recording.md` § Handoff report contract — deliver
 the report with that section's items, in that section's order. Not
 restated here.
+
+## Deployment
+
+lab-os-owned, user-scope-deployed. Authored at `.claude/skills/timeboxing/`;
+deployed by `bash .claude/scripts/link-lab-assets.sh`, which symlinks it into
+`~/.claude/skills/`. Re-run it on each clone.
+
+Deployment matters here for two reasons. The skill fires in **every** session
+on a linked machine, not only sessions rooted in lab-os — so a boxed task in
+any repo runs this protocol, which is why the target-file rule is
+adoption-gated and the env var is constrained rather than obeyed. And the two
+source-of-truth docs it defers to live in the lab-os checkout: a symlinked
+install resolves `docs/timeboxing.md` and `docs/timebox_recording.md` against
+the checkout the symlink points into. Where that checkout is absent, the
+inline protocol above still runs — the calibration row, the default boxes, and
+the target-file rule are all restated here for exactly that case — but the
+standard's rationale and the recalibration loop are unreachable, so treat a
+docs-less run as protocol-only and re-read the standard before changing any
+default.

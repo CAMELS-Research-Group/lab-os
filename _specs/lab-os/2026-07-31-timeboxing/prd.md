@@ -37,5 +37,5 @@ P1 clone/branch + file PRD (done) → P2 guide draft → P3 skill draft → chec
 
 ## Open questions
 
-1. **Skill distribution:** `.claude/skills/` in lab-os auto-loads only for lab-os sessions. For the skill to fire in LSCA and other repos: user-level `~/.claude/skills/` copy, per-repo mirror (like the rules pattern), or invoke-by-path. Requester decides at review.
+1. ~~**Skill distribution:**~~ **Closed 2026-08-06 — answered by the standing decision in #59, not by this PR.** lab-os owns the lab's shared Claude skills and deploys them user-scope via `.claude/scripts/link-lab-assets.sh`, which auto-discovers every `.claude/skills/*/SKILL.md`. Timeboxing therefore needs no distribution mechanism of its own: on the next link run it loads in every session on every linked machine, not only sessions rooted in lab-os. The consequences are carried where they bite — the target-file rule is adoption-gated and `TIMEBOX_CALIBRATION_FILE` is constrained rather than obeyed (`SKILL.md` § Calibration row, § Deployment), because firing everywhere means firing in repos that never adopted the convention.
 2. **Agent-task default boxes** (guide proposes: dev 30 · docs 15 · debug 20 · spike 15) are seeded, not calibrated — first ~10 rows should trigger a defaults review.
