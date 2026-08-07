@@ -40,6 +40,10 @@ jobs:
     uses: ./.github/workflows/backlog-lint.yml
     with:
       enforce: false
+      # lab-os MUST ship a BACKLOG.md, so a missing one is a hard error (under
+      # enforce). Member repos copy the downstream block below and leave this
+      # off, keeping the no-BACKLOG → no-op-green path.
+      require-backlog: true
 
   backlog-views:
     # lab-os-only. enforce: true — flipped 2026-08-06 with the dashboard

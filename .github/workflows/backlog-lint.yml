@@ -38,6 +38,14 @@ on:
         type: boolean
         required: false
         default: false
+      require-backlog:
+        description: >-
+          Treat a MISSING BACKLOG.md as a hard error (under enforce). lab-os
+          sets this true — it MUST ship a backlog. Member repos leave it false
+          so a repo without a BACKLOG.md keeps no-op-ing green.
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -68,6 +76,7 @@ jobs:
       - name: Run backlog-lint
         env:
           ENFORCE: ${{ inputs.enforce }}
+          REQUIRE_BACKLOG: ${{ inputs.require-backlog }}
         run: |
           # Fail closed on an unrecognized enforce value: anything that is not
           # literally "true"/"false" (an empty caller expression, "True",
@@ -77,6 +86,14 @@ jobs:
             ARGS="--enforce"
           elif [ "$ENFORCE" != "false" ]; then
             echo "::error::backlog-lint: unrecognized enforce input '$ENFORCE' (expected true or false)"
+            exit 1
+          fi
+          # Same fail-closed handling for require-backlog: only literal "true"
+          # adds the flag; a non-true/non-false value is a caller error.
+          if [ "$REQUIRE_BACKLOG" = "true" ]; then
+            ARGS="$ARGS --require-backlog"
+          elif [ "$REQUIRE_BACKLOG" != "false" ]; then
+            echo "::error::backlog-lint: unrecognized require-backlog input '$REQUIRE_BACKLOG' (expected true or false)"
             exit 1
           fi
           # lab-os' own PRs must run the PR's script (main's copy is absent/stale
