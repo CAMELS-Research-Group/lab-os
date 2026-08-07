@@ -174,7 +174,7 @@
       <div class="entry">
         <div class="entry-head">
           <span class="entry-id">3</span>
-          <span class="entry-title">lab-os-promotion-review (1).md</span>
+          <span class="entry-title">lab-os-promotion-review.md</span>
           <span class="source-badge badge-watson">Watson</span>
           <span class="entry-tag tag-sharpen">Fork only</span>
         </div>
@@ -192,7 +192,7 @@
       <div class="entry">
         <div class="entry-head">
           <span class="entry-id">5</span>
-          <span class="entry-title">claude-conventions-jean (1).md</span>
+          <span class="entry-title">claude-conventions-jean.md</span>
           <span class="source-badge badge-jean">Jean</span>
           <span class="entry-tag tag-author">Operator side</span>
         </div>
@@ -620,7 +620,7 @@
       </div>
       <div class="entry">
         <div class="entry-head"><span class="entry-id">FT</span><span class="entry-title">Fleet tools (read-only bridge, PreToolUse hook)</span><span class="entry-tag tag-sharpen">Principle only</span></div>
-        <div class="entry-body">An internal loopback service is the reference implementation of 07-network-boundaries.md. The PreToolUse hook idea (resolve <code>git -C</code>/cd so the write-gate keys on the real tree, fail-open on error) is the promotable principle — not the plumbing.</div>
+        <div class="entry-body">An internal loopback service is the reference implementation of the network-boundaries convention, which is not yet promoted upstream. The PreToolUse hook idea (resolve <code>git -C</code>/cd so the write-gate keys on the real tree, fail-open on error) is the promotable principle — not the plumbing.</div>
         <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
       </div>
     </section>
@@ -930,10 +930,14 @@
           <li><strong>Data protection</strong> — gated datasets, synthetic-only dev fixtures (<code>02-data-protection.md</code>)</li>
           <li><strong>Operating philosophy</strong> — Ethics, PRD-first, Pushback, Reversibility (<code>global-CLAUDE.template.md</code>)</li>
           <li><strong>White-label desktop starter</strong> — merged upstream via lab-os PR #41</li>
-          <li><strong>CLAUDE.local.md overlay</strong> — filed as lab-os#53</li>
-          <li><strong>.claude/rules/01-05</strong> — byte-identical to lab-os via symlink (Jean's workspace)</li>
-          <li><strong>07-network-boundaries.md</strong> — promoted FROM Jean's workspace; rule cites 2026-07-03 audit</li>
-          <li><strong>Overclaim-scrub / "gate green, run unpiped"</strong> — <code>04-docs.md</code> + <code>01-workflow.md</code></li>
+                    <li><strong>.claude/rules/01-04</strong> — byte-identical to lab-os via symlink (Jean's workspace)</li>
+                    <li><strong>Overclaim-scrub / "gate green, run unpiped"</strong> — <code>04-docs.md</code> + <code>01-workflow.md</code></li>
+        </ul>
+        <p style="margin:14px 0 6px;font-weight:600">Filed but NOT landed, still needs promoting</p>
+        <p style="margin:0 0 8px;opacity:.75">Verified against lab-os main, 2026-08-07: upstream <code>.claude/rules/</code> carries 01-workflow, 02-data-protection, 03-logging, 04-docs, and nothing else.</p>
+        <ul>
+          <li><strong>CLAUDE.local.md overlay</strong> — filed as lab-os#53, still open. Entry W4 tags it Copy, which is correct.</li>
+          <li><strong>Network-boundaries rule</strong> — never promoted. Dropped when this PR was reduced to the review surface; body preserved on <code>archive/conventions-bundle-2026-08-05</code>. Needs its own PR.</li>
         </ul>
       </div>
     </section>

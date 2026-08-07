@@ -177,9 +177,19 @@ These are ratified in lab-os already. Cite the `.claude/rules/0x-*` file as cano
 - Build = delegate to subagents, Autonomous-loop safety contract
 - Merge bar + PR lifecycle + commits, Logging standard, Docs standard
 - Data protection, Operating philosophy
-- White-label desktop starter (PR #41), CLAUDE.local.md overlay (issue #53)
-- Rules 01-04 (byte-identical via symlink), 07-network-boundaries (promoted from Jean's workspace)
+- White-label desktop starter (PR #41)
+- Rules 01-04 (byte-identical via symlink)
 - Overclaim-scrub / "gate green, run unpiped"
+
+**Filed but NOT landed, still needs promoting.** Verified against `main` on 2026-08-07:
+`.claude/rules/` upstream carries `01-workflow`, `02-data-protection`, `03-logging`,
+`04-docs`, and nothing else.
+
+- **CLAUDE.local.md overlay.** Filed as lab-os#53, still open. Entry W4 tags it `Copy`, which is correct.
+- **Network-boundaries rule.** Never promoted. It rode this PR as `05-network-boundaries.md`,
+  was renumbered to `07` to clear the collision with #58 and #66, then was dropped when this PR
+  was reduced to the review surface alone. The rule body is preserved on
+  `archive/conventions-bundle-2026-08-05`. Needs authoring as its own PR; the number is unclaimed.
 
 ---
 
