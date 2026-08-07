@@ -7,8 +7,12 @@ New items follow [templates/backlog-item.template.md](templates/backlog-item.tem
 anyone may add to Inbox, shaping an item requires an owner. Groomed at each sprint boundary.
 
 Read the **Index** first — it is the "what's ready right now" surface. Full items follow.
+`## Items` is the last section: every `## ` heading below it must be an item heading.
 
 ## Index
+
+<!-- generated from the Item blocks — edit those, then run:
+     python3 scripts/backlog_lint.py --write-index -->
 
 | id | title | owner | size | status |
 |---|---|---|---|---|
@@ -16,6 +20,7 @@ Read the **Index** first — it is the "what's ready right now" surface. Full it
 | B2 | Workshop process + feedback iteration | Watson | M | ready |
 | B3 | Lab-wide backlog (this file) | Kiara | S | in-progress |
 | B4 | Time-boxing PRDs / working sessions | Arya | S | ready |
+| B5 | Backlog-lint (CI hygiene check for BACKLOG.md) | Kiara | M | in-progress |
 
 ## Inbox
 
@@ -82,3 +87,21 @@ has a Problem and a Done-when and an owner. -->
   under `docs/` and one committed PRD cites the time-box it ran under
 - **Depends on:** —
 - **Status:** ready
+
+## B5 — Backlog-lint (CI hygiene check for BACKLOG.md)
+
+- **Problem:** the backlog's item schema + readiness bar ("Done when" = one checkable
+  condition) are enforced only by grooming discipline; malformed items, a stale Index,
+  dangling `Depends on`, and unsplit `L` items marked `ready` merge silently. No CI
+  equivalent to `log-lint` / `docs-budget` / `merge-bar-check`.
+- **Who it helps:** everyone who adds or grooms items — and the agent sessions that add
+  them; keeps the Index a trustworthy "what's ready" surface.
+- **Value:** makes the readiness bar true *by construction* instead of by memory; squarely
+  the retro's "Tooling for Agents / Power Users" gap; reuses the lab's existing lint pattern.
+- **Owner:** Kiara
+- **Rough size:** M
+- **Done when:** a PR that violates the item schema (missing field / bad `Done when` / stale
+  generated Index / dangling `Depends on` / `L` marked `ready`) fails CI, and a well-formed
+  one passes — running on every PR alongside the sibling lints.
+- **Depends on:** B3
+- **Status:** in-progress

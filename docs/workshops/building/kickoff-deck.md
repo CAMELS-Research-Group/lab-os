@@ -319,7 +319,7 @@ load and the agent applies them.
 - **The way we teach you to work is the way the lab actually works**
 
 **Notes:** Credibility, briefly — this matters most to anyone evaluating how the lab works. The
-handbook repo runs its own rules in CI — three checks that lint every PR. A separate automated
+handbook repo runs its own rules in CI — four checks that lint every PR. A separate automated
 reviewer posts an outside-perspective read on open PRs — the Review step, automated — but never
 approves or merges; a human owns that. And lab tooling ships through a public marketplace. The way
 we teach you to work is the way the lab actually works.

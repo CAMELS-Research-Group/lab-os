@@ -27,13 +27,14 @@ by agents and CI.
   - [`global-CLAUDE.template.md`](templates/global-CLAUDE.template.md) — personal-global persona + lab operating philosophy (→ `~/.claude/CLAUDE.md`)
   - [`dev-root-CLAUDE.template.md`](templates/dev-root-CLAUDE.template.md) — genericized lab orientation (→ `<DEV_ROOT>/.claude/CLAUDE.md`)
   - [`repo-CLAUDE.template.md`](templates/repo-CLAUDE.template.md) — per-repo CLAUDE.md seed (rules pointer, gate command, gated datasets)
-  - [`project_log.template.md`](templates/project_log.template.md) — normative project-log structure (parsed by `log-lint`)
-  - [`PRD.template.md`](templates/PRD.template.md) — PRD scaffold (Problem · Success criteria · Scope · Constraints · Plan · Open questions)
-  - [`templates/work-bundle/`](templates/work-bundle/) — design + plan templates for initiative-level work bundles
+  - [`docs/project_log.template.md`](templates/docs/project_log.template.md) — normative project-log structure (parsed by `log-lint`)
+  - [`docs/planning/`](templates/docs/planning/) — the four-file planning-bundle scaffolds ([`prd`](templates/docs/planning/prd.template.md) · [`spec`](templates/docs/planning/spec.template.md) · [`plan`](templates/docs/planning/plan.template.md) · [`log`](templates/docs/planning/log.template.md)), one bundle per slice under `_specs/<repo>/<DATE>-<handle>/`
+  - [`PRD.template.md`](templates/PRD.template.md) — older standalone PRD scaffold, superseded in practice by `docs/planning/prd.template.md`; retained pending consolidation
 - `.github/workflows/` — adherence Actions (consume via a thin caller; see [`standards.yml`](.github/workflows/standards.yml) as the copyable example):
   - [`log-lint.yml`](.github/workflows/log-lint.yml) — validates project-log structure and entry format
   - [`docs-budget.yml`](.github/workflows/docs-budget.yml) — warns when CLAUDE.md or rules files exceed byte budgets
   - [`merge-bar-check.yml`](.github/workflows/merge-bar-check.yml) — checklist completeness and log-cleanup gate
+  - [`backlog-lint.yml`](.github/workflows/backlog-lint.yml) — lab-os-only: BACKLOG.md item hygiene and derived-Index integrity
 - `site/` — the Docusaurus handbook, built and deployed to GitHub Pages by [`deploy-site.yml`](.github/workflows/deploy-site.yml).
 - `BOOTSTRAP.md`, `WORKING-WITH-CLAUDE.md` — pointer stubs; their content moved to the handbook site.
 
@@ -64,7 +65,7 @@ ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
 
 The reviewer then concatenates `lab-os/.claude/rules/*.md` + `pr-repo/.claude/rules/*.md` into its prompt context.
 
-**Adherence Actions**: repos also consume the three enforcement workflows by adding a thin caller that references them from this repo. [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
+**Adherence Actions**: repos also consume the three shared enforcement workflows (`log-lint`, `docs-budget`, `merge-bar-check`) by adding a thin caller that references them from this repo; the fourth, `backlog-lint`, is lab-os-only (downstream repos use their own issues). [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
 
 ## Override semantics
 
