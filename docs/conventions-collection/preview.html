@@ -374,7 +374,7 @@
           <span class="entry-title">Mutation-prove a lock/regression test actually "bites"</span>
           <span class="entry-tag tag-sharpen">Sharpen</span>
         </div>
-        <div class="entry-body">A test meant to lock a behavior isn't trusted until you mutate the code to break it and confirm the test goes red, then revert. Hazard: don't run mutation via <code>git checkout &lt;file&gt;</code> — that clobbered uncommitted edits in Sprint 7.</div>
+        <div class="entry-body">A test meant to lock a behavior isn't trusted until you mutate the code to break it and confirm the test goes red, then revert. Hazard: don't run mutation via <code>git checkout &lt;file&gt;</code> — that has clobbered uncommitted edits.</div>
         <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span></div>
       </div>
 
@@ -395,7 +395,7 @@
           <span class="entry-title">Watched-live bar — green tests are not the greenlight</span>
           <span class="entry-tag tag-needs">Needs authoring</span>
         </div>
-        <div class="entry-body">A human-watched live run (zero freeze, real behavior observed) is the ship gate for any interactive surface. <strong>Single most-cited convention in Jean's record</strong> (174/268 tests green while 2 camera-breaking live bugs shipped, three separate times).</div>
+        <div class="entry-body">A human-watched live run (zero freeze, real behavior observed) is the ship gate for any interactive surface. <strong>The most-cited convention in the source record</strong> (a green test suite while camera-breaking live bugs shipped, three separate times).</div>
         <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
         <div class="entry-tradeoff">Someone must actually watch a live run before every ship — slower than trusting CI.</div>
       </div>
@@ -454,7 +454,7 @@
           <span class="entry-title">"Done" means pushed — commit-and-push together</span>
           <span class="entry-tag tag-needs">Needs authoring</span>
         </div>
-        <div class="entry-body">Git-authoritative completion means the commit is on <code>origin</code>, not merely local. Convergent: Sprint 4 incident (work reported "merged + pushed" was local-only).</div>
+        <div class="entry-body">Git-authoritative completion means the commit is on <code>origin</code>, not merely local. Convergent: an incident where work reported "merged + pushed" was local-only.</div>
         <div class="entry-sources"><span class="source-badge badge-jean">Jean deep</span><span class="source-badge badge-watson">Watson #5</span></div>
       </div>
 
