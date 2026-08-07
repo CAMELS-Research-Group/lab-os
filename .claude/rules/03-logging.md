@@ -8,13 +8,15 @@ All lab repos. Rationale: `PR-LIFECYCLE.md`. Doc tiers, budgets, single-source: 
 |---|---|---|
 | Lab | `<DEV_ROOT>/project_log.md` | Cross-repo: tooling, infra, conventions, lab formation |
 | Project | `<repo>/project_log.md` | Decisions outliving any one plan; irreversible/external events; direction changes |
-| Plan-execution | `## Execution Log` in plan doc | Plan deviations, implementation calls, gate evidence; archives with the plan |
+| Spec-log | `_specs/<repo>/<DATE>-<handle>/log.md` | Bundle's single log: load-bearing decisions, discarded alternatives, and in-flight deviations/gate evidence the plan would discard |
 
-Test: matters after the plan ships? → project. Only how the plan ran? → plan-execution. Cross-repo? → lab.
+The planning bundle is `_specs/<repo>/<DATE>-<handle>/{prd,spec,plan,log}.md` — `<DATE>` is the plan's `Date:` header, `<handle>` a short kebab-case slug; the `<repo>` segment is workspace-root altitude only — member repos omit it; file contract: `04-docs.md` §ENG (chore/docs-only bundles omit `spec.md`). The plan carries no Execution Log; `log.md` absorbs it. `spec.md` is the bundle's "what is still true" surface; `log.md` the history — the same split at bundle altitude.
 
-Closure: a plan-execution log closes with the PR that ships it — post-merge evidence (deploy green, runtime checks, branch cleanup) goes to a comment on that PR, never a trailing entry held for a future PR; anything bigger routes per Entry triggers.
+Test: matters after the plan ships? → project. Bundle-scoped (decisions, alternatives, deviations, gate evidence)? → spec-log. Cross-repo? → lab.
 
-Lab caveat: no git/CI; honor-system — immutability begins once a newer entry exists; Refs = absolute paths/URLs, not PR#; archive when adding over cap.
+Closure: post-merge evidence (deploy green, runtime checks, branch cleanup) goes to a PR comment, never a trailing entry in any log. Anything bigger routes per Entry triggers.
+
+Lab caveat: an untracked lab log is honor-system — immutability begins once a newer entry exists; archive when adding over cap. Where `<DEV_ROOT>` is a CI repo, its cap is CI-scored like any other surface.
 
 ## Entry triggers
 
@@ -28,7 +30,7 @@ Else routes:
 
 | Information | Home |
 |---|---|
-| Deviation from approved plan | Plan doc `## Execution Log` |
+| Deviation from approved plan | Bundle `log.md` (spec-log) |
 | Expensive finding/gotcha | `TROUBLESHOOTING.md` or GitHub issue |
 | Open work, follow-ups, review findings (repo-scoped) | GitHub issues (trigger-meeting findings also logged) |
 | Cross-repo / lab-level open work | [upstream `BACKLOG.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/BACKLOG.md) (item shape: [`templates/backlog-item.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/backlog-item.template.md)) |
@@ -48,9 +50,10 @@ Else routes:
 **Refs:** #<PR>, <absolute paths or URLs>
 ```
 
-- ≤1,500 bytes/entry; extra → PR body or spec
+- ≤1,500 bytes/entry — project-log entries only (spec-logs are grep-only, unbudgeted); extra → PR body or spec
+- `YYYY-MM-DD HH:MM` stamps are US Eastern, at all altitudes
 - Count-free — no counts that restale
-- PR# is the durable ref; never a squash SHA (lab altitude: paths/URLs)
+- PR# is the durable ref; never a squash SHA (untracked lab log: paths/URLs)
 - No `Status:` field — currency lives in the index
 
 ## Immutability & supersession
@@ -59,6 +62,8 @@ Entries immutable once the PR merges. Reversal/revision = new entry with `Supers
 
 ## File structure & overflow
 
-`templates/project_log.template.md` is normative (`log-lint` parses it): title + pointer to this standard; Standing Decisions index — one line per still-binding decision, hot window and archive alike (the "what is still true" surface, read first), date+subject match the entry header verbatim, created in the entry's PR (events: no index line); entries reverse-chron, top-insert, each preceded by `---` + blank line (conflict: keep both blocks, reorder by header timestamp).
+`templates/docs/project_log.template.md` is normative (`log-lint` parses it) and owns the grammar: a `## Standing Decisions` index (the "what is still true" surface, read first), then `## Entries`, reverse-chron, top-insert.
 
-Cap: 15 KB whole file. Entry over cap → CI warns (never blocks); a dedicated `chore: archive log overflow` PR moves oldest entries to `project_log_archive.md` — prepended as a block, order preserved, byte-identical modulo EOL. Archive: grep-only, cap-exempt; still-binding archived decisions keep index lines, re-pointed.
+Cap (whole file): 15 KB at project altitude, 40 KB at lab (§Log altitudes). Entry over cap → CI warns (never blocks); a dedicated `chore: archive log overflow` PR moves oldest entries to `project_log_archive.md` — prepended as a block, order preserved, byte-identical modulo EOL. Archive: grep-only, cap-exempt; still-binding archived decisions keep index lines, re-pointed.
+
+**Spec-log overflow:** the bundle `log.md` has no Standing Decisions index and no cap enforcement; it is grep-only from the start. Spec-log entries append chronologically (oldest-first, bottom-insert — contrast project-log's reverse-chron top-insert). The Entry format applies, but `Refs: #PR` is relaxed: a bundle-relative path, or omitted until the PR lands. Overflow oldest entries to `log_archive.md` in the bundle — same block-prepend, byte-identical rule as above. Spec-logs do not feed the project-log index.
