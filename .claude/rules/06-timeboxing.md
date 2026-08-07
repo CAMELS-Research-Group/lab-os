@@ -1,6 +1,6 @@
 # Timeboxing
 
-All working sessions and agent-executed tasks. Owning docs: `docs/timeboxing.md` (session standard v1.0), `docs/timebox_recording.md` (agent task boxes + recording mechanics). At-a-glance: `docs/timeboxing_quickref.md`. Paths are lab-os-root-relative; if this rule is read as a distributed copy outside the repo, resolve them against a lab-os checkout (same convention as the skill's header). This rule is a pointer — the docs own the details; do not restate their tables here.
+All working sessions and agent-executed tasks. Owning docs: `docs/timeboxing.md` (session standard v1.0), `docs/timebox_recording.md` (agent task boxes + recording mechanics). At-a-glance: `docs/timeboxing_quickref.md`. Paths are lab-os-root-relative; if this rule is read as a distributed copy outside the repo, resolve them against a lab-os checkout (same convention as the skill's header). This rule is a pointer — the docs own the details. No tables: condensed prose that names its owning doc is fine, a second copy of a table is not.
 
 ## Session boxes
 
@@ -12,7 +12,7 @@ All working sessions and agent-executed tasks. Owning docs: `docs/timeboxing.md`
 ## Agent task boxes
 
 - The `timeboxing` skill (`.claude/skills/timeboxing/SKILL.md`) is the protocol: timestamped state file with recorded pauses, elapsed-time checkpoints, ≥80% scope-hammer, expiry → notify user + handoff (flow carve-out on the stated goal only), auto-appended calibration row, exit-met judged by the agent with user override at review.
-- Row target: the calibration file of the repo the task belongs to **where that repo has adopted the practice** (its calibration file exists, or `TIMEBOX_CALIBRATION_FILE` is set); otherwise lab-os's `docs/timebox_calibration.md`. Agents never create a repo's calibration file — that is a human adoption act.
+- Row target: the calibration file of the repo the task belongs to **where that repo has adopted the practice** (its calibration file exists, or a **permitted** `TIMEBOX_CALIBRATION_FILE` is set — the env var is constrained, not absolute; rejection rules: `SKILL.md` § Calibration row); otherwise lab-os's `docs/timebox_calibration.md`. Agents never create a repo's calibration file — that is a human adoption act.
 
 ## Calibration loop
 

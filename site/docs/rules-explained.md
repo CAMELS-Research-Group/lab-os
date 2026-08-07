@@ -88,6 +88,28 @@ Internalize two things:
 - **Write for the tier.** Agent docs are dense and budget-capped; engineering docs skimmable with
   explicit contracts; public docs free of internal jargon and codenames.
 
+## 05 — Agent Runtime
+
+Source of truth:
+[`05-agent-runtime.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/05-agent-runtime.md)
+
+Governs any lab tool that *hosts* a coding agent — one that starts, stops and commands an agent
+engine rather than just talking to one. It sets the guardrails such a tool must meet: the reasoning
+brain runs on a local model, coding goes through the official CLI on the base allowance, and no path
+ever drives a subscription token through a third-party tool or introduces a metered API key.
+
+This one is unusual and worth knowing why: **nothing in the lab hosts such a runtime today.** The
+rule is forward-binding — it is the contract the first one must meet, written before it exists so
+the constraints are a starting point rather than a retrofit.
+
+Internalize two things:
+
+- **The host drives the runtime; it never becomes it.** The application commands the engine and
+  keeps every authoritative state change in its own store. An engine that starts owning state has
+  stopped being driven.
+- **Cost is a design constraint, not a budget line.** Local brain, plain print-mode CLI, no metered
+  key — the rule makes `$0` structural rather than something you monitor.
+
 ## 06 — Timeboxing
 
 Source of truth:
@@ -113,4 +135,5 @@ Internalize two things:
 | What can I never commit? | [`02-data-protection.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/02-data-protection.md) |
 | When do I write a log entry? | [`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md) |
 | Which doc owns a fact? | [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md) |
+| I'm building something that runs a coding agent — what must it guarantee? | [`05-agent-runtime.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/05-agent-runtime.md) |
 | How long should this session run? | [`06-timeboxing.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/06-timeboxing.md) |

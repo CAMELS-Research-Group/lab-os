@@ -32,7 +32,13 @@ outside the box by definition.
 ### Default boxes for agent tasks
 
 Seeded values — not yet calibrated. After ~10 rows exist, compare and correct
-(same reference-class mechanism as the human table).
+(same reference-class mechanism as the human table). These values also live
+inline in [`SKILL.md`](../.claude/skills/timeboxing/SKILL.md) § 1, which is the
+copy an agent reads at intake — **update both**, the way the quickref and
+`timeboxing.md` are updated together for the human table. That copy is
+deliberate (an agent that cannot resolve this path can still box), so it will
+not go away; the recalibration this section schedules is exactly when it
+desyncs.
 
 | Agent task type | Box | Exit criterion shape |
 |---|---|---|

@@ -85,6 +85,13 @@ the discipline. This is the reference class that defeats the planning fallacy;
 it's the same mechanism as Scrum velocity, applied to sessions instead of
 sprints.
 
+When a box length changes here, it changes in two other places too: the
+"How long is the box?" table in [`timeboxing_quickref.md`](timeboxing_quickref.md),
+and — for the `agent-` types — the inline defaults in
+[`timebox_recording.md`](timebox_recording.md) § Default boxes for agent tasks,
+which are themselves mirrored into `SKILL.md` § 1. This file owns the values;
+the others are copies that state so. Update them together.
+
 Calibration rows deliberately do **not** go into `project_log.md`. The lab
 logging standard scopes tracked logs to three entry triggers (decisions,
 irreversible events, re-scopes) and rules out bare status — per-box telemetry
