@@ -37,8 +37,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from backlog_lint import Backlog, _in_ci, parse_backlog  # noqa: E402
-from backlog_view import ready_unblocked, source_integrity_errors  # noqa: E402
+from backlog_lint import Backlog, parse_backlog  # noqa: E402
+from backlog_view import _in_ci, ready_unblocked, source_integrity_errors  # noqa: E402
 
 
 def _blank_owner(o: str) -> bool:
@@ -94,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
         msg = f"{path} not found"
         print(f"::error::backlog-digest: {msg}" if _in_ci() else f"ERROR {msg}")
         return 1
-    backlog = parse_backlog(path.read_text())
+    backlog = parse_backlog(path.read_text(encoding="utf-8"))
     errs = source_integrity_errors(backlog)
     if errs:
         # A broken source must not render as an empty "nothing to groom"
@@ -121,7 +121,7 @@ _FIXTURE = Path(__file__).resolve().parent.parent / "tests/backlog_digest/BACKLO
 
 
 def _fixture() -> str:
-    return _FIXTURE.read_text()
+    return _FIXTURE.read_text(encoding="utf-8")
 
 
 def _self_test() -> int:
@@ -139,7 +139,7 @@ def _self_test() -> int:
     # The fixture must model a real input: backlog_lint accepts it with zero
     # errors (full schema, Index == render of the blocks).
     template = Path(__file__).resolve().parent.parent / "templates/backlog-item.template.md"
-    errs = lint(parse_backlog(fix), required_fields(template.read_text())).errors
+    errs = lint(parse_backlog(fix), required_fields(template.read_text(encoding="utf-8"))).errors
     expect("fixture is lint-valid (zero errors)", not errs)
 
     d = render_digest(parse_backlog(fix))
@@ -189,7 +189,7 @@ def _self_test() -> int:
 
     with tempfile.TemporaryDirectory() as td:
         src = Path(td) / "BACKLOG.md"
-        src.write_text(fix)
+        src.write_text(fix, encoding="utf-8")
         rc, out_text = run_main(src)
         expect("CLI renders a valid backlog to stdout (exit 0)",
                rc == 0 and "# Backlog grooming digest" in out_text)
@@ -198,7 +198,7 @@ def _self_test() -> int:
                rc == 1 and "not found" in out_text)
         # Destroyed source: must refuse, never print "nothing to groom".
         src.write_text("<<<<<<< HEAD\ntotal wreckage\n=======\nother side\n"
-                       ">>>>>>> theirs\n")
+                       ">>>>>>> theirs\n", encoding="utf-8")
         rc, out_text = run_main(src)
         expect("destroyed source refuses a digest (exit 1)",
                rc == 1 and "refusing" in out_text
@@ -206,7 +206,7 @@ def _self_test() -> int:
         # Index row with no Item block (drop B6's block, keep its row): the
         # old predicate advertised B6 as ready & unblocked despite
         # `Depends on: B3` (B3 is in-progress, not done).
-        src.write_text(fix.split("## B6 —")[0])
+        src.write_text(fix.split("## B6 —")[0], encoding="utf-8")
         rc, out_text = run_main(src)
         expect("Index/Item drift refuses a digest, names the id",
                rc == 1 and "B6" in out_text)

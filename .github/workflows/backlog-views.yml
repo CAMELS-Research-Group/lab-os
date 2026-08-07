@@ -61,6 +61,14 @@ jobs:
         run: |
           SCRIPT=".lab-os/scripts/backlog_view.py"
           if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/backlog_view.py"; fi
+          # Fail closed on an unrecognized enforce value, mirroring
+          # backlog-lint.yml (#67): anything not literally "true"/"false" (an
+          # empty caller expression, "True", a typo) must NOT silently degrade
+          # to warn-only — it exits 1 rather than picking a posture.
+          if [ "$ENFORCE" != "true" ] && [ "$ENFORCE" != "false" ]; then
+            echo "::error::backlog-views: unrecognized enforce input '$ENFORCE' (expected true or false)"
+            exit 1
+          fi
           if [ ! -f BACKLOG.md ]; then echo "No BACKLOG.md; nothing to check."; exit 0; fi
           # Capture --check's exit status separately so staleness (exit 3) and
           # script/parse failure (any other non-zero) stay distinguishable —

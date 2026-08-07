@@ -4,9 +4,13 @@
 # the Actions run summary — a safe surface that posts under nobody's identity.
 #
 # Posting a GitHub issue is WIRED BUT UNARMED: it only happens on a manual
-# workflow_dispatch run with post_issue=true. Explicit arming, because the
-# issue posts under a maintainer's identity — comms under an identity need a
-# deliberate per-run action, never a schedule.
+# workflow_dispatch run with post_issue=true. The post uses GH_TOKEN:
+# ${{ github.token }}, so it appears as github-actions[bot] — NOT a maintainer's
+# identity. Arming is still deliberate, but the reason is notification
+# discipline and duplicate control, not identity: an unattended schedule that
+# opened or bumped a team-visible standing issue every sprint boundary would
+# generate recurring notifications and risk duplicate issues on any lookup
+# failure. A human decides when that team ping is wanted.
 #
 # One-time setup before the first armed run: the `backlog-digest` label must
 # exist (`gh label create backlog-digest --repo CAMELS-Research-Group/lab-os`)
@@ -21,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       post_issue:
-        description: "Also post/update the grooming issue (arms comms under your identity)."
+        description: "Also post/update the grooming issue as github-actions[bot] (deliberate team ping)."
         type: boolean
         required: false
         default: false
