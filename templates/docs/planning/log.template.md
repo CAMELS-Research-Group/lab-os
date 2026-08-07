@@ -14,8 +14,8 @@
      per-entry byte cap does not bind; Refs may carry a bundle-relative path or be omitted
      until the PR lands. Overflow goes to log_archive.md co-located in this bundle.
 
-     Routing (the part 03-logging.md does not state): known gaps are NOT entries here — they
-     live in the PRD's "Open questions" (.claude/rules/04-docs.md §ENG document standards). A
+     Routing (owned by .claude/rules/04-docs.md §ENG document standards, restated here at
+     point of use): known gaps are NOT entries here — they live in the PRD's "Open questions". A
      decision's binding current-state resolution lives once in this bundle's spec.md; this log
      is the history of how it got there. Decisions that outlive the slice → project_log.md.
 

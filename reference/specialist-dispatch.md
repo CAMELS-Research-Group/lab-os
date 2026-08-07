@@ -93,11 +93,12 @@ that repo's root:
 
 | Repo | ENG-tier bundle paths (globs) | Convention source |
 |---|---|---|
-| `lab-os` | `docs/work/**/*.md`, `templates/work-bundle/**/*.md`, `templates/PRD.template.md` | `PR-LIFECYCLE.md` § work bundle (`docs/work/YYYY-MM-DD-<slug>/`, archived to `docs/work/completed/`) |
+| `lab-os` | `_specs/**/*.md`, `templates/docs/planning/**/*.md`, `templates/PRD.template.md` | `03-logging.md` § Log altitudes (`_specs/<repo>/<DATE>-<handle>/`) · `04-docs.md` § Bundle lifecycle (retained in place, never moved) |
 
-`docs/work/` carries no committed bundles in lab-os today — the glob is registered against the
-convention, and simply matches nothing until one lands. A repo whose bundles live elsewhere (a fork
-using `_specs/**`, a member repo using its own root) adds its row here; no agent body changes.
+`_specs/` carries no committed bundles in lab-os today — the glob is registered against the
+convention, and simply matches nothing until one lands. A repo whose bundles live elsewhere (a
+member repo that omits the `<repo>` segment, or one using its own root) adds its row here; no agent
+body changes.
 
 A pass whose diff fires no predicate in either table dispatches no specialists — the generalist
 review runs alone, exactly as before this reference existed.

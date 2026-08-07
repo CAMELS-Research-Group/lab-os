@@ -2,7 +2,10 @@
 
 **Single owning source** of the finding-class catalog. Do not duplicate class definitions elsewhere.
 
-**Derivers:**
+**Derivers** — **fork-resident unless marked otherwise**: they live in the lab's workspace fork
+(github.com/WatsonWBlair/Agentic_Workspace), their paths below are fork-relative, and a path that
+does not resolve in an upstream lab-os clone is expected rather than broken:
+
 - `standards-aware-planning` skill (`.claude/skills/standards-aware-planning/`) — reads the
   design-constraint forms; emits plan-time checks for classes at altitude `plan`
 - pr-review-loop code-quality rubric (`.claude/skills/pr-review-loop/reference/code-quality-rubric.md`)
@@ -15,7 +18,8 @@
   the class catalog by reference alongside its own prose-slop categories (standalone +
   cross-linked per that bundle's PRD OQ3, resolved 2026-07-03; the class sweep under this lens
   is a follow-on scope amendment)
-- `pr-round` skill (`.claude/skills/pr-round/`) — reads this file **in place** as tier 2 of its
+- `pr-round` skill (`.claude/skills/pr-round/`) — **resident in this repo**; reads this file
+  **in place** as tier 2 of its
   three-tier rubric (`reference/rubric-layering.md`), applying the lab thresholds — notably the
   1000-line Class 1 budget — over its shipped tier-1 defaults. **Documented exception to the
   no-duplication rule above:** its tier-1 file restates the seven classes in *project-neutral* form
@@ -23,7 +27,8 @@
   is deliberately generic and threshold-free; **this file stays authoritative** wherever it resolves,
   and drift between the two is expected and accepted rather than reconciled.
 
-**Vocabulary source:** [`codebase-design` skill](../.claude/skills/codebase-design/SKILL.md).
+**Vocabulary source:** the `codebase-design` skill — fork-resident
+(`.claude/skills/codebase-design/SKILL.md` in the workspace fork).
 Terms used below — module, interface, depth, seam, adapter, leverage, locality, the deletion test,
 "the interface is the test surface" — are defined there; this file applies them.
 

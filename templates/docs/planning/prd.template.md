@@ -1,9 +1,12 @@
 # <Project title> — PRD
 
 <!-- This is a living document at a stable path. Update by amendment; never archive.
-     Decisions made while executing this PRD live in project_log.md — never embedded here.
-     Bundle lifecycle for individual slices: _specs/<repo>/YYYY-MM-DD-<slug>/ archived per
-     the lab planning-bundle conventions (.claude/rules/04-docs.md). -->
+     Decisions are never embedded here: resolved ones live once in this bundle's spec.md
+     (history in log.md); only decisions that outlive the slice route to project_log.md.
+     See the blockquote below and .claude/rules/04-docs.md §ENG document standards.
+     Bundle lifecycle for individual slices: _specs/<repo>/YYYY-MM-DD-<slug>/, retained in
+     place and flipped to Status: complete — never moved or deleted
+     (.claude/rules/04-docs.md §Bundle lifecycle). -->
 
 **Status:** draft <!-- draft | active | paused | complete | superseded | abandoned -->
 **Date:** YYYY-MM-DD · **Repo:** <repo>
