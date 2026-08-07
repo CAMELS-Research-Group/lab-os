@@ -226,6 +226,24 @@ def _self_test() -> int:
                source_integrity_errors(drifted_bl) != []
                and not ({r["id"] for r in drifted_bl.index}
                         ^ {it.id for it in drifted_bl.items}))
+        # `Depends on` fail-open through the SHARED guard (Watson's #68
+        # blockers): B6 genuinely depends on B3 (in-progress, not done). A
+        # malformed value made parse_deps read [] and the digest advertise B6
+        # under "Ready & unblocked — pick these up". The shared
+        # source_integrity_errors now refuses. B6's line is unique (B3 uses
+        # `Depends on: —`). Mutation-check: drop the dep loop in
+        # source_integrity_errors and this goes green (a digest renders B6).
+        prose_dep = fix.replace("- **Depends on:** B3\n- **Status:** ready",
+                                "- **Depends on:** blocked on Jean\n- **Status:** ready")
+        src.write_text(prose_dep, encoding="utf-8")
+        rc, out_text = run_main(src)
+        expect("malformed Depends-on refuses a digest (exit 1, shared guard)",
+               rc == 1 and "refusing" in out_text
+               and "grooming digest" not in out_text and "B6" in out_text)
+        # No false positive: the clean fixture (all deps well-formed) still
+        # renders, and B5 (well-formed `Depends on: B1`, B1 done) is unblocked.
+        expect("well-formed deps: clean fixture still passes the shared guard",
+               source_integrity_errors(parse_backlog(fix)) == [])
 
     print("backlog-digest self-test:", "PASS" if ok else "FAIL")
     return 0 if ok else 1

@@ -507,8 +507,14 @@ def run_self_test() -> int:  # noqa: C901 - a linear fixture list reads best fla
         c_env.update(LC_ALL="C", LANG="C", PYTHONUTF8="0")
 
         def run_c(args: list[str]) -> tuple[int, str]:
+            # Decode the child's output as UTF-8 explicitly: the child now
+            # emits UTF-8 em-dashes, and this parent may itself be running
+            # under LC_ALL=C (the whole suite is run that way to prove closure),
+            # where text=True would otherwise decode the child with ASCII and
+            # choke on its own success output.
             r = subprocess.run([sys.executable, str(script), *args],
-                               capture_output=True, text=True, env=c_env)
+                               capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", env=c_env)
             return r.returncode, r.stdout + r.stderr
 
         dep_bad = tdp / "DEPBAD.md"
