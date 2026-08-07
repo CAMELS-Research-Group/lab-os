@@ -7,8 +7,8 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
-- 2026-07-31 16:55 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
 - 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61
 - 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59
@@ -26,7 +26,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ---
 
-## 2026-07-31 16:55 — Adopt timeboxing v1.0: session standard + agent task boxes
+## 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes
 
 **Decision:** lab-os adopts the session timeboxing standard v1.0 (`docs/timeboxing.md`: default
 boxes per session type, written exit criterion, scope-hammer before extension, one extension max)
