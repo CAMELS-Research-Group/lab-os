@@ -23,8 +23,9 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
      allowed). Each entry is preceded by `---` on its own line, then a blank line.
      Merge conflict here: keep both blocks, reorder entries by header timestamp.
      Entries are immutable once their PR merges — revise via a new entry with `Supersedes:`.
-     Whole file capped at 15 KB; overflow moves oldest entries to project_log_archive.md via a
-     dedicated `chore: archive log overflow` PR. -->
+     Whole file capped at 15 KB at project altitude (40 KB at lab — see 03-logging.md); overflow
+     moves oldest entries to project_log_archive.md via a dedicated
+     `chore: archive log overflow` PR. -->
 
 ---
 
