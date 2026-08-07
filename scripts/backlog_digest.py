@@ -210,6 +210,22 @@ def _self_test() -> int:
         rc, out_text = run_main(src)
         expect("Index/Item drift refuses a digest, names the id",
                rc == 1 and "B6" in out_text)
+        # Blocker B (adversarial self-review): CELL-content drift through the
+        # SHARED source_integrity_errors. B5's block says done; the committed
+        # Index row still says ready; ids match. The old guard passed and the
+        # digest read `ready` from the Index. The fixed shared guard refuses.
+        cell_drift = fix.replace("- **Depends on:** B1\n- **Status:** ready",
+                                 "- **Depends on:** B1\n- **Status:** done")
+        src.write_text(cell_drift, encoding="utf-8")
+        rc, out_text = run_main(src)
+        expect("status cell drift refuses a digest (exit 1, shared guard)",
+               rc == 1 and "refusing" in out_text
+               and "grooming digest" not in out_text)
+        drifted_bl = parse_backlog(cell_drift)
+        expect("digest cell drift caught though id-sets MATCH (Blocker B)",
+               source_integrity_errors(drifted_bl) != []
+               and not ({r["id"] for r in drifted_bl.index}
+                        ^ {it.id for it in drifted_bl.items}))
 
     print("backlog-digest self-test:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
