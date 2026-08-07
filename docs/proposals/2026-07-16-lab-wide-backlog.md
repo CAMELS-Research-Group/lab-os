@@ -51,7 +51,8 @@ provides no single "what's ready" surface; status quo — voted down by the retr
 1. **`BACKLOG.md` at the lab-os repo root** (added in this PR), following the workshop
    answer-key shape: **Index** (the "what's ready right now" table) → **Inbox** (raw,
    unshaped) → **Items** (shaped blocks per `templates/backlog-item.template.md`, whose
-   "Done when" field is the readiness bar).
+   "Done when" field is the readiness bar). The Index is **generated** — edit the Item
+   blocks, then run `python3 scripts/backlog_lint.py --write-index`; never hand-edit it.
 2. **Routing rule** (extends, does not change, the logging conventions): repo-scoped work
    stays in that repo's issues; **cross-repo / lab-level work goes here**. An item that
    grows a discussion gets a linked issue; an item that grows into a project gets a spec

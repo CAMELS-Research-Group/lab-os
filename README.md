@@ -33,6 +33,7 @@ by agents and CI.
   - [`log-lint.yml`](.github/workflows/log-lint.yml) — validates project-log structure and entry format
   - [`docs-budget.yml`](.github/workflows/docs-budget.yml) — warns when CLAUDE.md or rules files exceed byte budgets
   - [`merge-bar-check.yml`](.github/workflows/merge-bar-check.yml) — checklist completeness and log-cleanup gate
+  - [`backlog-lint.yml`](.github/workflows/backlog-lint.yml) — lab-os-only: BACKLOG.md item hygiene and derived-Index integrity
 - `site/` — the Docusaurus handbook, built and deployed to GitHub Pages by [`deploy-site.yml`](.github/workflows/deploy-site.yml).
 - `BOOTSTRAP.md`, `WORKING-WITH-CLAUDE.md` — pointer stubs; their content moved to the handbook site.
 
@@ -63,7 +64,7 @@ ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
 
 The reviewer then concatenates `lab-os/.claude/rules/*.md` + `pr-repo/.claude/rules/*.md` into its prompt context.
 
-**Adherence Actions**: repos also consume the three enforcement workflows by adding a thin caller that references them from this repo. [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
+**Adherence Actions**: repos also consume the three shared enforcement workflows (`log-lint`, `docs-budget`, `merge-bar-check`) by adding a thin caller that references them from this repo; the fourth, `backlog-lint`, is lab-os-only (downstream repos use their own issues). [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
 
 ## Override semantics
 

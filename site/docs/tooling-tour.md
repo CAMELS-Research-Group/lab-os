@@ -1,7 +1,7 @@
 ---
 sidebar_position: 7
 title: Tooling Tour
-description: The automation lab-os runs on itself — three CI adherence checks, the templates directory, an automated PR reviewer, and a Claude Code plugin marketplace.
+description: The automation lab-os runs on itself — the CI adherence checks, the templates directory, an automated PR reviewer, and a Claude Code plugin marketplace.
 ---
 
 # Tooling Tour
@@ -13,16 +13,16 @@ you're joining it, this is what will act on your pull requests. Every section li
 truth —
 when this page and the source disagree, the source wins.
 
-## The three CI adherence checks
+## The CI adherence checks
 
 CI (continuous integration — the checks GitHub runs automatically on every pull request, or PR) is how
-this repository enforces its own standards. The three checks are defined once in lab-os as
+this repository enforces its own standards. The checks are defined once in lab-os as
 *reusable workflows* — GitHub Actions' way of letting many repositories share one check — in
 [`.github/workflows/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/.github/workflows). lab-os
 runs them on its own pull requests through a small *caller* file — a workflow whose only job is to
 invoke the shared ones —
 [`standards.yml`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/workflows/standards.yml);
-any other repo can adopt all three by copying that one file — a later rollout step, marked
+any other repo can adopt them all by copying that one file — a later rollout step, marked
 not-yet-required in [Setting Up a New Repo](/docs/repo-setup) (the
 [README](https://github.com/CAMELS-Research-Group/lab-os/blob/main/README.md) documents adoption under
 "How repos consume it").
@@ -81,6 +81,26 @@ and discussed in [Rules, Explained](/docs/rules-explained).
 **A red check means** your PR body is incomplete — a missing template section, or the log
 checkboxes unticked (or both ticked) on a PR that changes code. Edit the PR description; no code
 change needed. Docs-only PRs skip the checkbox rule (sections are still required).
+
+### backlog-lint
+
+Source of truth:
+[`backlog-lint.yml`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/workflows/backlog-lint.yml)
+(behavior is spelled out in its header comment).
+
+Checks [`BACKLOG.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/BACKLOG.md) — the
+lab-wide backlog — against its item convention
+([`templates/backlog-item.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/backlog-item.template.md)):
+required fields per item, a single-condition non-placeholder `Done when`, the status ladder, size
+discipline (`L` is never `ready`), the Index as a generated projection of the Item blocks,
+`Depends on` integrity, and a public-tier leak tripwire over item text.
+
+**A red check means** a tooling defect — a broken schema template or a failed self-test; those
+always fail. Item findings are currently **warn-only**: they surface as `::error` / `::warning`
+annotations on the PR while the job stays green, until the enforcement flip planned as Phase 2 of
+its [PRD](https://github.com/CAMELS-Research-Group/lab-os/blob/main/docs/prds/backlog-lint.md). Fix
+the item — for a stale Index, edit the Item blocks and run
+`python3 scripts/backlog_lint.py --write-index` — and push. Repos without a `BACKLOG.md` no-op green.
 
 ## The `templates/` directory
 

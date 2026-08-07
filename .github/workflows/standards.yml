@@ -1,4 +1,4 @@
-# lab-os self-caller — invokes all three reusable CI workflows against
+# lab-os self-caller — invokes the reusable CI workflows against
 # lab-os itself on every pull request.
 #
 # This file also serves as the copy-paste template for phase-2 callers in
@@ -32,6 +32,30 @@ jobs:
     uses: ./.github/workflows/merge-bar-check.yml
     # No `with:` needed — default exclude-globs ("*.md,docs/**,.github/**")
     # are correct for lab-os.
+
+  backlog-lint:
+    # lab-os-only: BACKLOG.md is the lab-wide backlog (downstream repos use their
+    # own issues). Warn-only until backlog-lint's first green run; Phase 2 flips this.
+    # The workflow's self-test step is unconditional either way.
+    uses: ./.github/workflows/backlog-lint.yml
+    with:
+      enforce: false
+      # lab-os MUST ship a BACKLOG.md, so a missing one is a hard error (under
+      # enforce). Member repos copy the downstream block below and leave this
+      # off, keeping the no-BACKLOG → no-op-green path.
+      require-backlog: true
+
+  backlog-views:
+    # lab-os-only. enforce: true — flipped 2026-08-06 with the dashboard
+    # regenerated and `--check` green at the same head (PR #68 review,
+    # Blocker 1: warn-only let the check's first artifact land drifted, the
+    # exact class the tool exists to close). A stale docs/backlog-views.md
+    # now FAILS the PR; the remedy is `python3 scripts/backlog_view.py
+    # --write`. Script/parse/integrity failures always fail, and the
+    # workflow's self-test steps are unconditional either way.
+    uses: ./.github/workflows/backlog-views.yml
+    with:
+      enforce: true
 
 # ---------------------------------------------------------------------------
 # Downstream repo example

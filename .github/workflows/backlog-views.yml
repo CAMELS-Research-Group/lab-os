@@ -1,0 +1,93 @@
+# Reusable backlog-views sync check.
+#
+# The dashboard docs/backlog-views.md is a generated projection of BACKLOG.md
+# (scripts/backlog_view.py). `--check` compares the committed dashboard against
+# a fresh render. Warn-only by default: a STALE dashboard (the script's
+# dedicated exit code 3) surfaces as a ::warning; any other failure — a
+# traceback, an unparseable BACKLOG.md, a missing script — FAILS the job even
+# in warn-only mode, because a script failure is not staleness and must not be
+# reported as one. `enforce: true` makes staleness fail too.
+# The self-test steps (view AND digest — this is the digest's only PR-time
+# check; its own workflow runs on a schedule) are never gated on `enforce`:
+# a self-test failure is a code defect and always fails the job.
+# lab-os-only surface (BACKLOG.md); a caller without one no-ops green.
+
+name: backlog-views
+
+on:
+  workflow_call:
+    inputs:
+      enforce:
+        description: Fail when the committed dashboard is stale (else warn-only).
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  backlog-views:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out caller repo
+        uses: actions/checkout@v4
+      - name: Check out lab-os (script source)
+        uses: actions/checkout@v4
+        with:
+          repository: CAMELS-Research-Group/lab-os
+          path: .lab-os
+      - name: Self-test backlog-view (unconditional — never gated on enforce)
+        run: |
+          SCRIPT=".lab-os/scripts/backlog_view.py"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/backlog_view.py"; fi
+          python3 "$SCRIPT" --self-test
+      - name: Self-test backlog-digest (unconditional — its only PR-time check)
+        run: |
+          # The digest's own workflow runs on a schedule, so a digest-breaking
+          # PR would otherwise merge green and fail days later at the sprint
+          # boundary. Same repo-gated script selection as the step above.
+          SCRIPT=".lab-os/scripts/backlog_digest.py"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/backlog_digest.py"; fi
+          python3 "$SCRIPT" --self-test
+          # Also render against the REAL backlog: a PR that leaves BACKLOG.md
+          # producing a broken digest must fail here, not days later at the
+          # sprint boundary. Source-integrity failures exit non-zero; a repo
+          # without a BACKLOG.md no-ops green, same as the check step below.
+          if [ -f BACKLOG.md ]; then python3 "$SCRIPT" --backlog BACKLOG.md > /dev/null; fi
+      - name: Check the dashboard is in sync
+        env:
+          ENFORCE: ${{ inputs.enforce }}
+        run: |
+          SCRIPT=".lab-os/scripts/backlog_view.py"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/backlog_view.py"; fi
+          # Fail closed on an unrecognized enforce value, mirroring
+          # backlog-lint.yml (#67): anything not literally "true"/"false" (an
+          # empty caller expression, "True", a typo) must NOT silently degrade
+          # to warn-only — it exits 1 rather than picking a posture.
+          if [ "$ENFORCE" != "true" ] && [ "$ENFORCE" != "false" ]; then
+            echo "::error::backlog-views: unrecognized enforce input '$ENFORCE' (expected true or false)"
+            exit 1
+          fi
+          if [ ! -f BACKLOG.md ]; then echo "No BACKLOG.md; nothing to check."; exit 0; fi
+          # Capture --check's exit status separately so staleness (exit 3) and
+          # script/parse failure (any other non-zero) stay distinguishable —
+          # a traceback must never be reported as "dashboard is stale".
+          set +e
+          python3 "$SCRIPT" --check docs/backlog-views.md
+          rc=$?
+          set -e
+          case "$rc" in
+            0) ;;
+            3)
+              if [ "$ENFORCE" = "true" ]; then
+                echo "::error::backlog dashboard is stale (enforce) — run scripts/backlog_view.py --write"
+                exit 1
+              fi
+              echo "::warning::backlog dashboard is stale (warn-only) — run scripts/backlog_view.py --write"
+              ;;
+            *)
+              echo "::error::backlog_view.py --check failed (exit $rc) — script/parse failure, not staleness"
+              exit "$rc"
+              ;;
+          esac
