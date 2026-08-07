@@ -69,8 +69,16 @@ jobs:
         env:
           ENFORCE: ${{ inputs.enforce }}
         run: |
+          # Fail closed on an unrecognized enforce value: anything that is not
+          # literally "true"/"false" (an empty caller expression, "True",
+          # "yes") must not silently degrade the job to warn-only.
           ARGS=""
-          if [ "$ENFORCE" = "true" ]; then ARGS="--enforce"; fi
+          if [ "$ENFORCE" = "true" ]; then
+            ARGS="--enforce"
+          elif [ "$ENFORCE" != "false" ]; then
+            echo "::error::backlog-lint: unrecognized enforce input '$ENFORCE' (expected true or false)"
+            exit 1
+          fi
           # lab-os' own PRs must run the PR's script (main's copy is absent/stale
           # there); gate on repo name, not file-exists, so downstream repos can't
           # shadow the canonical script. The field-schema template comes from the

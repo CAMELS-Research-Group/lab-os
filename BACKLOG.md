@@ -7,6 +7,7 @@ New items follow [templates/backlog-item.template.md](templates/backlog-item.tem
 anyone may add to Inbox, shaping an item requires an owner. Groomed at each sprint boundary.
 
 Read the **Index** first — it is the "what's ready right now" surface. Full items follow.
+`## Items` is the last section: every `## ` heading below it must be an item heading.
 
 ## Index
 

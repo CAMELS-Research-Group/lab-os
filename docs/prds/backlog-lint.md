@@ -1,6 +1,6 @@
 # Backlog-lint — PRD
 
-**Status:** draft <!-- draft | active | paused | complete -->
+**Status:** active <!-- draft | active | paused | complete -->
 **Date:** 2026-07-22 · **Repo:** lab-os
 
 > **Decisions live in `project_log.md`, not here.** When a decision is reached while executing
@@ -20,7 +20,7 @@ The lab already enforces its other text conventions by CI (`log-lint`, `docs-bud
 
 <!-- Observable, falsifiable. -->
 
-- A PR that adds or edits `BACKLOG.md` **fails CI** when an item is missing a required field, its `Done when` is empty / a placeholder / more than one condition (wrapped continuation lines join into one value; a nested list inside the field fails), its `Status` is off the `inbox → ready → in-progress → done` ladder, the committed Index differs from the Index rendered from the Item blocks, a `Depends on` id doesn't resolve, the dependency graph contains a cycle, or a size-`L` item is marked `ready`.
+- A PR that adds or edits `BACKLOG.md` **fails CI** when an item is missing a required field, its `Done when` is empty / a placeholder / more than one condition (wrapped continuation lines join into one value; a nested list inside the field fails), its `Status` is off the `inbox → ready → in-progress → done` ladder, the committed Index differs from the Index rendered from the Item blocks, a `Depends on` id doesn't resolve, the dependency graph contains a cycle, or a size-`L` item is marked `ready`. *(Observable at Phase 2, once `enforce: true` — Phase 1 ships warn-only, per the rollout criterion below; findings surface as annotations, not a red job.)*
 - A well-formed backlog PR **passes with no human review of format** — reviewers spend attention on the item's content, not its shape.
 - The check runs **on every PR, like the sibling lints** (`log-lint`, `docs-budget`, `merge-bar-check`) — its cost is seconds, so a changed-files gate is not worth the extra conditional. <!-- amended 2026-07: the original "only on PRs that touch BACKLOG.md" claim never matched the shipped workflow; the sibling convention won. -->
 - The field schema the linter enforces is **single-sourced with `backlog-item.template.md`** — editing the template cannot silently diverge from what CI checks.
@@ -37,7 +37,7 @@ The lab already enforces its other text conventions by CI (`log-lint`, `docs-bud
 - A lightweight public-tier spot check (flag obvious private-repo paths / gated-dataset identifiers appearing in an item — lab-os is public).
 - **Schema source:** the required-field list + enums are **parsed from `backlog-item.template.md`** (the single source), distinguishing a filled field from an unfilled `<placeholder>`.
 - **`Done when` test is structural:** present, single line, non-placeholder → hard fail. A `Done when` with no concrete artifact reference (command / file / observable behavior) is a **warning**, not a failure — never red a legitimate item over phrasing.
-- Warn-until-green rollout + `backlog-lint:override` label handling.
+- Warn-until-green rollout + `backlog-lint:override` label handling *(override handling lands in Phase 2 of the Plan, not in the Phase-1 diff)*.
 - Unit tests covering each failure class (each rule mutation-proven to fail a bad fixture and pass a good one).
 
 ### Out of scope
@@ -72,7 +72,7 @@ The lab already enforces its other text conventions by CI (`log-lint`, `docs-bud
 ### Phase 2 — Enforce + override + document
 
 **Goal:** flip to failing after the first green run; make the check discoverable.
-**Deliverables:** enforcing workflow, `backlog-lint:override` label handling, a "what backlog-lint checks" line in `site/docs/tooling-tour.md` — tooling doc, **not** a `.claude/rules/` entry (a lint's behavior isn't a hard rule; don't spend rule-file budget).
+**Deliverables:** enforcing workflow, `backlog-lint:override` label handling. (The "what backlog-lint checks" section in `site/docs/tooling-tour.md` — tooling doc, **not** a `.claude/rules/` entry, since a lint's behavior isn't a hard rule — was pulled forward into Phase 1 during the #67 review round: the annotations already run on every PR, so the doc could not stay a phase behind them.)
 **Work bundle:** <!-- link once created -->
 
 ### Phase 3 (optional) — Expose the parsed model
