@@ -241,7 +241,35 @@ def parse_backlog(text: str) -> Backlog:
 
         if section == "## Inbox":
             if line.startswith("## "):
-                section = ""
+                # A `## ` line here is NOT one of the recognized section
+                # transitions — `## Index`/`## Inbox`/`## Items` were consumed
+                # by the top guard, so this is a stray heading INSIDE Inbox.
+                # Do not silently exit the section: the old `section = ""`
+                # dropped every line below such a heading into the unowned
+                # fall-through at the bottom of the loop, where it escaped BOTH
+                # the Inbox leak scan and the orphan leak scan (a gated/private
+                # reference below a stray `## …` merged with zero signal, so
+                # `--check --enforce` went green on a real leak). Record the
+                # stray heading as an orphan — the same mechanism the
+                # Items-section unowned-text fix uses, so the existing orphan
+                # leak scan covers it — and STAY in Inbox so its following
+                # content keeps being captured and leak-scanned. A legitimate
+                # Inbox→Items transition still fires at the top guard; a
+                # legitimately-empty Inbox still records nothing.
+                orphans.append((i, line))
+                if _ITEM_HEAD.match(line):
+                    # A well-formed ITEM heading appearing in Inbox means the
+                    # `## Items` section is renamed/misspelled/missing (item
+                    # blocks landed after Inbox with no Items heading to open
+                    # them). Preserve the same "outside Items section" hard
+                    # error the post-Inbox path already raises, so a wiped/
+                    # renamed Items section never goes green just because Inbox
+                    # happened to precede it. Staying in Inbox (rather than the
+                    # old section="") is what keeps the surrounding leak scan;
+                    # this line re-arms the structural detection it would
+                    # otherwise swallow.
+                    parse_errors.append(
+                        f"item heading outside Items section at line {i}: {stripped}")
                 continue
             if stripped:
                 inbox.append((i, line))
@@ -550,8 +578,26 @@ def _annotation(kind: str, msg: str, path: Path) -> str:
     return f"::{kind} {where}::backlog-lint: {msg}"
 
 
-def _run(backlog_path: Path, template_path: Path, enforce: bool) -> int:
+def _run(backlog_path: Path, template_path: Path, enforce: bool,
+         require_backlog: bool = False) -> int:
+    # Existence is decided FIRST, but only a truly-absent file short-circuits:
+    # a present-but-broken file always flows through to lint() below and
+    # reports its structural errors. --require-backlog only bites on a genuinely
+    # missing file, so it can never mask a present file's structural findings.
     if not backlog_path.exists():
+        if require_backlog:
+            # A declared-but-absent backlog is a defect, not "nothing to
+            # check": lab-os passes --require-backlog because it MUST ship a
+            # BACKLOG.md. Member repos leave the flag off and keep the no-op-
+            # green path below. Fail closed under --enforce; warn-only
+            # otherwise, per the module's warn-until-first-green posture.
+            msg = (f"{backlog_path} not found but --require-backlog is set — "
+                   "this repo must ship a BACKLOG.md")
+            if enforce:
+                return _fail(msg)
+            print(_annotation("warning", msg, backlog_path) if _in_ci()
+                  else f"WARN  {msg}")
+            return 0
         print(f"backlog-lint: {backlog_path} not found; nothing to check.")
         return 0
     req, why = _load_schema(template_path)
@@ -639,6 +685,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--check", default=_DEFAULT_BACKLOG, help="path to BACKLOG.md")
     ap.add_argument("--template", default=_DEFAULT_TEMPLATE, help="item template (field source)")
     ap.add_argument("--enforce", action="store_true", help="exit 1 on errors (default: warn-only)")
+    ap.add_argument("--require-backlog", action="store_true",
+                    help="treat a MISSING BACKLOG.md as a hard error under --enforce "
+                         "(default: off — member repos without a backlog no-op green)")
     ap.add_argument("--write-index", action="store_true",
                     help="regenerate the (derived) Index table from the Item blocks")
     ap.add_argument("--self-test", action="store_true", help="run built-in fixtures and exit")
@@ -647,7 +696,8 @@ def main(argv: list[str] | None = None) -> int:
         return _self_test()
     if args.write_index:
         return _write_index(Path(args.check))
-    return _run(Path(args.check), Path(args.template), args.enforce)
+    return _run(Path(args.check), Path(args.template), args.enforce,
+                args.require_backlog)
 
 
 # --- self test (fixtures prove each rule bites) ------------------------------
@@ -789,6 +839,29 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
     check("Inbox leak is caught",
           _GOOD.replace("- a raw idea waiting to be shaped", "- idea parked at /Users/someone/notes/idea.md"),
           "Inbox")
+    # Blocker A (PR #67 adversarial self-review): a stray `## …` heading inside
+    # Inbox must NOT silently exit the section and drop every line below it out
+    # of BOTH the Inbox and orphan leak scans. Test PAIR — (1) a private
+    # reference one line below a stray `## Notes` heading in Inbox still ERRORS;
+    # (2) the same leak with no stray heading above it (control) also errors, so
+    # the fix is not smuggling the signal in via the heading. Mutation-check:
+    # revert the Inbox branch to `section = ""` and (1) goes green (no error).
+    check("leak below a stray `## ` heading in Inbox is still caught (Blocker A)",
+          _GOOD.replace("- a raw idea waiting to be shaped",
+                        "- a raw idea waiting to be shaped\n\n## Notes\n\n"
+                        "- see /Users/watson/private/keys.txt"),
+          "non-public")
+    check("Inbox leak with no stray heading above it (Blocker A control)",
+          _GOOD.replace("- a raw idea waiting to be shaped",
+                        "- see /Users/watson/private/keys.txt"),
+          "non-public")
+    # The fix must not false-positive: a stray `## ` heading in Inbox with clean
+    # content below stays green, and the legit Inbox→Items transition survives.
+    check("stray `## ` heading in Inbox with clean content is not a false positive",
+          _GOOD.replace("- a raw idea waiting to be shaped",
+                        "- a raw idea waiting to be shaped\n\n## Notes\n\n"
+                        "- a second clean idea"),
+          None)
 
     # Structural windows (adversarial self-review, PR #67): malformed headings
     # and unattached text fail loudly — nothing mis-attaches or vanishes.
@@ -944,6 +1017,26 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
                f"::error file={bad_b},line=" in out, out)
         expect("main: errors with --enforce exit 1",
                run_main(["--check", str(bad_b), "--template", tpl, "--enforce"])[0] == 1)
+        # Imp D (PR #67 review): --require-backlog makes a MISSING BACKLOG a
+        # hard error under --enforce. lab-os ships one and passes the flag;
+        # member repos leave it off and no-op green. The flag is off by default.
+        missing_b = tdp / "NO-SUCH-BACKLOG.md"
+        expect("missing backlog, flag absent: no-op green (member-repo path intact)",
+               run_main(["--check", str(missing_b), "--template", tpl])[0] == 0)
+        expect("missing backlog, --require-backlog without --enforce: warn-only green",
+               run_main(["--check", str(missing_b), "--template", tpl,
+                         "--require-backlog"])[0] == 0)
+        rc, out = run_main(["--check", str(missing_b), "--template", tpl,
+                            "--require-backlog", "--enforce"])
+        expect("missing backlog, --require-backlog --enforce: hard error exit 1",
+               rc == 1 and "--require-backlog" in out, out)
+        # A PRESENT-but-broken backlog still reports structurally under
+        # --require-backlog (the flag fires only on a truly-absent file, so it
+        # never masks a present file's structural findings).
+        rc, out = run_main(["--check", str(bad_b), "--template", tpl,
+                            "--require-backlog", "--enforce"])
+        expect("present-but-broken backlog under --require-backlog reports structurally",
+               rc == 1 and "placeholder" in out, out)
         warn_b = tdp / "WARNONLY.md"
         warn_b.write_text(_GOOD.replace("`scripts/x.py --self-test` passes",
                                         "the team agrees it works"), encoding="utf-8")
