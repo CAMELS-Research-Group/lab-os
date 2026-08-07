@@ -35,7 +35,7 @@ Four contributors independently reviewed their workspaces, project logs, and wor
 
 **De-duplication notes:**
 - Doc #3 is a **strict subset** of Doc #2 (entries 1–17 byte-identical; machine-wide addendum 18–38 absent)
-- `claude-conventions-jean.md` has an exact duplicate in Downloads (byte-identical)
+- Doc #5 was submitted twice; the two copies are byte-identical
 
 ---
 

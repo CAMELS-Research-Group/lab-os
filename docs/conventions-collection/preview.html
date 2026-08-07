@@ -223,7 +223,7 @@
       <div class="entry">
         <div class="entry-body">
           <strong>Doc #3 is a strict subset of Doc #2</strong> — entries 1–17 are identical. The machine-wide addendum (entries 18–38) exists only in Doc #2. De-dupe: use Doc #2 as the canonical Watson source; Doc #3 is the simpler prompt version.<br><br>
-          <strong>Doc #5 has an exact duplicate</strong> — <code>claude-conventions-jean.md</code> and <code>claude-conventions-jean (1).md</code> are byte-identical (2546 bytes each). One copy suffices.<br><br>
+          <strong>Doc #5 was submitted twice</strong> — the two copies are byte-identical. One copy suffices.<br><br>
           <strong>Convergent findings across Jean + Watson (strongest promotes):</strong><br>
           • Dependency seam (Jean A1 ↔ Watson entry implicit in fork-and-own)<br>
           • Soft-degrade by default (Jean A2 ↔ Watson convention patterns)<br>
@@ -406,7 +406,7 @@
           <span class="entry-title">Adversarial pre-ship second-set-of-eyes</span>
           <span class="entry-tag tag-needs">Needs authoring</span>
         </div>
-        <div class="entry-body">Anything shippable gets an independent adversarial pass first (different model or non-author), returning questions-to-verify, never verdicts — evidence decides. <code>skeptic.py</code> enforces questions-only in code.</div>
+        <div class="entry-body">Anything shippable gets an independent adversarial pass first (different model or non-author), returning questions-to-verify, never verdicts — evidence decides. The questions-only contract is enforced in code, not by convention.</div>
         <div class="entry-sources"><span class="source-badge badge-jean">Jean workspace</span></div>
         <div class="entry-tradeoff">A warm second model (~25s/call) + discipline to run it by default.</div>
       </div>
@@ -605,7 +605,7 @@
       </div>
       <div class="entry">
         <div class="entry-head"><span class="entry-id">W13</span><span class="entry-title">Reusable workflow scripts + tracking convention</span><span class="entry-tag tag-copy">Copy</span></div>
-        <div class="entry-body">packet-fanout.js + pr-review-cycle.js. Convention: <code>.claude/workflows/*</code> gitignored as session scratch with per-file <code>!</code> negations for vetted keepers.</div>
+        <div class="entry-body">Convention: <code>.claude/workflows/*</code> gitignored as session scratch, with per-file <code>!</code> negations promoting vetted scripts into the repo.</div>
         <div class="entry-sources"><span class="source-badge badge-watson">Watson</span></div>
       </div>
       <div class="entry">
@@ -938,15 +938,6 @@
       </div>
     </section>
 
-    <section class="card">
-      <header><h2>Housekeeping Items (Fix, Don't Promote)</h2></header>
-      <div class="prose">
-        <ul>
-          <li><strong>Model contradiction:</strong> <code>settings.json</code> pins <code>claude-fable-5[1m]</code> but ratified model-defaults describe Sonnet-first/Opus-audit.</li>
-          <li><strong>Stale memory:</strong> <code>project_dev_home.md</code> says lab-claude-plugins doesn't exist — it is installed now from <code>WatsonWBlair/lab-claude-plugins</code>.</li>
-        </ul>
-      </div>
-    </section>
   </div>
 
 </div>
