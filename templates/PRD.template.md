@@ -2,8 +2,11 @@
 
 <!-- This is a living document at a stable path. Update by amendment; never archive.
      Decisions made while executing this PRD live in project_log.md — never embedded here.
-     Bundle lifecycle for individual slices: docs/work/YYYY-MM-DD-<slug>/ archived per
-     lab-os docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5. -->
+     Current home: _specs/<repo>/<DATE>-<handle>/ — this PRD lives in the same bundle
+     directory as the slice's design.md and plan.md, not in a separate PRD tree.
+     Bundle lifecycle for individual slices archived per
+     lab-os docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5;
+     prd.md is exempt from that archival, being a living doc at a stable path. -->
 
 **Status:** draft <!-- draft | active | paused | complete -->
 **Date:** YYYY-MM-DD · **Repo:** <repo>
@@ -67,14 +70,15 @@
 ## Plan (phased)
 
 <!-- High-level phases with their deliverables. Each non-trivial phase gets a work bundle
-     (docs/work/YYYY-MM-DD-<slug>/) with its own design.md + plan.md. Link them here once created.
+     (_specs/<repo>/<DATE>-<handle>/) with its own design.md + plan.md, alongside this PRD.
+     Link them here once created.
      This section updates by amendment as phases complete or scope shifts. -->
 
 ### Phase 1 — <phase name>
 
 **Goal:** <one sentence>
 **Deliverables:** <what ships>
-**Work bundle:** <!-- link once created, e.g. [design](docs/work/YYYY-MM-DD-slug/design.md) -->
+**Work bundle:** <!-- link once created, e.g. [design](_specs/<repo>/<DATE>-<handle>/design.md) -->
 
 ### Phase 2 — <phase name>
 
