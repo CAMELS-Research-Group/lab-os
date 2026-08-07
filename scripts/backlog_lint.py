@@ -112,6 +112,14 @@ class Backlog:
     # `items` is the source of truth; `index`/`index_table` are the COMMITTED
     # Index exactly as parsed — unverified until lint() byte-compares the
     # table against render_index(items). Derive trustworthy rows from `items`.
+    raw: str                      # the full source text, verbatim — a LIVE field:
+                                  # the view/digest tools (PR #68) read `raw.strip()`
+                                  # to tell a truly-empty backlog from one that
+                                  # merely parsed to zero Item blocks (truncated /
+                                  # destroyed source), a distinction `items`/`index`
+                                  # alone cannot make. (Removed as dead in the #67
+                                  # review round; re-added here with that real
+                                  # consumer, so it is no longer a dead public field.)
     index: list[dict[str, str]]   # committed rows: id, title, owner, size, status
     index_table: list[str]        # the committed Index table lines, verbatim
     items: list[Item]
@@ -163,8 +171,20 @@ def parse_deps(raw: str) -> list[str]:
     return [] if raw.strip() in _DEP_NONE else re.findall(r"B\d+", raw)
 
 
+def _uncell(v: str) -> str:
+    """Inverse of _cell: a table cell's `\\|` renders as a literal `|`."""
+    return v.replace("\\|", "|")
+
+
 def _parse_index(lines: list[str]) -> tuple[list[dict[str, str]], list[str]]:
-    """Parse the Index section: (rows, verbatim table lines)."""
+    """Parse the Index section: (rows, verbatim table lines).
+
+    Cells split on UNESCAPED `|` only (and are then unescaped), mirroring
+    render_index/_cell which escape a literal `|` in a value as `\\|`. Splitting
+    on every raw `|` would over-split an escaped-pipe title into extra cells and
+    silently drop the row — the lint↔view disagreement PR #68's review flagged
+    (a title like `Ready \\| thing` lints clean but vanishes from `index`).
+    """
     rows: list[dict[str, str]] = []
     table: list[str] = []
     in_index = False
@@ -177,7 +197,9 @@ def _parse_index(lines: list[str]) -> tuple[list[dict[str, str]], list[str]]:
         if not in_index or not line.strip().startswith("|"):
             continue
         table.append(line)
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        # Split on `|` not preceded by a backslash, then unescape each cell, so
+        # an escaped-pipe value stays one cell and reads back as its literal.
+        cells = [_uncell(c.strip()) for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
         if len(cells) != 5 or cells[0] in ("id", "---") or set(cells[0]) == {"-"}:
             continue
         rows.append(dict(zip(("id", "title", "owner", "size", "status"), cells)))
@@ -258,6 +280,16 @@ def parse_backlog(text: str) -> Backlog:
         fm = _FIELD.match(line)
         if fm:
             key = fm.group("key").strip()
+            if key in cur.fields:
+                # A second `- **Key:**` line in one item: last-write-wins would
+                # let lint and render_index see a different value than a
+                # top-down human reader sees (the first). Fail closed — matching
+                # the module's "ambiguous input errors" posture — and keep the
+                # first value so the render stays deterministic under the error.
+                parse_errors.append(
+                    f"duplicate field '{key}' under item {cur.id} at line {i}")
+                cur_key = key
+                continue
             cur.fields[key] = fm.group("val").strip()
             cur.raw_fields[key] = fm.group("val").strip()
             cur_key = key
@@ -272,7 +304,7 @@ def parse_backlog(text: str) -> Backlog:
             # field-level check, including the leak scan.
             parse_errors.append(f"unattached text under item {cur.id} at line {i}")
             orphans.append((i, line))
-    return Backlog(index=index, index_table=index_table, items=items,
+    return Backlog(raw=text, index=index, index_table=index_table, items=items,
                    inbox=inbox, parse_errors=parse_errors, orphans=orphans)
 
 
@@ -479,7 +511,7 @@ def _load_schema(template_path: Path) -> tuple[list[str] | None, str]:
     (unreadable / no field lines / missing semantic label) instead of making
     the operator guess among them."""
     try:
-        text = template_path.read_text()
+        text = template_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as e:
         return None, f"cannot be read ({e})"
     req = required_fields(text)
@@ -498,7 +530,11 @@ def _annotation(kind: str, msg: str, path: Path) -> str:
     """A GitHub annotation anchored to the backlog file (and line, when the
     finding names one), so it reaches the PR's Files-changed view — in the
     warn-only posture the annotation IS the signal."""
-    m = re.search(r"line (\d+)", msg)
+    # Anchor to a FILE line only. The stale-Index error says "first difference
+    # at table line N" — that N indexes the Index table, not the file, so a
+    # bare `line (\d+)` would anchor the annotation to the wrong file line.
+    # Exclude any "line N" immediately preceded by "table ".
+    m = re.search(r"(?<!table )line (\d+)", msg)
     where = f"file={path}" + (f",line={m.group(1)}" if m else "")
     return f"::{kind} {where}::backlog-lint: {msg}"
 
@@ -515,7 +551,7 @@ def _run(backlog_path: Path, template_path: Path, enforce: bool) -> int:
         return _fail(f"template {template_path} {why} — required-field "
                      "schema unavailable")
     try:
-        text = backlog_path.read_text()
+        text = backlog_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as e:
         # Fail closed, one clean line: an unreadable backlog is a tooling
         # defect, not "no findings" (UnicodeDecodeError is not an OSError).
@@ -536,7 +572,7 @@ def _write_index(backlog_path: Path) -> int:
     if not backlog_path.exists():
         return _fail(f"{backlog_path} not found")
     try:
-        text = backlog_path.read_text()
+        text = backlog_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as e:
         return _fail(f"cannot read {backlog_path}: {e}")
     parsed = parse_backlog(text)
@@ -566,7 +602,7 @@ def _write_index(backlog_path: Path) -> int:
                      "row by hand once, then --write-index maintains it")
     rendered = render_index(parsed.items) + "\n"
     new = "".join(lines[:start]) + rendered + "".join(lines[end:])
-    backlog_path.write_text(new)
+    backlog_path.write_text(new, encoding="utf-8")
     print(f"backlog-lint: wrote derived Index to {backlog_path}")
     return 0
 
@@ -643,7 +679,7 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
 
     # The schema comes from the real template — no hardcoded fallback list, so
     # a template edit that breaks the field regex fails HERE, loudly.
-    req = required_fields(_repo_template().read_text())
+    req = required_fields(_repo_template().read_text(encoding="utf-8"))
 
     def expect(name: str, cond: bool, detail: str = "") -> None:
         nonlocal ok
@@ -715,7 +751,7 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
     # three MUST NOT match, so the scan's boundary is visible from the suite.
     for miss_name, miss_text in (
         ("private github.com URL is (documented) not caught",
-         "see https://github.com/CAMELS-Research-Group/internal-notes/issues/9"),
+         "see https://github.com/example-org/example-notes-repo/issues/9"),
         ("gated-dataset prefix is (documented) not caught",
          "needs mimic-iv-2.2/hosp access first"),
         ("Windows home path is (documented) not caught",
@@ -813,6 +849,37 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
            and all(len(re.split(r"(?<!\\)\|", row)) == 7 for row in rendered_rows),
            str(rendered_rows))
 
+    # An escaped-pipe title round-trips through render → parse (PR #68 review):
+    # `--write-index` escapes `|` as `\|` in the Index cell, and _parse_index
+    # must split on unescaped pipes and unescape the cell — otherwise the row
+    # over-splits and drops out of `index`, and the view/digest tools (which
+    # read status/owner/title FROM `index`) disagree with lint on the same file.
+    piped_written = _GOOD.replace("## B1 — First", "## B1 — First | piped") \
+                         .replace("| B1 | First | Kiara | S | ready |",
+                                  "| B1 | First \\| piped | Kiara | S | ready |")
+    piped_bl = parse_backlog(piped_written)
+    expect("escaped-pipe title: lint clean (render byte-matches committed row)",
+           not lint(piped_bl, req).errors, str(lint(piped_bl, req).errors))
+    expect("escaped-pipe Index row survives and unescapes (lint↔view agree)",
+           any(r["id"] == "B1" and r["title"] == "First | piped"
+               for r in piped_bl.index), str(piped_bl.index))
+
+    # A second `- **Key:**` line in one item fails closed, not last-write-wins.
+    check("duplicate field label under one item is a hard error",
+          _GOOD.replace("- **Owner:** Kiara",
+                        "- **Owner:** Kiara\n- **Owner:** Someone Else"),
+          "duplicate field 'Owner'")
+
+    # `raw` is a LIVE field: the full source text, verbatim (PR #68's
+    # source-integrity guard reads `raw.strip()` to tell a truly-empty backlog
+    # from one that parsed to zero Item blocks — truncated/destroyed source).
+    expect("Backlog.raw carries the full verbatim source",
+           parse_backlog(_GOOD).raw == _GOOD, "raw diverged from input")
+    expect("raw.strip() distinguishes destroyed source (non-empty, zero items)",
+           (lambda b: bool(b.raw.strip()) and not b.items)(
+               parse_backlog("<<<<<<< HEAD\nwreck\n=======\nother\n>>>>>>> x\n")),
+           "destroyed-source signal not detectable via raw")
+
     hijacked = parse_backlog(_GOOD.replace(
         "- **Problem:** something is missing",
         "- **__title__:** HIJACKED\n- **Problem:** something is missing"))
@@ -844,8 +911,8 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
     with tempfile.TemporaryDirectory() as td:
         tdp = Path(td)
         good_b, bad_b = tdp / "GOOD.md", tdp / "BAD.md"
-        good_b.write_text(_GOOD)
-        bad_b.write_text(_GOOD.replace("`scripts/x.py --self-test` passes", "<the check>"))
+        good_b.write_text(_GOOD, encoding="utf-8")
+        bad_b.write_text(_GOOD.replace("`scripts/x.py --self-test` passes", "<the check>"), encoding="utf-8")
         tpl = str(_repo_template())
         rc, out = run_main(["--check", str(good_b), "--template", tpl])
         expect("main: clean backlog exits 0", rc == 0, out)
@@ -857,7 +924,7 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
                run_main(["--check", str(bad_b), "--template", tpl, "--enforce"])[0] == 1)
         warn_b = tdp / "WARNONLY.md"
         warn_b.write_text(_GOOD.replace("`scripts/x.py --self-test` passes",
-                                        "the team agrees it works"))
+                                        "the team agrees it works"), encoding="utf-8")
         rc, out = run_main(["--check", str(warn_b), "--template", tpl])
         expect("CI warnings annotate as ::warning (never ::error), exit 0",
                rc == 0 and f"::warning file={warn_b}" in out and "::error" not in out,
@@ -865,31 +932,31 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
         expect("main: missing template exits 1 (fail closed)",
                run_main(["--check", str(good_b), "--template", str(tdp / "no-such.md")])[0] == 1)
         empty_tpl = tdp / "empty-template.md"
-        empty_tpl.write_text("# a template with no field lines\n")
+        empty_tpl.write_text("# a template with no field lines\n", encoding="utf-8")
         expect("main: template with zero fields exits 1 (fail closed)",
                run_main(["--check", str(good_b), "--template", str(empty_tpl)])[0] == 1)
         renamed_tpl = tdp / "renamed-label-template.md"
-        renamed_tpl.write_text(_repo_template().read_text().replace("- **Status:**", "- **State:**"))
+        renamed_tpl.write_text(_repo_template().read_text(encoding="utf-8").replace("- **Status:**", "- **State:**"), encoding="utf-8")
         rc, out = run_main(["--check", str(good_b), "--template", str(renamed_tpl)])
         expect("main: template with a renamed semantic label exits 1, names it",
                rc == 1 and "Status" in out, out)
         # --write-index round-trip: hand-broken Index regenerates to clean.
         stale = tdp / "STALE.md"
         stale.write_text(_GOOD.replace("| B1 | First | Kiara | S | ready |",
-                                       "| B1 | WRONG | Nobody | L | done |"))
+                                       "| B1 | WRONG | Nobody | L | done |"), encoding="utf-8")
         expect("--write-index repairs a stale Index",
                _write_index(stale) == 0
-               and not lint(parse_backlog(stale.read_text()), req).errors)
+               and not lint(parse_backlog(stale.read_text(encoding="utf-8")), req).errors)
         piped_b = tdp / "PIPED.md"
-        piped_b.write_text(_GOOD.replace("## B1 — First", "## B1 — First | piped"))
+        piped_b.write_text(_GOOD.replace("## B1 — First", "## B1 — First | piped"), encoding="utf-8")
         expect("--write-index handles | in a title; result lints clean",
                _write_index(piped_b) == 0
-               and not lint(parse_backlog(piped_b.read_text()), req).errors)
+               and not lint(parse_backlog(piped_b.read_text(encoding="utf-8")), req).errors)
         # Blocker 2 (PR #67 review): --write-index must refuse on structural
         # parse errors instead of silently deleting the unparsed blocks' rows.
         mal = tdp / "MALFORMED.md"
         mal_text = _GOOD.replace("## B2 — Second", "## B2 - Second")
-        mal.write_text(mal_text)
+        mal.write_text(mal_text, encoding="utf-8")
         rc, out = run_main(["--check", str(mal), "--write-index"])
         expect("--write-index on a structurally broken backlog exits non-zero",
                rc == 1, out)
@@ -897,7 +964,7 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
                "refusing to regenerate" in out
                and "unrecognized item heading" in out, out)
         expect("--write-index leaves the broken file byte-identical",
-               mal.read_text() == mal_text)
+               mal.read_text(encoding="utf-8") == mal_text)
         # Unreadable-template fixture: a DIRECTORY, not a chmod(0) file —
         # chmod(0) does not deny reads to root, so on a root-executing runner
         # (container jobs, some self-hosted docker runners) that variant would
@@ -908,6 +975,21 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
         unread_tpl.mkdir()
         expect("main: unreadable template exits 1 (one-line failure, no traceback)",
                run_main(["--check", str(good_b), "--template", str(unread_tpl)])[0] == 1)
+        # Encoding is pinned to UTF-8 on every read/write (PR #67 review
+        # Blocker 1): the item-heading grammar REQUIRES an em-dash, so an
+        # unpinned read under a locale codepage (cp1252 on Windows, ascii under
+        # LC_ALL=C) mis-decodes `—` and every item vanishes / the file fails to
+        # decode. This round-trip writes an em-dash file and reads it back
+        # through the parser; under a non-UTF-8 locale it fails unless encoding
+        # is pinned. Run the whole suite under `LC_ALL=C PYTHONUTF8=0` to prove
+        # it end to end.
+        emdash = tdp / "EMDASH.md"
+        emdash.write_text(_GOOD, encoding="utf-8")
+        round_tripped = parse_backlog(emdash.read_text(encoding="utf-8"))
+        expect("em-dash headings survive a write→read round-trip (encoding pinned)",
+               [it.id for it in round_tripped.items] == ["B1", "B2"]
+               and round_tripped.items[0].title == "First",
+               str([it.title for it in round_tripped.items]))
 
     if prev_ga is None:
         os.environ.pop("GITHUB_ACTIONS", None)
