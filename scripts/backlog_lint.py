@@ -248,6 +248,17 @@ def parse_backlog(text: str) -> Backlog:
             continue
 
         if section != "## Items":
+            # An item heading OUTSIDE the Items section is an unambiguous
+            # structural defect: the Items section is renamed/misspelled or
+            # missing, so its item blocks parse to zero and their committed
+            # Index rows would be silently dropped by --write-index. Record a
+            # hard error so --check never goes green after such a wipe, however
+            # the section went missing. (In a well-formed file every item
+            # heading sits under `## Items`, so this never fires on a valid
+            # backlog — the guard above already consumed those.)
+            if _ITEM_HEAD.match(line):
+                parse_errors.append(
+                    f"item heading outside Items section at line {i}: {stripped}")
             continue
 
         head = _ITEM_HEAD.match(line)
@@ -584,6 +595,17 @@ def _write_index(backlog_path: Path) -> int:
         listing = "; ".join(parsed.parse_errors)
         return _fail(f"refusing to regenerate: {len(parsed.parse_errors)} "
                      f"structural error(s) must be fixed first: {listing}")
+    if not parsed.items and parsed.index:
+        # Belt to Fix B's suspenders: the source parsed to ZERO items but the
+        # committed Index still carries data rows. Regenerating here would
+        # render an empty table and wipe every committed row while reporting
+        # success — the exact zero-parsed-items destruction path. The most
+        # likely cause is a renamed/missing `## Items` heading (which Fix B
+        # also flags via parse_errors above), but a genuinely-empty-yet-
+        # committed file reaches here with no parse_errors, so guard it too.
+        return _fail(f"refusing to regenerate: source parsed zero items but "
+                     f"the committed Index has {len(parsed.index)} row(s) — "
+                     f"the Items section is likely renamed or missing")
     lines = text.splitlines(keepends=True)
     start = end = None
     in_index = False
@@ -965,6 +987,39 @@ def _self_test() -> int:  # noqa: C901 - a linear fixture list reads best flat
                and "unrecognized item heading" in out, out)
         expect("--write-index leaves the broken file byte-identical",
                mal.read_text(encoding="utf-8") == mal_text)
+        # Blocker 1 (this fix, PR #67 review — zero-parsed-items --write-index
+        # destruction): when `## Items` is renamed/misspelled/absent the source
+        # parses to zero items. Pre-fix that produced ZERO parse errors, so
+        # --write-index rendered an empty table, wiped every committed Index row
+        # and reported success, and --check then went GREEN on the header-only
+        # file. Fix B (item heading outside Items → parse_error) makes --check
+        # ERROR and, via the existing parse_errors refusal, makes --write-index
+        # refuse; Fix A (zero items + committed rows → refuse) is the belt for
+        # the genuinely-empty-Items case that carries no parse error.
+        renamed = tdp / "RENAMED-ITEMS.md"
+        renamed_text = _GOOD.replace("## Items", "## Backlog items")
+        renamed.write_text(renamed_text, encoding="utf-8")
+        rc, out = run_main(["--check", str(renamed), "--write-index"])
+        expect("renamed ## Items: --write-index refuses (non-zero)", rc == 1, out)
+        expect("renamed ## Items: --write-index leaves the file byte-identical",
+               renamed.read_text(encoding="utf-8") == renamed_text)
+        rc, out = run_main(["--check", str(renamed), "--template", tpl, "--enforce"])
+        expect("renamed ## Items: --check --enforce ERRORS, never green",
+               rc == 1 and "item heading outside Items section" in out, out)
+        # A genuinely-empty Items section (heading present, zero item blocks)
+        # with a committed Index carrying rows: no parse error, so Fix A alone
+        # must stop --write-index from wiping the committed rows.
+        emptied = tdp / "EMPTY-ITEMS.md"
+        emptied_text = _GOOD.split("## Items")[0] + "## Items\n"
+        emptied.write_text(emptied_text, encoding="utf-8")
+        expect("empty Items + committed rows: zero items, zero parse errors (Fix-A precondition)",
+               (lambda b: not b.items and not b.parse_errors and len(b.index) == 2)(
+                   parse_backlog(emptied_text)), str(parse_backlog(emptied_text).parse_errors))
+        rc, out = run_main(["--check", str(emptied), "--write-index"])
+        expect("empty Items + committed rows: --write-index refuses (Fix A)",
+               rc == 1 and "parsed zero items" in out, out)
+        expect("empty Items: --write-index leaves the file byte-identical",
+               emptied.read_text(encoding="utf-8") == emptied_text)
         # Unreadable-template fixture: a DIRECTORY, not a chmod(0) file —
         # chmod(0) does not deny reads to root, so on a root-executing runner
         # (container jobs, some self-hosted docker runners) that variant would
