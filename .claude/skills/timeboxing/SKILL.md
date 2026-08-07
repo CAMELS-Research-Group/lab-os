@@ -108,10 +108,13 @@ expires, whichever is first.
 
 The judgment is provisional until the hard pass. If the user overrides
 exit-met or amends the note: correct the row **in place** if it is not yet
-committed; if it is, leave it and append a correction row
-(Note: `corrects <date> row`). Never rewrite committed rows. (Derived from
-`docs/timebox_recording.md` § The override flow, which owns this
-contract.)
+committed; if it is, leave it and append a correction row whose Note
+contains `supersedes the <date> <planned>/<actual> row` — naming the row by
+date alone is ambiguous once a date carries more than one. Add the
+reciprocal `superseded by <date> <planned>/<actual> row` to the row being
+replaced, so both are excluded correctly when defaults are computed. Never
+rewrite committed rows. (Derived from `docs/timebox_recording.md`
+§ The override flow (review gate), which owns this contract.)
 
 ## Calibration row
 
@@ -132,9 +135,12 @@ act — never seed the convention into a repo by side effect, and never probe
 a second location); (3) otherwise lab-os's `docs/timebox_calibration.md`.
 
 **Never** write rows to any `project_log.md`, and the env var cannot make
-you: a `TIMEBOX_CALIBRATION_FILE` whose basename is `project_log.md`, or
-which resolves outside the task repo or lab-os, is **rejected** — fall
-through to (2) and say so in the handoff. Telemetry is not a log entry
+you: a `TIMEBOX_CALIBRATION_FILE` whose **resolved** filename is
+`project_log.md` or `project_log_archive.md` in any case, or which resolves
+outside the task repo or lab-os, is **rejected** — fall through to (2) and
+say so in the handoff. Match the resolved path, not the literal string:
+`../project_log.md` and `Project_Log.md` reach the same file, and this
+skill runs on case-insensitive filesystems by default. Telemetry is not a log entry
 under the lab logging standard, and this skill deploys user-scope into
 repos that never adopted the convention, so an env var that silently
 redirected appends would be a write primitive pointed at the audit trail.

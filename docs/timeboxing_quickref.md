@@ -28,7 +28,7 @@ If you can't fit the goal in one line, spend the first 10 minutes scoping — no
 | Debug something | `Debugging` | **30 min, then escalate** |
 | Make a decision | `Decision session` | **15 min each** |
 
-[`timeboxing.md`](timeboxing.md) § Default boxes owns every value in this
+[`timeboxing.md`](timeboxing.md) § Default boxes by session type owns every value in this
 table — the session-type names, the box lengths, and the exit criteria alike.
 This page is a copy kept for scanning speed, so when the two disagree, that one
 wins and this one is the bug. Write the middle column verbatim in your

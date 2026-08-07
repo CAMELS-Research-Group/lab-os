@@ -105,7 +105,6 @@ Internalize two things:
 - **Record the row even when the box went badly.** The overruns are the data; a reference class of
   only the wins recalibrates nothing.
 
-The `05` slot is deliberately empty — it is reserved for an in-flight rule, not a gap.
 
 ## Quick answers
 

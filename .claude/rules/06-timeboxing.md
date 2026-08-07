@@ -4,7 +4,7 @@ All working sessions and agent-executed tasks. Owning docs: `docs/timeboxing.md`
 
 ## Session boxes
 
-- State the box before starting: one line — goal + box length + exit criterion. Defaults per session type: `docs/timeboxing.md` § Default boxes. A box without an exit criterion is not a box.
+- State the box before starting: one line — goal + box length + exit criterion. Defaults per session type: `docs/timeboxing.md` § Default boxes by session type. A box without an exit criterion is not a box.
 - One artifact per box; mid-box discoveries go to a next-box list, never into scope.
 - Scope-hammer before extending. One extension max, half the original box, written reason. Humans may take the extension when the timer fires; agent boxes may extend only **before** expiry — an agent box found already expired goes straight to handoff (the asymmetry is deliberate: agent expiry is usually discovered late, at a checkpoint seam).
 - At box end: append one planned-vs-actual row to the owning calibration file. **Exit met?** is judged at the timer, before any extension. Rows never go to `project_log.md` (telemetry, not a log entry — `03-logging.md` entry triggers).

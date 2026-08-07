@@ -1,6 +1,7 @@
 # PRD — timeboxing skill + recording guide (lab-os)
 
 **Status:** active — in review, PR #66. Decision history: `project_log.md`.
+**Date:** 2026-07-31 · **Repo:** lab-os
 **Deliverables:** `docs/timebox_recording.md` (guide) · `.claude/skills/timeboxing/SKILL.md` (skill) · `.claude/rules/06-timeboxing.md` (rules surface).
 
 ## Problem
@@ -20,7 +21,7 @@ The lab's dev workflow is: user + agent brainstorm together → context ironed o
 
 ## Scope
 
-**In:** the guide (recording/logging model for agent-task boxes, row format, target-file rule, override flow, agent-task default boxes) · the skill (the protocol the agent follows: intake, start, checkpoints, expiry notification, scope-hammer, extension, end, handoff) · **target-file rule (decided at review; adoption-gated per upstream review):** rows go to the calibration file of the repo the task belongs to where that file already exists — creating it is a human adoption act, never the agent's — else fall back to lab-os's; `TIMEBOX_CALIBRATION_FILE` env var overrides.
+**In:** the guide (recording/logging model for agent-task boxes, row format, target-file rule, override flow, agent-task default boxes) · the skill (the protocol the agent follows: intake, start, checkpoints, expiry notification, scope-hammer, extension, end, handoff) · **target-file rule:** rows go to the calibration file of the repo the task belongs to where that file already exists — creating it is a human adoption act, never the agent's — else fall back to lab-os's; `TIMEBOX_CALIBRATION_FILE` env var overrides.
 
 **Out (v1):** boxing the joint brainstorm phase (human standard governs) · hook-based mid-turn enforcement · a helper script (skill uses direct shell date arithmetic; script is v2 if mechanics prove error-prone) · appetite/multi-sitting tracking · marketplace packaging (superseded by lab-os homing; portable design retained so porting stays cheap) · any writes to `project_log.md`.
 

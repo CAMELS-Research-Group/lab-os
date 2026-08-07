@@ -109,9 +109,14 @@ by [`timebox_calibration.md`](timebox_calibration.md):
   roll-up is a grep away.
 - **Never `project_log.md`, and the env var cannot make it so.** Rows are
   telemetry; the lab logging standard's entry triggers exclude them, at every
-  altitude. This constraint outranks `TIMEBOX_CALIBRATION_FILE`: a value
-  whose basename is `project_log.md` is **rejected**, and resolution falls
-  through to step 2. Reject rather than obey, and say so in the handoff — an
+  altitude. This constraint outranks `TIMEBOX_CALIBRATION_FILE`: a value whose
+  **resolved** filename is `project_log.md` or `project_log_archive.md`, in
+  any case, is **rejected**, and resolution falls through to step 2. The
+  archive carries overflow entries and their index lines, so it is the same
+  audit trail; the match is on the resolved path because `../project_log.md`
+  and `Project_Log.md` reach it too, and this protocol runs on
+  case-insensitive filesystems by default. Reject rather than obey, and say
+  so in the handoff — an
   env var that silently redirected appends would be a write primitive
   pointed at the audit trail, and the skill now deploys user-scope into
   repos that never adopted this convention.
@@ -130,7 +135,22 @@ The agent's exit-met judgment is provisional until the hard pass:
 3. **Before the row is committed**, the agent corrects it in place — the
    append-only rule protects history, and an uncommitted row isn't history
    yet. **After commit**, the original row stands and the agent appends a
-   correction row (Note: `corrects <date> row`).
+   correction row.
+
+The correction convention, which applies to **any** post-commit amendment
+regardless of who raised it — a user override at review, or an agent-detected
+factual error in its own `Actual`:
+
+- The correction row's Note contains
+  `supersedes the <date> <planned>/<actual> row`, and the row it replaces
+  gains the reciprocal `superseded by <date> <planned>/<actual> row`. Both
+  markers are the ones [`timebox_calibration.md`](timebox_calibration.md)'s
+  header defines. Naming the row by date alone is not a usable reference once
+  a date carries more than one.
+- **A superseded row is excluded from the reference class for aggregation.**
+  One box end contributes one row to any average, however many rows record
+  it — otherwise a corrected box is counted twice in the very numbers the
+  calibration loop exists to compute.
 
 ## Handoff report contract
 

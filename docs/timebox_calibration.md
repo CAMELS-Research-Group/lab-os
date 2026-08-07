@@ -10,7 +10,7 @@ the box's stated exit criterion, judged at the timer, not after any extension;
 **Note** is optional (scope hammered, extended +N, interrupted, …).
 
 Rows are append-only and never rewritten once committed, so two exclusion
-markers carry the corrections. A Note beginning `non-conforming` or
+markers carry the corrections. A Note containing `non-conforming` or
 `superseded by <date> <planned>/<actual> row` means **excluded from the
 reference class** — skip it when computing defaults. A superseding row names
 the row it replaces by that same `<date> <planned>/<actual>` key, which is

@@ -307,7 +307,7 @@ protection: license-restricted, human-subject data never enters a repo — the o
 Logging: record decisions and their why, not a diary; merged entries are immutable. Docs: every fact
 has one owning document. Timeboxing: say how long and what "done" means before you start, then record
 what actually happened so the estimates get corrected by evidence. You don't memorise these — they
-load and the agent applies them. (05 is reserved for an in-flight rule, not missing.)
+load and the agent applies them.
 
 ### S21 · We run it on ourselves
 
