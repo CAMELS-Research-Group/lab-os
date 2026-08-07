@@ -105,7 +105,6 @@ Internalize two things:
 - **Record the row even when the box went badly.** The overruns are the data; a reference class of
   only the wins recalibrates nothing.
 
-
 ## Quick answers
 
 | Question | Rule file |
