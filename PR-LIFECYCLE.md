@@ -24,9 +24,10 @@ branch → PR from template → automated review ⇄ remediation → merge bar �
 
 Branch from the default branch, one branch per concern. Commit messages follow the
 conventional-commit format in [`01-workflow.md`](.claude/rules/01-workflow.md). If the work is a
-slice with a design, its work bundle (`docs/work/YYYY-MM-DD-<slug>/`) already exists or is created
-here — see the work-artifact lifecycle in the
-[design spec §5](docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md).
+slice with a design, its planning bundle (`_specs/<repo>/<DATE>-<handle>/`, holding
+`prd`/`spec`/`plan`/`log`) already exists or is created here — the bundle's shape and altitudes are
+owned by [`03-logging.md`](.claude/rules/03-logging.md), its lifecycle by
+[`04-docs.md` § Bundle lifecycle](.claude/rules/04-docs.md).
 
 ## 2. Open the PR from the template
 
@@ -72,11 +73,12 @@ the loop re-reviews by design).
 
 ## 5. The merge bar
 
-The merge bar is the hard rule — six conditions verified at merge time, defined in
+The merge bar is the hard rule — seven conditions verified at merge time, defined in
 [`01-workflow.md` → Merge Bar](.claude/rules/01-workflow.md). In short: gate green (run unpiped),
 template complete, findings resolved or routed, **log cleanup done** (entries finalized against
-the final diff, Standing Decisions index updated), doc-sync triggers checked, single concern.
-Read the rule file for the authoritative list; nothing merges below it.
+the final diff, Standing Decisions index updated), **spec-log current** on bundle-backed changes,
+doc-sync triggers checked, single concern — plus, on a bundle-backed slice declared done, the
+PRD `Status:` flip. Read the rule file for the authoritative list; nothing merges below it.
 
 ## 6. Solo-maintainer bypass
 
@@ -98,9 +100,11 @@ review is the durable evidence that the merge bar was held to.
 1. **Squash merge.** One commit per PR on the default branch; the PR number is the durable
    reference (which is why log entries record `#<PR>` and never a squash SHA — the SHA doesn't
    exist until after the entry is written).
-2. **Bundle archival rides** — if this PR is the one where the owner declares a slice done, the
-   work bundle moves to `docs/work/completed/` in the same PR (or its own `chore:` PR later;
-   finality is hindsight — see [spec §5](docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md)).
+2. **Bundle archival rides** — if this PR is the one where the owner declares a slice done,
+   "archival" is an in-place flip of the bundle's PRD `Status:` to `complete`, in the same PR (or
+   its own `chore:` PR later; finality is hindsight). Bundles stay dated under `_specs/` and are
+   never moved or deleted — see
+   [`04-docs.md` § Bundle lifecycle](.claude/rules/04-docs.md).
 3. **Delete the branch.**
 
 ## Log overflow: the archive chore PR

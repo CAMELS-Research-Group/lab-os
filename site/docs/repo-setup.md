@@ -45,7 +45,7 @@ author guidance — dense writing aimed at an AI reader, 8 KB size budget, no re
 ### 4. Seed `project_log.md`
 
 Copy
-[`templates/project_log.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/project_log.template.md)
+[`templates/docs/project_log.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/docs/project_log.template.md)
 to the repo root. Its structure is load-bearing (the `log-lint` automated check parses it) — keep the `## Standing Decisions`
 and `## Entries` headings exactly as shipped. Entry format and triggers:
 [`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md).
