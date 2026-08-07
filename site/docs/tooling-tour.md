@@ -115,14 +115,14 @@ guidance:
 - [`repo-CLAUDE.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/repo-CLAUDE.template.md)
   — per-repo `CLAUDE.md` seed, kept short to a byte budget (see
   [Rules, Explained](/docs/rules-explained) — 04, Docs).
-- [`project_log.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/project_log.template.md)
+- [`docs/project_log.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/docs/project_log.template.md)
   — the project-log skeleton (log-lint parses this exact structure, so its load-bearing headings
   are never renamed — see [Setting Up a New Repo](/docs/repo-setup)).
+- [`docs/planning/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/templates/docs/planning)
+  — the four scaffolds of a planning bundle (`prd` · `spec` · `plan` · `log`), filed together under
+  `_specs/<repo>/<DATE>-<handle>/` and retained in place when the slice ships.
 - [`PRD.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/PRD.template.md)
-  — the living PRD (product requirements document) shape: Problem, success criteria, scope, constraints, plan, open questions.
-- [`work-bundle/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/templates/work-bundle)
-  — paired design + plan templates for a single unit of work, kept together and filed away as
-  one package when that work ships.
+  — the older standalone PRD (product requirements document) shape: Problem, success criteria, scope, constraints, plan, open questions.
 
 ## The PR-review agent
 

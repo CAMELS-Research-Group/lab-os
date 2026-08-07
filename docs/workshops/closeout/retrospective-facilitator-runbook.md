@@ -215,7 +215,7 @@ Out-of-scope or unresolved — <…>
 | A one-time decision worth remembering | a `project_log.md` entry |
 
 See [Rules, explained](../../../site/docs/rules-explained.md) for what belongs in a rule file vs a
-`CLAUDE.md`, and the [`project_log.md` template](../../../templates/project_log.template.md) for the
+`CLAUDE.md`, and the [`project_log.md` template](../../../templates/docs/project_log.template.md) for the
 log-entry shape. A rule or `CLAUDE.md` change is a documentation change — open it as a normal pull
 request so it gets reviewed before it becomes "how we work."
 

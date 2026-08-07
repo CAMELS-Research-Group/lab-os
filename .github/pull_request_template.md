@@ -50,8 +50,8 @@ Keep the PR scoped to a single concern — split if it spans multiple phases.
 <!-- Log: tick exactly one of the next two. merge-bar-check enforces this on code-path PRs. -->
 - [ ] Log entries finalized (verified against final diff, index updated)
 - [ ] No loggable events in this PR
-<!-- Bundle archival: tick only when the owner declares a slice done (see PR-LIFECYCLE.md, Merge mechanics). -->
-- [ ] Work-bundle archival included (slice declared done)
+<!-- Bundle lifecycle: tick only when the owner declares a slice done (see PR-LIFECYCLE.md, Merge mechanics). -->
+- [ ] Bundle PRD `Status:` flipped to `complete` in place (slice declared done)
 
 ## Related
 

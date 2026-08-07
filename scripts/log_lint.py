@@ -4,7 +4,7 @@
 Implements the log-lint Action from the logging & docs standard
 (docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §9,
 §4.3-4.6). Parses the normative template structure
-(templates/project_log.template.md) and checks a changed project_log.md
+(templates/docs/project_log.template.md) and checks a changed project_log.md
 against the target-branch baseline.
 
 CLI

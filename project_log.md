@@ -1,7 +1,7 @@
 # lab-os — project log
 
 Format: lab standard, `lab-os/.claude/rules/03-logging.md`. Skeleton per
-`lab-os/templates/project_log.template.md` (normative — `log-lint` parses this structure).
+`lab-os/templates/docs/project_log.template.md` (normative — `log-lint` parses this structure).
 The `## Standing Decisions` and `## Entries` headings are load-bearing lint anchors: exact
 text, one each, never renamed. Entry headers are the only other `##` headings allowed.
 
@@ -10,6 +10,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
 - 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
 - 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
+- 2026-07-31 13:22 — Adopt the workspace fork's rules at current HEAD; agent-runtime HARD RULE stands · #58
 - 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61
 - 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59
 - 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI · #67
@@ -70,6 +71,47 @@ dual-representation drift class instead of policing it.
 rides); a `.claude/rules/` entry (rule-budget cost; a lint's behavior is not a hard rule);
 hand-authored Index + reconciliation check (leaves two authoritative copies).
 **Refs:** #67; docs/prds/backlog-lint.md
+
+---
+
+## 2026-07-31 13:22 — Adopt the workspace fork's rules at current HEAD; agent-runtime HARD RULE stands
+
+**Decision:** Drops the snapshot pin. `.claude/rules/03-logging.md` and `04-docs.md` are re-copied
+verbatim from the workspace fork's HEAD, landing #54's ratified bundle contract here: the planning
+bundle is four files (`prd`/`spec`/`plan`/`log`), `spec.md` is the bundle's design authority with a
+decision summary table and the `DECIDED / RECOMMENDED / PARKED` legend, chore/docs-only bundles omit
+it, three-file bundles are grandfathered. The spec-log's exemption from the per-entry byte cap is now
+explicit. The rest of the superseded entry stands: `05-agent-runtime.md` as a HARD RULE, the three
+log altitudes, upstream lab-os owning the canonical bytes.
+**Why:** The pin was defended as diff hygiene, but it would ship a rules set member repos must
+immediately re-vendor, and it left `04-docs.md` asserting a four-file bundle while `03-logging.md`
+still described three. Parity with the authoring surface is this PR's purpose; a half-synced pair is
+worse than either end.
+**Alternatives:** Defer the newer text to its own slice (the superseded call) — rejected: publishes a
+self-contradicting pair and doubles downstream vendoring.
+**Supersedes:** 2026-07-28 22:26 — Adopt the workspace fork's rules as lab-os standards; add agent-runtime HARD RULE
+**Refs:** #58, .claude/rules/03-logging.md, .claude/rules/04-docs.md
+
+---
+
+## 2026-07-28 22:26 — Adopt the workspace fork's rules as lab-os standards; add agent-runtime HARD RULE
+
+**Decision:** lab-os re-syncs `.claude/rules/` from the workspace fork, pinned to the 2026-07-24
+snapshot, and gains a fifth rule: `05-agent-runtime.md`, a HARD RULE binding any asset hosting a
+guardrailed local coding-agent runtime — max-clean `claude -p`, per-run caps, a named halt
+vocabulary, fail-closed per-repo permission and commit-destination policy, a deny-by-default
+approval gate, bot-identity-only posting, disabled-by-default. Logging is re-architected onto three
+altitudes (lab / project / spec-log) with the planning bundle as the spec-log's home. Upstream
+lab-os owns the convention and canonical bytes; the fork is where edits are staged.
+**Why:** The fork has been the de facto authoring surface while lab-os shipped the published
+standard, so they drifted. Pulling that work back as one reviewed slice restores a single source
+before member repos vendor from it. The runtime contract needs rule-tier permanence because it
+constrains spend and identity, not style.
+**Alternatives:** Keep the runtime contract in the hosting repo's docs — rejected: it binds every
+asset hosting a runtime, not one repo. Also re-copy the fork's newer `03-logging.md`/`04-docs.md` —
+rejected: those landed after this PR was cut; pinning to the reviewed snapshot keeps the diff
+auditable and defers them to their own slice.
+**Refs:** #58, .claude/rules/05-agent-runtime.md
 
 ---
 

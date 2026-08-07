@@ -1,7 +1,7 @@
 # <repo-name> — project log
 
 Format: lab standard, `lab-os/.claude/rules/03-logging.md`. Skeleton per
-`lab-os/templates/project_log.template.md` (normative — `log-lint` parses this structure).
+`lab-os/templates/docs/project_log.template.md` (normative — `log-lint` parses this structure).
 The `## Standing Decisions` and `## Entries` headings are load-bearing lint anchors: exact
 text, one each, never renamed. Entry headers are the only other `##` headings allowed.
 
@@ -23,8 +23,9 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
      allowed). Each entry is preceded by `---` on its own line, then a blank line.
      Merge conflict here: keep both blocks, reorder entries by header timestamp.
      Entries are immutable once their PR merges — revise via a new entry with `Supersedes:`.
-     Whole file capped at 15 KB; overflow moves oldest entries to project_log_archive.md via a
-     dedicated `chore: archive log overflow` PR. -->
+     Whole file capped at 15 KB at project altitude (40 KB at lab — see 03-logging.md); overflow
+     moves oldest entries to project_log_archive.md via a dedicated
+     `chore: archive log overflow` PR. -->
 
 ---
 
