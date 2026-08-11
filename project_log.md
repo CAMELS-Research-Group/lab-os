@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
 - 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
@@ -26,6 +27,25 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes
+
+**Decision:** lab-os adopts the session timeboxing standard v1.0 (`docs/timeboxing.md`: default
+boxes per session type, written exit criterion, scope-hammer before extension, one extension max)
+together with its agent-task extension (`docs/timebox_recording.md` + `.claude/skills/timeboxing/`):
+agent dev tasks run inside a stated box, expiry notifies the user and hands off, and one
+planned-vs-actual calibration row is appended per box — to the calibration file of the repo the task
+belongs to where that repo has adopted the practice, else to `docs/timebox_calibration.md` here.
+Rules surface: `.claude/rules/06-timeboxing.md`.
+**Why:** Manual discipline never closed the calibration loop in the originating fork (zero rows
+2026-07-24 → 07-31); dev work happens in the agent phase of brainstorm → agent-dev → hard-pass
+review, so that phase is where boxing prevents drift.
+**Alternatives:** Marketplace-plugin homing (portable; re-scoped — lab conventions live in lab-os).
+Central-only row logging (rejected: rows live beside the work; roll-up is a grep away).
+**Refs:** #66; fork provenance: Aryaa-K/lab-os#1 (standard, adopted there 2026-07-24),
+Aryaa-K/lab-os#3 (agent extension, 2026-07-31)
 
 ---
 
