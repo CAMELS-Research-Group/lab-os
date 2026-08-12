@@ -1,0 +1,19 @@
+{
+  "name": "lab-os",
+  "owner": {
+    "name": "CAMELS Research Group",
+    "email": "watsonwblair@gmail.com"
+  },
+  "metadata": {
+    "description": "The CAMELS Research Group's lab-owned Claude Code plugin marketplace. Org-owned successor to the personal lab-claude-plugins marketplace.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "context-gc",
+      "source": "./.claude/plugins/context-gc",
+      "description": "Re-injects lost session state after auto-compaction via a SessionStart(compact) hook. Deterministic git/transcript floor plus fail-open local-Ollama enrichment.",
+      "version": "0.0.1"
+    }
+  ]
+}

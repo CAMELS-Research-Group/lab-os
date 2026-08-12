@@ -1,0 +1,7 @@
+{"type":"user","message":{"role":"user","content":"before first compaction"}}
+{"type":"assistant","message":{"role":"assistant","content":"ack1"}}
+{"type":"summary","isCompactSummary":true}
+{"type":"user","message":{"role":"user","content":"after first, before second"}}
+{"type":"assistant","message":{"role":"assistant","content":"ack2"}}
+{"type":"summary","isCompactSummary":true}
+{"type":"user","message":{"role":"user","content":"after second compaction"}}
