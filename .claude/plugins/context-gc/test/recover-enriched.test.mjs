@@ -9,26 +9,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { recover, recoverEnriched } from '../src/recover.mjs';
+import { createTempGitRepo, cleanup } from './helpers.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => path.join(__dirname, 'fixtures', name);
-
-function createTempGitRepo() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-recover-enriched-test-'));
-  spawnSync('git', ['init'], { cwd: dir, encoding: 'utf8' });
-  spawnSync('git', ['config', 'user.email', 'context-gc-test@example.com'], { cwd: dir });
-  spawnSync('git', ['config', 'user.name', 'context-gc test'], { cwd: dir });
-  spawnSync('git', ['config', 'commit.gpgsign', 'false'], { cwd: dir });
-  return dir;
-}
-
-function cleanup(dir) {
-  fs.rmSync(dir, { recursive: true, force: true });
-}
 
 /** Builds a fetch-shaped success response resolving to `{response: JSON.stringify(body)}`. */
 function jsonResponse(body) {
@@ -48,7 +35,7 @@ async function withMaxBytes(maxBytes, fn) {
 }
 
 test('enrichment success: merges tagged objective + decisions into the manifest, floor intact', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
     spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
@@ -79,7 +66,7 @@ test('enrichment success: merges tagged objective + decisions into the manifest,
 });
 
 test('enrichment failure (network throw): ships the deterministic floor byte-for-byte unchanged', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'orphan.txt'), 'x\n');
 
@@ -97,7 +84,7 @@ test('enrichment failure (network throw): ships the deterministic floor byte-for
 });
 
 test('enrichment failure (non-200): ships the deterministic floor byte-for-byte unchanged', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'orphan.txt'), 'x\n');
     const payload = { source: 'compact', cwd: dir, transcript_path: fixture('todo-write.jsonl') };
@@ -113,7 +100,7 @@ test('enrichment failure (non-200): ships the deterministic floor byte-for-byte 
 });
 
 test('enrichment failure (malformed JSON response): ships the deterministic floor unchanged', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'orphan.txt'), 'x\n');
     const payload = { source: 'compact', cwd: dir, transcript_path: fixture('todo-write.jsonl') };
@@ -129,7 +116,7 @@ test('enrichment failure (malformed JSON response): ships the deterministic floo
 });
 
 test('enrichment failure (timeout/abort): ships the deterministic floor unchanged, does not hang', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'orphan.txt'), 'x\n');
     const payload = { source: 'compact', cwd: dir, transcript_path: fixture('todo-write.jsonl') };
@@ -161,7 +148,7 @@ test('enrichment failure (timeout/abort): ships the deterministic floor unchange
 });
 
 test('source other than "compact": returns "" without ever calling the transport', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     let called = false;
     const fetchImpl = async () => {
@@ -190,7 +177,7 @@ test('missing payload entirely resolves to "" without throwing', async () => {
 });
 
 test('cap-trim: enriched content is dropped before the deterministic floor under byte pressure', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
     spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
@@ -224,7 +211,7 @@ test('cap-trim: enriched content is dropped before the deterministic floor under
 });
 
 test('honors the configured model/host/timeout from config.mjs (via env)', async () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'orphan.txt'), 'x\n');
     const payload = { source: 'compact', cwd: dir, transcript_path: fixture('todo-write.jsonl') };
@@ -272,7 +259,7 @@ test('a getter that throws when read still results in "" rather than propagating
 test('recover() itself never calls the network, even when enrichment would succeed', () => {
   // Sanity check on the seam: recover() (the deterministic-only function) takes no fetchImpl
   // and has no path to ollama.mjs at all — this is a structural assertion, not a mock check.
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
     const manifest = recover({ source: 'compact', cwd: dir, transcript_path: fixture('todo-write.jsonl') });

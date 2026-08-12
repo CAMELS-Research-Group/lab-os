@@ -12,29 +12,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { recover } from '../src/recover.mjs';
+import { createTempGitRepo, cleanup } from './helpers.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => path.join(__dirname, 'fixtures', name);
 
-/**
- * Creates a throwaway git repo under the OS temp dir with a local identity configured (mirrors
- * git.test.mjs's helper) so the repo is real but never touches or depends on the surrounding repo.
- */
-function createTempGitRepo() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-recover-test-'));
-  spawnSync('git', ['init'], { cwd: dir, encoding: 'utf8' });
-  spawnSync('git', ['config', 'user.email', 'context-gc-test@example.com'], { cwd: dir });
-  spawnSync('git', ['config', 'user.name', 'context-gc test'], { cwd: dir });
-  spawnSync('git', ['config', 'commit.gpgsign', 'false'], { cwd: dir });
-  return dir;
-}
-
-function cleanup(dir) {
-  fs.rmSync(dir, { recursive: true, force: true });
-}
-
 test('source "compact" with a real repo + fixture transcript returns a manifest with changed files and tasks', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
     spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
@@ -58,7 +42,7 @@ test('source "compact" with a real repo + fixture transcript returns a manifest 
 });
 
 test('source other than "compact" is a no-op: returns "" and never touches git or the transcript', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-test-');
   try {
     fs.writeFileSync(path.join(dir, 'untracked.txt'), 'x\n');
 
@@ -83,7 +67,7 @@ test('missing payload entirely returns "" without throwing', () => {
 });
 
 test('nonexistent transcript_path degrades to empty tasks but still reports git files (degrade, not empty)', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-test-');
   try {
     fs.writeFileSync(path.join(dir, 'orphan.txt'), 'x\n');
 
@@ -101,7 +85,7 @@ test('nonexistent transcript_path degrades to empty tasks but still reports git 
 });
 
 test('missing transcript_path field (undefined) degrades to empty tasks but still reports git files', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-recover-test-');
   try {
     fs.writeFileSync(path.join(dir, 'orphan2.txt'), 'x\n');
 
@@ -151,7 +135,7 @@ test('a payload shaped to blow up internals (non-string cwd/transcript_path) ret
 });
 
 test('spawned as a real process, a large manifest reaches stdout uncorrupted (regression: process.exit() racing an async pipe flush on Windows)', () => {
-  const repoDir = createTempGitRepo();
+  const repoDir = createTempGitRepo('context-gc-recover-test-');
   const scriptPath = path.join(__dirname, '..', 'src', 'recover.mjs');
   let transcriptDir;
   try {

@@ -9,27 +9,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { getChangedFiles } from '../src/git.mjs';
-
-/**
- * Creates a throwaway git repo under the OS temp dir with a local identity configured (and
- * commit signing disabled) so `git commit` works unattended regardless of the host's global
- * git config. Returns the repo's absolute path.
- */
-function createTempGitRepo() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-git-test-'));
-  spawnSync('git', ['init'], { cwd: dir, encoding: 'utf8' });
-  spawnSync('git', ['config', 'user.email', 'context-gc-test@example.com'], { cwd: dir });
-  spawnSync('git', ['config', 'user.name', 'context-gc test'], { cwd: dir });
-  spawnSync('git', ['config', 'commit.gpgsign', 'false'], { cwd: dir });
-  return dir;
-}
-
-function cleanup(dir) {
-  fs.rmSync(dir, { recursive: true, force: true });
-}
+import { createTempGitRepo, cleanup } from './helpers.mjs';
 
 test('reports a modified tracked file with status "modified"', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-git-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
     spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
@@ -47,7 +30,7 @@ test('reports a modified tracked file with status "modified"', () => {
 });
 
 test('reports a new untracked file with status "untracked"', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-git-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
     spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
@@ -65,7 +48,7 @@ test('reports a new untracked file with status "untracked"', () => {
 });
 
 test('preserves a path containing a space intact', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-git-test-');
   try {
     fs.writeFileSync(path.join(dir, 'my file.txt'), 'content\n');
 
@@ -91,7 +74,7 @@ test('returns an empty array (no throw) for a directory that is not a git repo',
 });
 
 test('returns an empty array (no throw) when git is not on PATH', () => {
-  const dir = createTempGitRepo();
+  const dir = createTempGitRepo('context-gc-git-test-');
   const originalPath = process.env.PATH;
   const originalPathWin = process.env.Path;
   try {

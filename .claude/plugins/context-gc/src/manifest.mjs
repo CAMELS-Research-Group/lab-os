@@ -13,10 +13,10 @@
 // floor. `sources` is deliberately an object (not positional args) so it can carry both without
 // changing this function's signature.
 //
-// Pure and stateless (the "dedupe" the commit subject refers to): every call re-derives the
-// manifest fresh from whatever `sources` it is given. Nothing is persisted, read back, or
-// accumulated across calls — repeated compactions never compound stale state (log 2026-07-03,
-// resolves the PRD's within-session dedupe question in favor of re-derive-fresh).
+// Pure and stateless: every call re-derives the manifest fresh from whatever `sources` it is
+// given. Nothing is persisted, read back, or accumulated across calls, so repeated compactions
+// within one session never compound stale state — deduping is unnecessary by construction rather
+// than handled after the fact.
 
 const HEADER = '# Context manifest (pre-compaction floor)';
 
@@ -25,14 +25,43 @@ const HEADER = '# Context manifest (pre-compaction floor)';
 // this single shared tag rather than a per-field inline string.
 const MODEL_INFERRED_TAG = 'model-inferred — local Ollama; verify before treating as fact';
 
+// Appended to a section whose entries were partially dropped by the byte cap, so a trimmed list
+// is never read as a complete enumeration. Only ever appended when at least one entry survives:
+// a section trimmed to nothing is omitted entirely, which is unambiguous on its own and keeps a
+// pathological cap reachable (a marker on an empty section would consume bytes forever).
+function renderTruncationMarker(droppedCount) {
+  return `- … ${droppedCount} more (trimmed to fit the byte cap)`;
+}
+
+/**
+ * Flattens any value destined for a rendered line to a single line of text.
+ *
+ * Every rendered line interpolates a string that this module did not author — model-inferred
+ * enrichment from ollama.mjs, task content from the harness transcript, paths from git. A value
+ * containing a newline would otherwise forge manifest STRUCTURE: an embedded `## Files in flight`
+ * heading inside an enriched decision renders below `MODEL_INFERRED_TAG` but reads to the
+ * resuming agent as deterministic floor, which is exactly the distinction the tag exists to
+ * draw. Collapsing whitespace here is the one place that guarantee is enforced, so no caller can
+ * bypass it.
+ *
+ * @param {unknown} value
+ * @returns {string}
+ */
+function flattenToLine(value) {
+  return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+}
+
 /**
  * Renders one file entry as a single markdown list line.
  * @param {{path: string, status: string}} file
  * @returns {string}
  */
 function renderFileLine(file) {
-  const status = typeof file.status === 'string' && file.status ? file.status : 'modified';
-  const filePath = typeof file.path === 'string' ? file.path : '';
+  const rawStatus = flattenToLine(file && file.status);
+  // Degrades to the honest `unknown` rather than guessing `modified`: this line sits in the
+  // deterministic floor, where an invented status would be indistinguishable from a sourced one.
+  const status = rawStatus !== '' ? rawStatus : 'unknown';
+  const filePath = flattenToLine(file && file.path);
   return `- ${status}: ${filePath}`;
 }
 
@@ -42,8 +71,9 @@ function renderFileLine(file) {
  * @returns {string}
  */
 function renderTaskLine(task) {
-  const status = typeof task.status === 'string' && task.status ? task.status : 'unknown';
-  const content = typeof task.content === 'string' ? task.content : '';
+  const rawStatus = flattenToLine(task && task.status);
+  const status = rawStatus !== '' ? rawStatus : 'unknown';
+  const content = flattenToLine(task && task.content);
   return `- [${status}] ${content}`;
 }
 
@@ -53,7 +83,7 @@ function renderTaskLine(task) {
  * @returns {string}
  */
 function renderDecisionLine(decision) {
-  return `- ${typeof decision === 'string' ? decision : ''}`;
+  return `- ${flattenToLine(decision)}`;
 }
 
 /**
@@ -67,7 +97,8 @@ function renderDecisionLine(decision) {
  */
 function renderEnrichedSection(objective, decisions) {
   const lines = [];
-  if (objective) lines.push(`**Objective:** ${objective}`);
+  const flatObjective = flattenToLine(objective);
+  if (flatObjective !== '') lines.push(`**Objective:** ${flatObjective}`);
   if (decisions.length > 0) {
     lines.push('**Decisions / open threads:**', ...decisions.map(renderDecisionLine));
   }
@@ -82,20 +113,28 @@ function renderEnrichedSection(objective, decisions) {
  * empty — never a bare/lonely header. Deterministic sections render first (files, then tasks);
  * the enriched section renders last, reflecting its lower priority under the byte cap (see
  * `buildManifest`).
+ * A partially-trimmed deterministic section carries a truncation marker naming how many entries
+ * were dropped, so a short list is never mistaken for a complete one.
+ *
  * @param {Array<{path: string, status: string}>} files
  * @param {Array<{content: string, status: string}>} tasks
  * @param {string|null} objective
  * @param {string[]} decisions
+ * @param {{files: number, tasks: number}} [dropped] entries removed by the byte cap, per section
  * @returns {string}
  */
-function render(files, tasks, objective, decisions) {
+function render(files, tasks, objective, decisions, dropped = { files: 0, tasks: 0 }) {
   const sections = [];
 
   if (files.length > 0) {
-    sections.push(['## Files in flight', ...files.map(renderFileLine)].join('\n'));
+    const lines = ['## Files in flight', ...files.map(renderFileLine)];
+    if (dropped.files > 0) lines.push(renderTruncationMarker(dropped.files));
+    sections.push(lines.join('\n'));
   }
   if (tasks.length > 0) {
-    sections.push(['## Tasks', ...tasks.map(renderTaskLine)].join('\n'));
+    const lines = ['## Tasks', ...tasks.map(renderTaskLine)];
+    if (dropped.tasks > 0) lines.push(renderTruncationMarker(dropped.tasks));
+    sections.push(lines.join('\n'));
   }
   const enrichedSection = renderEnrichedSection(objective, decisions);
   if (enrichedSection) sections.push(enrichedSection);
@@ -119,7 +158,13 @@ function render(files, tasks, objective, decisions) {
  * `Buffer.byteLength(str, 'utf8')`, never JS string length (UTF-16 code units), so multibyte
  * content (emoji, non-ASCII paths) is bounded correctly. If even the empty-of-content header
  * cannot fit (a pathological `maxBytes`), the result falls back to `''`, which is always ≤ any
- * non-negative cap.
+ * non-negative cap. A partially-trimmed `files`/`tasks` section carries a truncation marker, so
+ * the floor is never silently presented as a complete enumeration; a section trimmed away
+ * entirely is omitted, which carries no such claim.
+ *
+ * The byte bound is enforced only for a finite `maxBytes`. A non-finite cap (`undefined`, `NaN`,
+ * `Infinity`) returns the untrimmed manifest — callers in this plugin always pass the integer
+ * `config.mjs` resolves, so this path is a defensive escape rather than a supported mode.
  *
  * Pure and stateless: does not read, write, or merge with any prior manifest; does not mutate any
  * `sources` field. A fresh call with the same inputs always returns the same output.
@@ -130,42 +175,51 @@ function render(files, tasks, objective, decisions) {
  * @returns {string}
  */
 export function buildManifest(sources, maxBytes) {
-  const files = sources && Array.isArray(sources.files) ? sources.files.slice() : [];
-  const tasks = sources && Array.isArray(sources.tasks) ? sources.tasks.slice() : [];
-  let objective = sources && typeof sources.objective === 'string' && sources.objective.trim() !== ''
-    ? sources.objective
-    : null;
-  let decisions = sources && Array.isArray(sources.decisions)
-    ? sources.decisions.filter((decision) => typeof decision === 'string' && decision.trim() !== '')
-    : [];
+  const trim = (withMarkers) => {
+    const files = sources && Array.isArray(sources.files) ? sources.files.slice() : [];
+    const tasks = sources && Array.isArray(sources.tasks) ? sources.tasks.slice() : [];
+    let objective = sources && typeof sources.objective === 'string' && sources.objective.trim() !== ''
+      ? sources.objective
+      : null;
+    let decisions = sources && Array.isArray(sources.decisions)
+      ? sources.decisions.filter((d) => typeof d === 'string' && d.trim() !== '')
+      : [];
 
-  let markdown = render(files, tasks, objective, decisions);
+    const dropped = { files: 0, tasks: 0 };
+    const counts = () => (withMarkers ? dropped : { files: 0, tasks: 0 });
+    const rerender = () => render(files, tasks, objective, decisions, counts());
 
-  if (!Number.isFinite(maxBytes)) return markdown;
+    let markdown = rerender();
 
-  while (Buffer.byteLength(markdown, 'utf8') > maxBytes && decisions.length > 0) {
-    decisions = decisions.slice(0, -1);
-    markdown = render(files, tasks, objective, decisions);
-  }
+    if (!Number.isFinite(maxBytes)) return markdown;
 
-  while (Buffer.byteLength(markdown, 'utf8') > maxBytes && objective !== null) {
-    objective = null;
-    markdown = render(files, tasks, objective, decisions);
-  }
+    // The trim priority is stated ONCE, here, as data in softest-first order — not encoded four
+    // times in near-identical control flow. Adding or reordering a tier is an edit to this list;
+    // the loop below never changes. `canDrop` reports whether the tier still has something to
+    // give up, `drop` gives up exactly one unit of it.
+    const TIERS = [
+      { canDrop: () => decisions.length > 0, drop: () => { decisions = decisions.slice(0, -1); } },
+      { canDrop: () => objective !== null, drop: () => { objective = null; } },
+      { canDrop: () => tasks.length > 0, drop: () => { tasks.pop(); dropped.tasks += 1; } },
+      { canDrop: () => files.length > 0, drop: () => { files.pop(); dropped.files += 1; } },
+    ];
 
-  while (Buffer.byteLength(markdown, 'utf8') > maxBytes && tasks.length > 0) {
-    tasks.pop();
-    markdown = render(files, tasks, objective, decisions);
-  }
+    const overCap = () => Buffer.byteLength(markdown, 'utf8') > maxBytes;
 
-  while (Buffer.byteLength(markdown, 'utf8') > maxBytes && files.length > 0) {
-    files.pop();
-    markdown = render(files, tasks, objective, decisions);
-  }
+    for (const tier of TIERS) {
+      while (overCap() && tier.canDrop()) {
+        tier.drop();
+        markdown = rerender();
+      }
+      if (!overCap()) break;
+    }
 
-  if (Buffer.byteLength(markdown, 'utf8') > maxBytes) return '';
+    return overCap() ? '' : markdown;
+  };
 
-  return markdown;
+  // A truncation marker can cost more bytes than the entry whose absence it reports, so at a
+  // tight cap the honest marker and the content compete for the same budget. Content wins:
+  // markers are attempted first, and only when that leaves nothing at all does the trim rerun
+  // without them. A caller therefore never loses a real line to a marker about a lost line.
+  return trim(true) || trim(false);
 }
-
-export default buildManifest;
