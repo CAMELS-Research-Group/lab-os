@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-08-12 17:33 — Raise always-loaded doc budgets to 12/8 KB; add a 48 KB aggregate cap · #79
 - 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
@@ -27,6 +28,24 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-08-12 17:33 — Raise always-loaded doc budgets to 12/8 KB; add a 48 KB aggregate cap
+
+**Decision:** `CLAUDE.md` 8→12 KB, each `.claude/rules/*.md` 5→8 KB, and a new 48 KB
+**aggregate** cap over the always-loaded tier (`CLAUDE.md` + rules; `project_log.md` excluded,
+unchanged at 15 KB). Over aggregate the remedy is demoting a surface to grep-only, not raising
+the cap. `.claude/rules/04-docs.md` owns the bytes; `scripts/docs_budget.py` enforces them.
+**Why:** The 8/5 KB numbers were never calibrated — the design doc logged them as a first guess
+(§13) and recorded every flagship repo already over 8 KB at adoption (§7.2). Caravan's
+`.claude/CLAUDE.md` had two bytes of headroom. A per-file raise alone removes the pressure that
+forces the always-loaded/grep-only tiering decision and invites silent instruction dilution, so
+the aggregate — what context costs per session and per subagent — is the binding number.
+**Alternatives:** Flat 20 KB per file (rejected: +75 KB of ceiling on a rules glob that only
+grows, 30 KB effective at the 1.5× fail line). Per-file raise with no aggregate (rejected:
+leaves the add-more-rules-files hole open).
+**Refs:** #79, `.claude/rules/04-docs.md`, `scripts/docs_budget.py`
 
 ---
 
