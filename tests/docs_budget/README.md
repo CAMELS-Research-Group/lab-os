@@ -4,20 +4,28 @@ Fixtures for `scripts/docs_budget.py --self-test`.
 
 ## Strategy: one static repo, the rest generated
 
-Budgets are fixed (CLAUDE.md 8,192 B; each `.claude/rules/*.md` 5,120 B;
-`project_log.md` 15,360 B — spec §7.2), so exercising the warn (>1.0x) and
-fail (>1.5x) zones requires files of 6–24 KB. Committing that much filler
+Budgets are fixed (CLAUDE.md 12,288 B; each `.claude/rules/*.md` 8,192 B;
+`project_log.md` 15,360 B; always-loaded aggregate 49,152 B — see
+`.claude/rules/04-docs.md`), so exercising the warn (>1.0x) and fail
+(>1.5x) zones requires files of 10–24 KB. Committing that much filler
 adds no review value, so:
 
 - **Committed here:** `under_budget_repo/` — a tiny static fixture repo
   whose three surfaces all sit in the OK zone.
 - **Generated at self-test runtime** (in a `tempfile.TemporaryDirectory`,
   exact byte sizes, deleted afterward):
-  - warn-zone repo — `CLAUDE.md` 9,000 B, `.claude/CLAUDE.md` 9,000 B
+  - warn-zone repo — `CLAUDE.md` 14,000 B, `.claude/CLAUDE.md` 14,000 B
     (proves the alternate location is scanned), `.claude/rules/01-r.md`
-    6,000 B, `project_log.md` 20,000 B
-  - fail-zone repo — `CLAUDE.md` 12,289 B, `.claude/rules/01-r.md` 7,681 B,
+    10,000 B, `project_log.md` 20,000 B — 38,000 B of always-loaded
+    surfaces, deliberately under the aggregate cap so the per-surface
+    annotation counts stay exact
+  - fail-zone repo — `CLAUDE.md` 18,433 B, `.claude/rules/01-r.md` 12,289 B,
     `project_log.md` 23,041 B (each exactly one byte past its 1.5x line)
+  - aggregate repos — 7 x 8,000 B rules files (56,000 B, warn) and 10 x
+    8,000 B (80,000 B, fail): every file individually inside its budget,
+    the always-loaded tier as a whole over the cap
+  - aggregate-exclusion repo — `CLAUDE.md` 1,000 B + `project_log.md`
+    15,000 B, proving the log is not counted in the aggregate
   - empty repo — missing-surface silence
   - symlink repo — `.claude/rules` linked outside the root, when the
     platform allows symlink creation

@@ -221,6 +221,11 @@ A **proportionality ladder** decides what documentation a unit of work gets:
 | Each `.claude/rules/*.md` | 5 KB | CI warning → split narrative out to root docs |
 | `project_log.md` (whole file) | 15 KB | Overflow chore PR (§4.6); CI warns |
 
+> **Superseded 2026-08-12** (the §13 "revisit after a month" gap, taken up): the per-file numbers
+> are now `CLAUDE.md` 12 KB and each `.claude/rules/*.md` 8 KB, plus a new 48 KB always-loaded
+> aggregate cap. `project_log.md` is unchanged at 15 KB. Current bytes live in
+> `.claude/rules/04-docs.md` §Tiers & budgets — this table is historical.
+
 Budgets warn at 1.0× and fail at 1.5× — **but `docs-budget` runs warn-only in any repo until that
 repo first passes green** (§12: today GP's CLAUDE.md is ~12.5 KB = 1.53×, LSCA ~11.4 KB, MC
 ~9.4 KB; the standard must not red its own flagship repos on day one). The numbers are starting

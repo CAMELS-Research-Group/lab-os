@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
 """docs-budget: byte-size budget check for always-loaded AI doc surfaces.
 
-Spec: docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md
-(section 7.2 context budgets, section 9 Adherence Actions).
+Budgets are owned by `.claude/rules/04-docs.md` (section Tiers & budgets);
+this script is their enforcement. Original design:
+docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md
+(section 7.2 context budgets, section 9 Adherence Actions) — that doc's
+8/5 KB figures were a stated first guess (its section 13) and were revised
+upward on 2026-08-12; the rule file, not the dated design doc, is current.
 
 Scanned paths (relative to --root; each skipped silently when absent):
 
-    CLAUDE.md             budget  8,192 B
-    .claude/CLAUDE.md     budget  8,192 B   (some repos keep it here instead)
-    .claude/rules/*.md    budget  5,120 B each
+    CLAUDE.md             budget 12,288 B
+    .claude/CLAUDE.md     budget 12,288 B   (some repos keep it here instead)
+    .claude/rules/*.md    budget  8,192 B each
     project_log.md        budget 15,360 B
+
+Beyond the per-file budgets, the always-loaded surfaces — CLAUDE.md plus
+every .claude/rules/*.md, but NOT project_log.md (first-read tier, and it
+has its own archive-overflow path) — are checked in aggregate against
+49,152 B. The aggregate is the invariant that actually protects session
+context: per-file budgets alone permit unbounded growth by adding rules
+files, and every rules file sitting at its full budget would blow the
+total on its own. Same zone semantics as a per-file budget.
 
 Zone semantics (size measured in bytes on disk):
 
@@ -43,9 +55,19 @@ import sys
 import tempfile
 from pathlib import Path
 
-BUDGET_CLAUDE_MD = 8_192
-BUDGET_RULES_MD = 5_120
+BUDGET_CLAUDE_MD = 12_288
+BUDGET_RULES_MD = 8_192
 BUDGET_PROJECT_LOG = 15_360
+
+# Aggregate cap on everything that loads into EVERY session's context.
+# Deliberately smaller than the sum of the per-file budgets: the per-file
+# numbers say how big any one surface may get, this says how much total
+# context the always-loaded tier may claim.
+BUDGET_ALWAYS_LOADED_TOTAL = 49_152
+
+# Surfaces that load unconditionally into every session (04-docs.md, AI tier).
+ALWAYS_LOADED_FILES = ("CLAUDE.md", ".claude/CLAUDE.md")
+ALWAYS_LOADED_RULES_PREFIX = ".claude/rules/"
 
 ZONE_OK = "OK"
 ZONE_WARN = "WARN"
@@ -67,6 +89,19 @@ def classify(size: int, budget: int) -> str:
     if size <= fail_threshold(budget):
         return ZONE_WARN
     return ZONE_FAIL
+
+
+def is_always_loaded(rel: str) -> bool:
+    """True when a scanned surface loads into every session's context.
+
+    CLAUDE.md (either location) and every .claude/rules/*.md file load
+    unconditionally. project_log.md does not — it is first-read tier (an
+    agent reads its head, not the file) and carries its own overflow-to-
+    archive path — so it is excluded from the aggregate.
+    """
+    if rel in ALWAYS_LOADED_FILES:
+        return True
+    return rel.startswith(ALWAYS_LOADED_RULES_PREFIX) and rel.endswith(".md")
 
 
 def escapes_root(path: Path, root: Path) -> bool:
@@ -170,6 +205,47 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
                     f"this will fail once enforcement is on."
                 )
 
+    # Aggregate always-loaded budget. Unreadable surfaces never reached
+    # `findings`, so they are excluded here too — a filesystem hiccup must
+    # not redden the aggregate any more than it reddens a per-file check.
+    always_loaded = [f for f in findings if is_always_loaded(f[0])]
+    aggregate_zone = None
+    if always_loaded:
+        total = sum(f[1] for f in always_loaded)
+        cap = BUDGET_ALWAYS_LOADED_TOTAL
+        aggregate_zone = classify(total, cap)
+        ratio = total / cap
+        lines.append(
+            f"[{aggregate_zone:<4}] always-loaded total "
+            f"({len(always_loaded)} surface(s)) — {total:,} B / {cap:,} B "
+            f"budget ({ratio:.2f}x)"
+        )
+        remedy = (
+            "Demote a surface to the grep-only tier (04-docs.md, AI tier), "
+            "or compress"
+        )
+        if aggregate_zone == ZONE_WARN:
+            lines.append(
+                f"::warning::always-loaded context is over its aggregate "
+                f"budget: {total:,} B vs {cap:,} B ({ratio:.2f}x). {remedy} "
+                f"(fails above 1.5x)."
+            )
+        elif aggregate_zone == ZONE_FAIL:
+            if enforce:
+                failed = True
+                lines.append(
+                    f"::error::always-loaded context exceeds 1.5x its "
+                    f"aggregate budget: {total:,} B vs {cap:,} B "
+                    f"({ratio:.2f}x). {remedy}."
+                )
+            else:
+                lines.append(
+                    f"::warning::always-loaded context exceeds 1.5x its "
+                    f"aggregate budget: {total:,} B vs {cap:,} B "
+                    f"({ratio:.2f}x). Warn-only mode — this will fail once "
+                    f"enforcement is on."
+                )
+
     if not findings:
         lines.append("docs-budget: no budgeted surfaces found — nothing to check.")
     else:
@@ -178,7 +254,8 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
         mode = "enforce" if enforce else "warn-only"
         lines.append(
             f"docs-budget: {len(findings)} surface(s) checked, "
-            f"{n_warn} warn-zone, {n_fail} fail-zone (mode: {mode})."
+            f"{n_warn} warn-zone, {n_fail} fail-zone; always-loaded total "
+            f"{aggregate_zone or 'n/a'} (mode: {mode})."
         )
 
     return (1 if failed else 0, lines)
@@ -213,14 +290,25 @@ def self_test() -> int:
 
     # --- 1. zone classification boundaries -------------------------------
     print("zone classification:")
-    check("size == budget is OK", classify(8_192, BUDGET_CLAUDE_MD) == ZONE_OK)
-    check("budget + 1 is WARN", classify(8_193, BUDGET_CLAUDE_MD) == ZONE_WARN)
-    check("size == 1.5x budget is WARN", classify(12_288, BUDGET_CLAUDE_MD) == ZONE_WARN)
-    check("1.5x budget + 1 is FAIL", classify(12_289, BUDGET_CLAUDE_MD) == ZONE_FAIL)
-    check("rules boundary 7,680 is WARN", classify(7_680, BUDGET_RULES_MD) == ZONE_WARN)
-    check("rules 7,681 is FAIL", classify(7_681, BUDGET_RULES_MD) == ZONE_FAIL)
+    check("size == budget is OK", classify(12_288, BUDGET_CLAUDE_MD) == ZONE_OK)
+    check("budget + 1 is WARN", classify(12_289, BUDGET_CLAUDE_MD) == ZONE_WARN)
+    check("size == 1.5x budget is WARN", classify(18_432, BUDGET_CLAUDE_MD) == ZONE_WARN)
+    check("1.5x budget + 1 is FAIL", classify(18_433, BUDGET_CLAUDE_MD) == ZONE_FAIL)
+    check("rules boundary 12,288 is WARN", classify(12_288, BUDGET_RULES_MD) == ZONE_WARN)
+    check("rules 12,289 is FAIL", classify(12_289, BUDGET_RULES_MD) == ZONE_FAIL)
     check("log boundary 23,040 is WARN", classify(23_040, BUDGET_PROJECT_LOG) == ZONE_WARN)
     check("log 23,041 is FAIL", classify(23_041, BUDGET_PROJECT_LOG) == ZONE_FAIL)
+
+    print("always-loaded membership:")
+    check("root CLAUDE.md is always-loaded", is_always_loaded("CLAUDE.md"))
+    check("nested .claude/CLAUDE.md is always-loaded",
+          is_always_loaded(".claude/CLAUDE.md"))
+    check("a rules file is always-loaded",
+          is_always_loaded(".claude/rules/01-workflow.md"))
+    check("project_log.md is NOT always-loaded",
+          not is_always_loaded("project_log.md"))
+    check("a non-md file under rules/ is NOT always-loaded",
+          not is_always_loaded(".claude/rules/notes.txt"))
 
     # --- 2. static fixture: under-budget repo ----------------------------
     print("static under-budget fixture:")
@@ -246,9 +334,9 @@ def self_test() -> int:
         warn_repo = _build_repo(
             tmp / "warn_repo",
             {
-                "CLAUDE.md": 9_000,            # 8,192 < size <= 12,288
-                ".claude/CLAUDE.md": 9_000,    # the alternate location is scanned
-                ".claude/rules/01-r.md": 6_000,  # 5,120 < size <= 7,680
+                "CLAUDE.md": 14_000,           # 12,288 < size <= 18,432
+                ".claude/CLAUDE.md": 14_000,   # the alternate location is scanned
+                ".claude/rules/01-r.md": 10_000,  # 8,192 < size <= 12,288
                 "project_log.md": 20_000,      # 15,360 < size <= 23,040
             },
         )
@@ -267,14 +355,18 @@ def self_test() -> int:
         )
         check("no ::error annotations for warn zone",
               not any(l.startswith("::error") for l in lines_w + lines_e))
+        # 38,000 B of always-loaded surfaces here — deliberately under the
+        # 49,152 B aggregate cap, so the per-surface counts above are exact.
+        check("aggregate stays OK while every file is warn-zone",
+              any("[OK  ] always-loaded total" in l for l in lines_w))
 
         # --- 4. generated fail-zone repo (> 1.5x) -------------------------
         print("generated fail-zone repo:")
         fail_repo = _build_repo(
             tmp / "fail_repo",
             {
-                "CLAUDE.md": 12_289,
-                ".claude/rules/01-r.md": 7_681,
+                "CLAUDE.md": 18_433,
+                ".claude/rules/01-r.md": 12_289,
                 "project_log.md": 23_041,
             },
         )
@@ -291,7 +383,60 @@ def self_test() -> int:
         check("enforce mode emits ::error per fail-zone surface",
               sum(1 for l in lines_e if l.startswith("::error")) == 3)
         check("report lines name file, size, budget, zone",
-              any("[FAIL] CLAUDE.md — 12,289 B / 8,192 B budget" in l for l in lines_e))
+              any("[FAIL] CLAUDE.md — 18,433 B / 12,288 B budget" in l for l in lines_e))
+
+        # --- 4b. aggregate always-loaded cap ------------------------------
+        # The behaviour per-file budgets cannot express: every file is
+        # individually within budget, but the always-loaded tier as a whole
+        # claims too much of every session's context.
+        print("aggregate always-loaded cap (every file individually OK):")
+        agg_warn_repo = _build_repo(
+            tmp / "agg_warn_repo",
+            # 7 x 8,000 B = 56,000 B -> 1.14x of 49,152 B
+            {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 8)},
+        )
+        findings, _ = scan(agg_warn_repo)
+        check("every per-file zone is OK", all(f[3] == ZONE_OK for f in findings))
+        code_w, lines_w = run(agg_warn_repo, enforce=False)
+        code_e, lines_e = run(agg_warn_repo, enforce=True)
+        check("aggregate reported in the WARN zone",
+              any("[WARN] always-loaded total (7 surface(s)) — 56,000 B" in l
+                  for l in lines_e),
+              f"got {[l for l in lines_e if 'always-loaded' in l]}")
+        check("aggregate warn emits a fileless ::warning",
+              any(l.startswith("::warning::always-loaded") for l in lines_e))
+        check("aggregate warn exits 0 in both modes", code_w == 0 and code_e == 0)
+
+        agg_fail_repo = _build_repo(
+            tmp / "agg_fail_repo",
+            # 10 x 8,000 B = 80,000 B -> 1.63x, past the 73,728 B fail line
+            {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 11)},
+        )
+        findings, _ = scan(agg_fail_repo)
+        check("every per-file zone is still OK",
+              all(f[3] == ZONE_OK for f in findings))
+        code_w, lines_w = run(agg_fail_repo, enforce=False)
+        code_e, lines_e = run(agg_fail_repo, enforce=True)
+        check("aggregate fail exits 1 in enforce mode", code_e == 1)
+        check("aggregate fail exits 0 in warn-only mode", code_w == 0)
+        check("aggregate fail emits a fileless ::error in enforce mode",
+              any(l.startswith("::error::always-loaded") for l in lines_e))
+        check("warn-only downgrades the aggregate fail to ::warning",
+              any(l.startswith("::warning::always-loaded") for l in lines_w)
+              and not any(l.startswith("::error") for l in lines_w))
+
+        # project_log.md is first-read tier, not always-loaded: it must not
+        # count toward the aggregate even though it is a budgeted surface.
+        print("aggregate excludes project_log.md:")
+        agg_log_repo = _build_repo(
+            tmp / "agg_log_repo",
+            {"CLAUDE.md": 1_000, "project_log.md": 15_000},
+        )
+        _, lines_l = run(agg_log_repo, enforce=True)
+        check("project_log.md bytes excluded from the aggregate total",
+              any("always-loaded total (1 surface(s)) — 1,000 B" in l
+                  for l in lines_l),
+              f"got {[l for l in lines_l if 'always-loaded' in l]}")
 
         # --- 5. missing surfaces skipped silently -------------------------
         print("missing surfaces:")
@@ -383,9 +528,11 @@ def main(argv: list[str] | None = None) -> int:
         prog="docs_budget.py",
         description=(
             "Check always-loaded AI doc surfaces against the lab context "
-            "budgets (spec section 7.2): CLAUDE.md and .claude/CLAUDE.md "
-            "8,192 B; each .claude/rules/*.md 5,120 B; project_log.md "
-            "15,360 B. Zones: size <= budget -> OK; budget < size <= "
+            "budgets (.claude/rules/04-docs.md): CLAUDE.md and "
+            ".claude/CLAUDE.md 12,288 B; each .claude/rules/*.md 8,192 B; "
+            "project_log.md 15,360 B; and the always-loaded surfaces in "
+            "aggregate (CLAUDE.md + rules, excluding project_log.md) "
+            "49,152 B. Zones: size <= budget -> OK; budget < size <= "
             "1.5x budget -> WARN (annotation, exit 0); size > 1.5x budget "
             "-> FAIL (exit 1 only with --enforce). Missing surfaces and "
             "surfaces that resolve outside the repo root (junctions/"

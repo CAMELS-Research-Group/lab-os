@@ -3,9 +3,10 @@
 <!-- AUTHOR GUIDANCE — AI-tier writing standard (read before filling):
      Dense, deterministic, count-free, zero narrative. State facts an agent acts on.
      No "this repo was created to…" prose, no counts that restale, no passive voice.
-     Budget: 8 KB (CI warn at 8 KB, fail at 12 KB; warn-only until the repo first
-     passes green). Keep this file ≤ 6 KB
-     so growth stays inside budget. When a section balloons, push the detail out:
+     Budget: 12 KB (CI warn at 12 KB, fail at 18 KB; warn-only until the repo first
+     passes green). Keep this file ≤ 9 KB
+     so growth stays inside budget. This file plus .claude/rules/*.md also share a
+     48 KB always-loaded aggregate budget — see .claude/rules/04-docs.md. When a section balloons, push the detail out:
        design rationale → design doc (ENG tier)
        how-to steps → runbook (ENG tier)
        decision history → project_log.md

@@ -40,7 +40,7 @@ it covers the lab's protection rules
 Copy
 [`templates/repo-CLAUDE.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/repo-CLAUDE.template.md)
 to the repo root (or `.claude/CLAUDE.md`) and fill the placeholders. Follow the template's embedded
-author guidance — dense writing aimed at an AI reader, 8 KB size budget, no restating lab rules that already load.
+author guidance — dense writing aimed at an AI reader, 12 KB size budget, no restating lab rules that already load.
 
 ### 4. Seed `project_log.md`
 

@@ -1,8 +1,10 @@
 # Reusable docs-budget adherence action (spec §9).
 #
-# Checks the caller repo's always-loaded AI doc surfaces against the §7.2
-# context budgets: CLAUDE.md / .claude/CLAUDE.md 8,192 B; each
-# .claude/rules/*.md 5,120 B; project_log.md 15,360 B.
+# Checks the caller repo's always-loaded AI doc surfaces against the
+# context budgets in .claude/rules/04-docs.md: CLAUDE.md /
+# .claude/CLAUDE.md 12,288 B; each .claude/rules/*.md 8,192 B;
+# project_log.md 15,360 B; plus the always-loaded aggregate (CLAUDE.md +
+# rules, excluding project_log.md) 49,152 B.
 # Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.
 # Default is warn-only (the §7.2 warn-only-until-first-green posture):
 # the job never fails, it only emits ::warning annotations.
