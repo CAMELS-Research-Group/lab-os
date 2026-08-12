@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-08-12 16:56 — lab-os owns Claude Code plugins; an org marketplace replaces the personal one · #PRNUM
+- 2026-08-12 16:56 — lab-os owns Claude Code plugins; an org marketplace replaces the personal one · #78
 - 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
@@ -43,7 +43,7 @@ at all. The prior marketplace was itself a personal repo (`WatsonWBlair/lab-clau
 deprecated). An org-owned marketplace puts plugin distribution on the same footing as skills.
 **Alternatives:** vendor a copy into each member repo (duplicates the bytes the sync rules exist to
 prevent); extend `rules_sync.py` to carry it (its manifest is markdown-only by construction).
-**Refs:** #PRNUM, `.claude/plugins/context-gc/`, `.claude-plugin/marketplace.json`
+**Refs:** #78, `.claude/plugins/context-gc/`, `.claude-plugin/marketplace.json`
 
 ---
 
