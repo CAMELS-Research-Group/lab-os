@@ -182,11 +182,12 @@ test('corruption NEWER than the selected marker degrades: a stale cycle is never
 });
 
 test('the compaction-summary record itself is never included in the tail', () => {
-  // The window's exclusive upper bound was unpinnable with the original fixtures: every one used
-  // an inert `{"type":"summary"}` marker that normalizeTail drops regardless, so an off-by-one
-  // including the marker was invisible. The harness's real marker may carry a user/assistant
-  // type — this fixture does — in which case the compaction summary would be injected into both
-  // additionalContext and the Ollama prompt.
+  // The window's upper bound is exclusive, and only this fixture can pin it. Every other fixture
+  // marks compaction with an inert `{"type":"summary"}` record that normalizeTail drops
+  // regardless, so an off-by-one that included the marker would stay invisible against them. The
+  // harness's real marker may carry a user/assistant type — this fixture does — in which case an
+  // included marker injects the compaction summary into both additionalContext and the Ollama
+  // prompt.
   const { tail } = readTranscript(fixture('typed-marker-record.jsonl'), 40);
 
   assert.equal(tail.length, 2);

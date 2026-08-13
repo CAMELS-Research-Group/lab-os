@@ -103,9 +103,10 @@ test('the plugin ships no root SKILL.md, so it stays hooks-only', () => {
   // would be loaded as a model-invocable skill. This plugin's entire surface is one deterministic
   // SessionStart hook; it must not also present as something Claude chooses to invoke.
   //
-  // This is a live hazard, not a hypothetical: the link script's discovery predicate used to be
-  // "directory contains SKILL.md", so the tempting way to make this plugin link was to drop in a
-  // stub SKILL.md rather than teach the script about plugin manifests.
+  // This is a live hazard, not a hypothetical: `link-lab-assets.sh` discovers an asset by either a
+  // `SKILL.md` or a `.claude-plugin/plugin.json`, so dropping in a stub `SKILL.md` is always the
+  // cheaper-looking way to make a hooks-only plugin link — and it silently buys a second, invocable
+  // surface along with the link.
   assert.ok(
     !fs.existsSync(path.join(pluginRoot, 'SKILL.md')),
     'a root SKILL.md would register this plugin as an invocable skill as well as a hook'
@@ -113,9 +114,10 @@ test('the plugin ships no root SKILL.md, so it stays hooks-only', () => {
 });
 
 test('the plugin version is declared', () => {
-  // No marketplace entry to agree with any more, so there is one version string rather than two.
-  // Still asserted: `plugin details` and every update path read it, and an absent version reads
-  // as an unversioned plugin rather than an error.
+  // `plugin.json` is the single place this plugin's version lives — there is no marketplace entry
+  // to agree with, so nothing else can catch it going missing. Asserted because `plugin details`
+  // and every update path read it, and an absent version reads as an unversioned plugin rather
+  // than an error.
   const plugin = readJson(path.join(pluginRoot, '.claude-plugin/plugin.json'));
   assert.equal(typeof plugin.version, 'string');
   assert.ok(plugin.version.length > 0);

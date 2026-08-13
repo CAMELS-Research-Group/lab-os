@@ -425,7 +425,8 @@ test('the marker is dropped only when paying for it would leave no entries at al
 
 test('a file entry with no usable status degrades to unknown, never an invented modified', () => {
   // This line sits in the deterministic floor, where a guessed status is indistinguishable from a
-  // sourced one. `renderTaskLine` already degraded honestly; `renderFileLine` now matches it.
+  // sourced one, so both line renderers degrade the same way: an absent field surfaces as
+  // `unknown`, never as the most common value. `renderFileLine` must not default to `modified`.
   const manifest = buildManifest(
     { files: [{ path: 'src/mystery.mjs' }], tasks: [] },
     10000
@@ -436,9 +437,10 @@ test('a file entry with no usable status degrades to unknown, never an invented 
 });
 
 test('the TASKS section carries its own truncation marker, not just the files section', () => {
-  // The tasks marker was previously unobserved: deleting it left the suite green. A truncated
-  // todo list read as a complete one is the more consequential of the two, since the resuming
-  // agent uses it to decide what is left to do.
+  // Both trimmable sections must announce their own truncation; asserting only the files marker
+  // would let the tasks one be deleted with the suite green. A truncated todo list read as a
+  // complete one is the more consequential of the two, since the resuming agent uses it to decide
+  // what is left to do.
   const tasks = Array.from({ length: 200 }, (_, i) => ({
     content: `task number ${i} with enough text to consume budget`,
     status: 'pending',

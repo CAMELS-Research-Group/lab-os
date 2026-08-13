@@ -146,9 +146,10 @@ test('spawned as a real process, a large manifest reaches stdout uncorrupted (re
     fs.writeFileSync(path.join(repoDir, 'new-file.txt'), 'new\n');
 
     // Build a transcript whose most recent TodoWrite carries thousands of long tasks, so the
-    // rendered manifest runs to hundreds of KB — well past the tiny sentinel an early spike
-    // validated, and large enough that a single `write()` to a piped stdout won't complete
-    // synchronously, which is what exposes the async-flush-vs-`process.exit()` race on macOS.
+    // rendered manifest runs to hundreds of KB. Payload size is the whole point: a manifest small
+    // enough to clear the pipe buffer completes its `write()` synchronously and proves nothing.
+    // Only a payload too large for one synchronous write exposes the
+    // async-flush-vs-`process.exit()` race on macOS.
     transcriptDir = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-recover-large-'));
     const transcriptPath = path.join(transcriptDir, 'large.jsonl');
     const TASK_COUNT = 3000;
@@ -245,9 +246,10 @@ test('a getter that throws when read still results in "" rather than propagating
 
 test('the hook exits 0 and emits nothing for every malformed stdin payload', () => {
   // main()'s loudest stated contract is "always exits 0 — a hook that blocks or errors session
-  // resume is worse than one that silently no-ops", and until now exactly one happy-path spawn
-  // covered it. A hook that exits non-zero on a payload shape the harness happens to send would
-  // block resume for every user at once.
+  // resume is worse than one that silently no-ops". Happy-path spawns cannot establish it: the
+  // contract is about the payloads nobody designed for. A hook that exits non-zero on a shape the
+  // harness happens to send would block resume for every user at once, so the table below drives
+  // the malformed shapes directly rather than assuming they cannot occur.
   const entry = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'recover.mjs');
 
   const payloads = [

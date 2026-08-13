@@ -129,10 +129,19 @@ trimmed. `src/config.mjs` is the single place these are read and defaulted.
 
 ## Requirements
 
-- **Node** — the hook's only command is `node …`, making it the plugin's one hard, non-degradable
-  dependency: unlike git and Ollama below, its absence fails the hook invocation itself rather than
-  degrading a field. It is normally present wherever Claude Code runs, and the plugin needs no
-  external npm dependencies.
+- **Node 18+** — the hook's only command is `node …`, making it the plugin's one hard,
+  non-degradable dependency: unlike git and Ollama below, its absence fails the hook invocation
+  itself rather than degrading a field. It is normally present wherever Claude Code runs, and the
+  plugin needs no external npm dependencies. **18** is the floor because the enrichment call uses
+  the global `fetch`, unflagged from Node 18.0.0; nothing in `src/` needs anything newer.
+
+  Two higher numbers apply to *developing* the plugin, not to running it, and are stated here so
+  all three are in one place: the test command — `node --test "test/*.test.mjs"` from this
+  directory, the form
+  [`.github/workflows/plugin-tests.yml`](../../../.github/workflows/plugin-tests.yml) runs — needs
+  **Node 21+**, because passing a glob to `--test` is a Node 21 feature (on 18–20 the pattern is
+  taken as a literal path and matches nothing); and that workflow pins **Node 22**, so 22 is the
+  only version the suite is actually verified on. A user running the hook is bound by 18 alone.
 - **Git** — for the deterministic files layer; its absence degrades that field only, it doesn't
   block the hook.
 - **Local Ollama** (optional) — for the enriched layer only. Pull the default model once with
@@ -170,3 +179,23 @@ The Ollama distillation itself runs entirely on-machine — no metered API, no e
 beyond the local Ollama host. Running Ollama locally avoids adding a *second* external sink; it
 does not avoid the pre-existing sink, which is the Claude session itself that the manifest
 re-enters by design.
+
+### Scope of `05-agent-runtime.md`
+
+`.claude/rules/05-agent-runtime.md` is a HARD RULE binding any lab-os asset that **hosts a
+guardrailed local coding-agent runtime**. This plugin is the first lab-os asset with a local-model
+surface at all, so the reading is stated here rather than left for each reader to re-derive: **it
+does not bind.** No runtime is hosted — there is no agent engine, no control seam, and no run
+state. Nothing here spawns `claude`; the sole hook command is `node src/recover.mjs`. The one model
+call is a single read-only distillation of a transcript tail into text — one shot, no tools, no
+loop, and no path by which the model's output reaches anything but the manifest string. The model
+is local Ollama, so the rule's `$0-by-construction` constraint is met by construction too: no
+Max/Pro OAuth token is driven through a third-party tool, and there is no metered API key to
+introduce.
+
+**The growth trigger.** That reading holds only while model output is *rendered*, never *acted on*.
+The moment any change lets the enriched layer drive an action — invoking a tool, spawning a
+process, writing a file, choosing what runs next — this asset is hosting a runtime and
+`05-agent-runtime.md` binds it in full, including the halt contract, per-run caps, the fail-closed
+permission allowlist, and the bot-identity requirement. Treat that as a review gate on any change
+that gives `src/ollama.mjs`'s output a consumer other than `buildManifest`.
