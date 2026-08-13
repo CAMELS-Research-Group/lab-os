@@ -7,7 +7,9 @@
 # rules, excluding project_log.md) 49,152 B.
 # Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.
 # Default is warn-only (the §7.2 warn-only-until-first-green posture):
-# the job never fails, it only emits ::warning annotations.
+# the budget check never fails the job, it only emits ::warning
+# annotations. The self-test step below is NOT gated: a self-test failure
+# is a code defect and always fails the job.
 #
 # Caller example (any lab repo):
 #
