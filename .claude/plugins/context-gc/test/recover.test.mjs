@@ -146,9 +146,9 @@ test('spawned as a real process, a large manifest reaches stdout uncorrupted (re
     fs.writeFileSync(path.join(repoDir, 'new-file.txt'), 'new\n');
 
     // Build a transcript whose most recent TodoWrite carries thousands of long tasks, so the
-    // rendered manifest runs to hundreds of KB — well past the tiny sentinel the Task 0 spike
+    // rendered manifest runs to hundreds of KB — well past the tiny sentinel an early spike
     // validated, and large enough that a single `write()` to a piped stdout won't complete
-    // synchronously, which is what exposes the async-flush-vs-`process.exit()` race on Windows.
+    // synchronously, which is what exposes the async-flush-vs-`process.exit()` race on macOS.
     transcriptDir = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-recover-large-'));
     const transcriptPath = path.join(transcriptDir, 'large.jsonl');
     const TASK_COUNT = 3000;
@@ -200,7 +200,7 @@ test('spawned as a real process, a large manifest reaches stdout uncorrupted (re
     const result = spawnSync(process.execPath, [scriptPath], {
       input: JSON.stringify(payload),
       encoding: 'utf8',
-      // main() now runs recoverEnriched() (Task 6), which attempts a real Ollama call unless
+      // main() runs recoverEnriched(), which attempts a real Ollama call unless
       // told otherwise. Point CONTEXT_GC_OLLAMA_HOST at a loopback port nothing listens on so
       // this test's byte-for-byte comparison against the deterministic-only `recover()` stays
       // valid regardless of whether the host machine happens to have a real Ollama running —
@@ -239,4 +239,59 @@ test('a getter that throws when read still results in "" rather than propagating
   assert.doesNotThrow(() => {
     assert.equal(recover(payload), '');
   });
+});
+
+// --- Process boundary: the exit-0 contract under hostile stdin ---
+
+test('the hook exits 0 and emits nothing for every malformed stdin payload', () => {
+  // main()'s loudest stated contract is "always exits 0 — a hook that blocks or errors session
+  // resume is worse than one that silently no-ops", and until now exactly one happy-path spawn
+  // covered it. A hook that exits non-zero on a payload shape the harness happens to send would
+  // block resume for every user at once.
+  const entry = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'recover.mjs');
+
+  const payloads = [
+    ['empty stdin', ''],
+    ['whitespace only', '   \n  '],
+    ['unparseable JSON', 'not json at all'],
+    ['JSON null', 'null'],
+    ['JSON array', '[1,2,3]'],
+    ['no source key', '{"cwd":"/tmp"}'],
+    ['non-compact source', '{"source":"startup"}'],
+    ['source with hostile types', '{"source":"compact","cwd":42,"transcript_path":{"a":1}}'],
+  ];
+
+  for (const [label, input] of payloads) {
+    const result = spawnSync(process.execPath, [entry], {
+      input,
+      encoding: 'utf8',
+      env: { ...process.env, CONTEXT_GC_OLLAMA_HOST: 'http://127.0.0.1:1' },
+    });
+
+    assert.equal(result.status, 0, `${label}: expected exit 0, got ${result.status}`);
+    assert.equal(result.stdout, '', `${label}: expected no stdout`);
+  }
+});
+
+test('an empty manifest writes nothing at all, not an empty additionalContext envelope', () => {
+  // A clean tree with no transcript has nothing to recover. Emitting an envelope with an empty
+  // string would put a meaningless block into every resumed session's context.
+  const entry = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'recover.mjs');
+  const dir = createTempGitRepo('context-gc-recover-clean-');
+  try {
+    fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
+    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+
+    const result = spawnSync(process.execPath, [entry], {
+      input: JSON.stringify({ source: 'compact', cwd: dir }),
+      encoding: 'utf8',
+      env: { ...process.env, CONTEXT_GC_OLLAMA_HOST: 'http://127.0.0.1:1' },
+    });
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, '');
+  } finally {
+    cleanup(dir);
+  }
 });

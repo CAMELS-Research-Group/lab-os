@@ -6,7 +6,8 @@
 // format-neutral `{ role, text }` tail records and a plain `tasks` list, never a raw record. If
 // the harness changes the `.jsonl` shape tomorrow, this is the only file that has to change.
 //
-// Real shape (verified against real sessions, log 2026-07-03 04:02): JSONL, one record per line;
+// Real shape (verified empirically against real sessions, not from documentation): JSONL, one
+// record per line;
 // top-level `type` is `"user"`, `"assistant"`, or a compaction-summary record; text lives at
 // `message.content`, which is either a plain string or an array of blocks (`{type:"text",text}`
 // and/or `{type:"tool_use",name,input}`); the compaction marker is a record carrying
@@ -22,6 +23,11 @@ import { readFileSync } from 'node:fs';
 
 const TASK_TOOL_NAMES = new Set(['TodoWrite', 'TaskCreate', 'TaskUpdate']);
 const EMPTY_RESULT = Object.freeze({ tail: [], tasks: [] });
+
+// Marks a line that did not parse as JSON, held at its original index so the read stays
+// position-accurate. Never leaves this module: `readTranscript` either rejects the read outright
+// or confines the sentinel to a region no caller sees.
+const CORRUPT = Object.freeze({ __contextGcCorruptRecord: true });
 
 /**
  * Normalizes a raw `message.content` value (string, block array, or anything else) to a plain
@@ -57,10 +63,13 @@ function normalizeTail(window) {
 /**
  * Normalizes one task-tool `tool_use` block's `input` to a plain `{content, status}` list, or
  * `null` if the block cannot be parsed as task state. Only `TodoWrite`'s `input.todos[]` shape is
- * confirmed: a `TodoWrite` block whose `input.todos` is an array normalizes to that array
- * (possibly empty — an intentional cleared list is a valid, parseable result, not a parse
- * failure). Anything else — `TaskCreate`/`TaskUpdate`, or a `TodoWrite` whose `input` doesn't
- * carry a `todos` array — is unparseable and normalizes to `null`.
+ * confirmed: a block whose `input.todos` is an array normalizes to that array (possibly empty —
+ * an intentional cleared list is a valid, parseable result, not a parse failure). A block
+ * carrying no `input.todos` array is unparseable and normalizes to `null`.
+ *
+ * This function does NOT inspect `block.name`; filtering to the task tools happens upstream in
+ * `extractTasks` via `TASK_TOOL_NAMES`. In practice only `TodoWrite` is known to carry the
+ * `todos` shape, but a `TaskCreate`/`TaskUpdate` block that did would parse here too.
  */
 function normalizeTaskBlock(block) {
   const todos = block.input && block.input.todos;
@@ -102,19 +111,29 @@ function extractTasks(window) {
 
 /**
  * Resolves `tailRecords` to a non-negative integer window size, tolerating any garbage input
- * (missing, negative, non-numeric) by falling back to `0` (an empty window) rather than throwing.
+ * (missing, negative, non-numeric) by falling back to `0` rather than throwing. A `0` window
+ * yields an empty tail AND empty tasks; `config.mjs` rejects non-positive values precisely so
+ * this fallback is never reached through configuration.
  */
 function resolveWindowSize(tailRecords) {
   return Number.isFinite(tailRecords) && tailRecords > 0 ? Math.floor(tailRecords) : 0;
 }
 
 /**
- * Reads and parses a transcript `.jsonl` file into an array of records. Returns `null` (instead
- * of throwing) when the file is missing/unreadable, or when any NON-TRAILING line fails to parse
- * as JSON — that still degrades the whole read (genuine corruption, not tolerated). A torn
- * trailing line is tolerated: the harness can still be appending to the file when this reads it,
- * leaving the last line half-written, so an unparseable LAST non-blank line is skipped and the
- * successfully-parsed preceding records are returned instead (an array, possibly empty).
+ * Reads and parses a transcript `.jsonl` file into an array of records, POSITION-PRESERVING:
+ * a non-trailing line that fails to parse as JSON becomes a `CORRUPT` sentinel at its own index
+ * rather than collapsing the read. Returns `null` (instead of throwing) only when the file is
+ * missing or unreadable.
+ *
+ * A torn trailing line is tolerated and dropped: the harness can still be appending to the file
+ * when this reads it, leaving the last line half-written.
+ *
+ * Keeping the sentinel in place is what lets `readTranscript` decide whether the corruption
+ * actually matters. A transcript can hold tens of thousands of records while only the few
+ * immediately preceding the last compaction marker are ever used; discarding the whole read for
+ * a bad line in a region that would never have been consulted costs the user their task list and
+ * tail for no gain. Corruption INSIDE the consulted window is still fatal to the read — see
+ * `readTranscript`.
  */
 function readRecords(transcriptPath) {
   let raw;
@@ -131,7 +150,7 @@ function readRecords(transcriptPath) {
       records.push(JSON.parse(lines[i]));
     } catch {
       if (i === lines.length - 1) break; // tolerate a torn trailing line
-      return null; // a non-trailing parse error still degrades the whole read
+      records.push(CORRUPT); // keep the position; readTranscript decides if it matters
     }
   }
   return records;
@@ -145,8 +164,12 @@ function readRecords(transcriptPath) {
  * PRECEDING it as the window, normalizes that window to format-neutral `{role,text}` tail
  * entries, and extracts task state from the window's most recent task-tool record.
  *
- * Fail-open: a missing/unreadable file, no `isCompactSummary` marker anywhere in the file, or
- * any unparseable line all degrade to `{ tail: [], tasks: [] }`. Never throws.
+ * Fail-open: a missing/unreadable file, no `isCompactSummary` marker anywhere in the file, or an
+ * unparseable line WITHIN the consulted window all degrade to `{ tail: [], tasks: [] }`. Never
+ * throws. An unparseable line outside that window — in the far history the plugin would never
+ * have read — is ignored, and a torn trailing line is tolerated (see `readRecords`).
+ *
+ * Task state comes from the window's most recent PARSEABLE task-tool record.
  *
  * Pure function of its arguments — does not read config or env; callers (e.g. `recover.mjs`)
  * pass `getConfig().tailRecords` explicitly.
@@ -172,7 +195,9 @@ export function readTranscript(transcriptPath, tailRecords) {
   const startIndex = Math.max(0, markerIndex - windowSize);
   const window = records.slice(startIndex, markerIndex);
 
+  // Corruption inside the region actually consulted is still fatal to the read: a window with a
+  // hole in it would silently present an incomplete tail as a complete one.
+  if (window.some((record) => record === CORRUPT)) return EMPTY_RESULT;
+
   return { tail: normalizeTail(window), tasks: extractTasks(window) };
 }
-
-export default readTranscript;

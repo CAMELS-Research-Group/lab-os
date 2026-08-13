@@ -1,7 +1,7 @@
 // context-gc — tests for src/transcript.mjs
 // transcript.mjs is the fragile seam: the only module that knows the raw `.jsonl` transcript
 // shape. These tests exercise it against synthetic fixtures under test/fixtures/ whose field
-// names/shapes are derived from a real (uncommitted) transcript (log 2026-07-03 04:02) — no real
+// names/shapes are derived from a real (uncommitted) transcript observed directly — no real
 // transcript content is committed. Every fixture read must come back normalized to
 // format-neutral `{role,text}` tail entries and a plain `tasks` list; never raw record shape.
 import { test } from 'node:test';
@@ -145,4 +145,24 @@ test('is a pure function of its arguments: does not read config or env', () => {
     if (before === undefined) delete process.env.CONTEXT_GC_TAIL_RECORDS;
     else process.env.CONTEXT_GC_TAIL_RECORDS = before;
   }
+});
+
+test('corruption outside the consulted window is tolerated, not fatal to the whole read', () => {
+  // A transcript can hold tens of thousands of records while only the few preceding the last
+  // compaction marker are ever read. A bad line in far history is in a region the plugin would
+  // never have consulted, so discarding the tail AND the task list for it costs the user
+  // everything and gains nothing. Corruption inside the window stays fatal — see the test above.
+  const result = readTranscript(fixture('garbage-outside-window.jsonl'), 2);
+
+  assert.deepEqual(result.tasks, [{ content: 'task A', status: 'completed' }]);
+  assert.equal(result.tail.length, 2);
+  assert.equal(result.tail[0].text, 'recent record 1');
+});
+
+test('a window that reaches back over the corrupt line is still fatal (blast radius, not amnesty)', () => {
+  // Same fixture, wider window: now the corrupt line falls inside the region consulted, so the
+  // read degrades. This is the pair that pins the boundary rather than just the happy side.
+  const result = readTranscript(fixture('garbage-outside-window.jsonl'), 50);
+
+  assert.deepEqual(result, { tail: [], tasks: [] });
 });

@@ -23,9 +23,9 @@ test('resolves documented defaults when env has none of the CONTEXT_GC_* keys', 
   assert.deepEqual(config, DEFAULTS);
 });
 
-test('the generation timeout default is the generous 20s value (not the old 8s cap)', () => {
-  // Regression guard for the Task-8 decision: the single flat cap was too short under
-  // live-compaction load; the resume budget is intentionally 20s so enrichment lands.
+test('the generation timeout default is a generous 20s, not a short cap', () => {
+  // Regression guard: a shorter flat cap does not survive live-compaction load, so enrichment
+  // silently never lands. The session-resume budget is deliberately 20s.
   assert.equal(getConfig({}).timeoutMs, 20000);
 });
 
@@ -99,4 +99,41 @@ test('does not mutate the env object passed in', () => {
   const before = JSON.stringify(env);
   getConfig(env);
   assert.equal(JSON.stringify(env), before);
+});
+
+// --- Range validation and whitespace handling ---
+
+test('a zero or negative integer tunable falls back to its default', () => {
+  // Each of these silently disables a feature if passed through: a 0 byte cap empties the
+  // manifest forever, a non-positive tail window empties the transcript read and with it
+  // enrichment. A typo must cost the default, not the plugin.
+  for (const value of ['0', '-1', '-4000']) {
+    const config = getConfig({
+      CONTEXT_GC_MAX_BYTES: value,
+      CONTEXT_GC_TAIL_RECORDS: value,
+      CONTEXT_GC_TIMEOUT_MS: value,
+    });
+    assert.equal(config.maxBytes, DEFAULTS.maxBytes, `maxBytes for ${value}`);
+    assert.equal(config.tailRecords, DEFAULTS.tailRecords, `tailRecords for ${value}`);
+    assert.equal(config.timeoutMs, DEFAULTS.timeoutMs, `timeoutMs for ${value}`);
+  }
+});
+
+test('a positive integer tunable is still honoured (the range check is not a blanket reject)', () => {
+  const config = getConfig({ CONTEXT_GC_MAX_BYTES: '1', CONTEXT_GC_TAIL_RECORDS: '7' });
+  assert.equal(config.maxBytes, 1);
+  assert.equal(config.tailRecords, 7);
+});
+
+test('a string tunable is trimmed, so stray whitespace cannot build a malformed URL', () => {
+  const config = getConfig({
+    CONTEXT_GC_OLLAMA_HOST: '  http://127.0.0.1:11434  ',
+    CONTEXT_GC_OLLAMA_MODEL: '\tqwen2.5:7b\n',
+  });
+  assert.equal(config.ollamaHost, 'http://127.0.0.1:11434');
+  assert.equal(config.ollamaModel, 'qwen2.5:7b');
+});
+
+test('an integer tunable surrounded by whitespace still parses', () => {
+  assert.equal(getConfig({ CONTEXT_GC_MAX_BYTES: '  512  ' }).maxBytes, 512);
 });

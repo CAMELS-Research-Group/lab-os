@@ -2,7 +2,7 @@
 // ollama.mjs is the local-Ollama enrichment leaf: it must NEVER throw and must fail open to
 // `null` on every failure mode (unreachable, non-200, network throw, timeout/abort, malformed or
 // empty response). Every test here injects a fake `fetchImpl` — none require a live Ollama or
-// touch the real network, per the task's hermeticity requirement.
+// touch the real network: every failure mode is driven through an injected fetchImpl.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { enrich } from '../src/ollama.mjs';
@@ -281,4 +281,90 @@ test('decisions filtered: non-string / blank entries in the decisions array are 
     objective: 'ship the feature',
     decisions: ['keep it simple', 'avoid a second dependency'],
   });
+});
+
+// --- Prompt bounding, transport-level parse failure, and model-shape tolerance ---
+
+test('the prompt is bounded regardless of tail size, keeping the NEWEST context', async () => {
+  // PROMPT_TAIL_CHAR_CAP is the only bound on prompt size and is documented as holding
+  // "regardless of tailRecords config". A regression slicing from the wrong end would still pass
+  // every other test while feeding the model the OLDEST context — producing a stale objective
+  // still rendered under the model-inferred tag.
+  const huge = [
+    { role: 'user', text: 'OLDEST-MARKER ' + 'x'.repeat(20000) },
+    { role: 'assistant', text: 'y'.repeat(20000) + ' NEWEST-MARKER' },
+  ];
+
+  let captured = null;
+  const fetchImpl = async (_url, options) => {
+    captured = JSON.parse(options.body).prompt;
+    return jsonResponse({ objective: 'o', decisions: [] });
+  };
+
+  await enrich({
+    tail: huge,
+    model: 'llama3.2:3b',
+    host: 'http://127.0.0.1:11434',
+    timeoutMs: 1000,
+    fetchImpl,
+  });
+
+  assert.ok(captured, 'expected the prompt to be captured');
+  assert.ok(captured.length < 20000, `prompt was not bounded: ${captured.length} chars`);
+  assert.match(captured, /NEWEST-MARKER/);
+  assert.doesNotMatch(captured, /OLDEST-MARKER/);
+});
+
+test('a body that fails to parse as JSON at the transport level fails open to null', async () => {
+  // Distinct from the "malformed response" case, which returns a well-formed body containing bad
+  // text. Here response.json() itself rejects — the failure class the catch comment names.
+  const fetchImpl = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => { throw new SyntaxError('Unexpected token < in JSON at position 0'); },
+  });
+
+  const result = await enrich({
+    tail: TAIL,
+    model: 'llama3.2:3b',
+    host: 'http://127.0.0.1:11434',
+    timeoutMs: 1000,
+    fetchImpl,
+  });
+
+  assert.equal(result, null);
+});
+
+test('a model returning a JSON array or scalar instead of an object fails open to null', async () => {
+  // A small local model emitting a bare array is an ordinary failure mode, not an adversarial one.
+  for (const body of [['not', 'an', 'object'], 42, 'a bare string', null]) {
+    const fetchImpl = async () => jsonResponse(body);
+    const result = await enrich({
+      tail: TAIL,
+      model: 'llama3.2:3b',
+      host: 'http://127.0.0.1:11434',
+      timeoutMs: 1000,
+      fetchImpl,
+    });
+    assert.equal(result, null, `expected null for ${JSON.stringify(body)}`);
+  }
+});
+
+test('non-string objective and non-array decisions are each dropped, not propagated', async () => {
+  const fetchImpl = async () => jsonResponse({ objective: 12345, decisions: 'not an array' });
+
+  const result = await enrich({
+    tail: TAIL,
+    model: 'llama3.2:3b',
+    host: 'http://127.0.0.1:11434',
+    timeoutMs: 1000,
+    fetchImpl,
+  });
+
+  // Either a fully-null result or one with both bad fields neutralised is acceptable; what must
+  // never happen is a non-string objective or a string `decisions` reaching manifest.mjs.
+  if (result !== null) {
+    assert.ok(result.objective === null || typeof result.objective === 'string');
+    assert.ok(Array.isArray(result.decisions));
+  }
 });

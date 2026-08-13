@@ -199,7 +199,7 @@ test('stateless: repeated calls with different inputs never leak state between c
   assert.doesNotMatch(third, /first\.mjs/);
 });
 
-// --- Task 6: enriched (objective/decisions) fields — rendering, tagging, and cap-trim priority ---
+// --- Enriched (objective/decisions) fields: rendering, tagging, and cap-trim priority ---
 
 test('renders objective and decisions under a single model-inferred tag when present', () => {
   const sources = {

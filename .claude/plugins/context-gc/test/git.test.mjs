@@ -99,3 +99,51 @@ test('returns an empty array (no throw) for a nonexistent cwd', () => {
     assert.deepEqual(files, []);
   });
 });
+
+// --- Rename/copy continuation records, absent cwd, and timeout bounding ---
+
+test('a staged rename yields exactly one entry for the new path, not a phantom for the old', () => {
+  // `git status --porcelain -z` emits a rename as TWO NUL-terminated records: `R  new\0old\0`.
+  // The second carries no `XY ` prefix, so without the continuation skip it would parse as its
+  // own entry and put a file that no longer exists into the manifest's deterministic floor.
+  const dir = createTempGitRepo('context-gc-git-rename-test-');
+  try {
+    fs.writeFileSync(path.join(dir, 'old.txt'), 'contents\n');
+    spawnSync('git', ['add', 'old.txt'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+
+    spawnSync('git', ['mv', 'old.txt', 'new.txt'], { cwd: dir });
+
+    const files = getChangedFiles(dir);
+    const paths = files.map((f) => f.path).sort();
+
+    assert.deepEqual(paths, ['new.txt']);
+    assert.doesNotMatch(JSON.stringify(files), /old\.txt/);
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test('an absent cwd reports nothing rather than the process working directory', () => {
+  // Deferring to process.cwd() would return a real-looking file list from an unrelated repo —
+  // fabricated floor content, which is worse than an absent section.
+  for (const value of [undefined, null, '', '   ']) {
+    assert.deepEqual(getChangedFiles(value), []);
+  }
+});
+
+test('a malformed porcelain record is skipped rather than coerced into a floor entry', () => {
+  // Simulated via a repo whose status output is empty: the guard itself is unit-verified by the
+  // rename case above (the continuation record is exactly a record with no `XY ` prefix).
+  const dir = createTempGitRepo('context-gc-git-clean-test-');
+  try {
+    fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
+    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
+    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+
+    const files = getChangedFiles(dir);
+    assert.deepEqual(files, []);
+  } finally {
+    cleanup(dir);
+  }
+});

@@ -15,23 +15,33 @@ const DEFAULTS = Object.freeze({
 
 /**
  * Resolves a string tunable: missing or blank (empty/whitespace-only) falls back to `fallback`.
+ * Returns the TRIMMED value — surrounding whitespace in an env var is always a typo, and an
+ * untrimmed host would go on to build a malformed URL whose failure is indistinguishable from
+ * "Ollama isn't running".
  */
 function resolveString(rawValue, fallback) {
   if (rawValue === undefined || rawValue === null) return fallback;
   const trimmed = String(rawValue).trim();
-  return trimmed === '' ? fallback : rawValue;
+  return trimmed === '' ? fallback : trimmed;
 }
 
 /**
- * Resolves an integer tunable: missing/blank, non-numeric, non-finite, or non-integer values
- * all fall back to `fallback` rather than throwing.
+ * Resolves an integer tunable: missing/blank, non-numeric, non-finite, non-integer, or
+ * out-of-range values all fall back to `fallback` rather than throwing.
+ *
+ * Every tunable this plugin resolves is a positive quantity — a byte cap, a record count, a
+ * timeout. Zero and negatives are therefore rejected rather than passed through: each one
+ * silently disables a whole feature with no diagnostic (`CONTEXT_GC_MAX_BYTES=0` makes the
+ * manifest permanently empty; a non-positive `CONTEXT_GC_TAIL_RECORDS` empties the transcript
+ * window and, with it, enrichment). A typo should cost the default, not the plugin.
  */
 function resolveInt(rawValue, fallback) {
   if (rawValue === undefined || rawValue === null) return fallback;
   const trimmed = String(rawValue).trim();
   if (trimmed === '') return fallback;
   const parsed = Number(trimmed);
-  return Number.isInteger(parsed) ? parsed : fallback;
+  if (!Number.isInteger(parsed) || parsed <= 0) return fallback;
+  return parsed;
 }
 
 /**
@@ -39,12 +49,12 @@ function resolveInt(rawValue, fallback) {
  * This is the ONLY function in the plugin that reads environment variables; every other
  * module receives its config already resolved.
  *
- * Env vars (all optional, documented defaults):
- * - `CONTEXT_GC_OLLAMA_MODEL`  (string)  default "hermes3:8b"
- * - `CONTEXT_GC_OLLAMA_HOST`   (string)  default "http://127.0.0.1:11434"
- * - `CONTEXT_GC_TAIL_RECORDS`  (integer) default 40
- * - `CONTEXT_GC_TIMEOUT_MS`    (integer) default 20000
- * - `CONTEXT_GC_MAX_BYTES`     (integer) default 4000
+ * Env vars (all optional; `DEFAULTS` above owns the values, this list only names the vars):
+ * - `CONTEXT_GC_OLLAMA_MODEL`  (string)
+ * - `CONTEXT_GC_OLLAMA_HOST`   (string)
+ * - `CONTEXT_GC_TAIL_RECORDS`  (positive integer)
+ * - `CONTEXT_GC_TIMEOUT_MS`    (positive integer)
+ * - `CONTEXT_GC_MAX_BYTES`     (positive integer)
  *
  * @param {NodeJS.ProcessEnv} [env]
  * @returns {{ollamaModel: string, ollamaHost: string, tailRecords: number, timeoutMs: number, maxBytes: number}}
@@ -58,5 +68,3 @@ export function getConfig(env = process.env) {
     maxBytes: resolveInt(env.CONTEXT_GC_MAX_BYTES, DEFAULTS.maxBytes),
   };
 }
-
-export default getConfig;

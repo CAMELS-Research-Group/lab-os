@@ -7,18 +7,17 @@
 // exactly the wiring between them.
 //
 // `recover(payload)` is the pure(-ish), fully SYNCHRONOUS, deterministic-only orchestration
-// function — files + tasks, no Ollama — that Task 5's tests already call directly and continue
-// to rely on unchanged. `recoverEnriched(payload, options?)` is the async orchestrator that adds
-// local-Ollama enrichment ON TOP of the same deterministic sources: it is the ONLY thing that
-// changes behavior in this file for Task 6, added rather than grafted onto `recover()`, so the
-// deterministic-only path stays trivially available (and trivially testable with no `await`) as
-// its own guaranteed floor — never entangled with the enrichment leaf's async/network surface.
-// `main()` is the thin process-facing shell (stdin -> recoverEnriched -> stdout) that only runs
-// when this file is the process entry point, never on import; it uses the enriched path because
-// that is what a real hook run should attempt.
+// function — files + tasks, no Ollama. `recoverEnriched(payload, options?)` is the async
+// orchestrator that adds local-Ollama enrichment ON TOP of the same deterministic sources; it is
+// added alongside `recover()` rather than grafted onto it, so the deterministic-only path stays
+// trivially available (and trivially testable with no `await`) as its own guaranteed floor,
+// never entangled with the enrichment leaf's async/network surface. `main()` is the thin
+// process-facing shell (stdin -> recoverEnriched -> stdout) that only runs when this file is the
+// process entry point, never on import; it uses the enriched path because that is what a real
+// hook run should attempt.
 //
-// Replaces the Task 0 spike (which proved additionalContext survives a real compact + resume);
-// that proof is why this module trusts the same hookSpecificOutput/additionalContext shape.
+// The `hookSpecificOutput`/`additionalContext` shape below is the one verified to survive a real
+// compact-and-resume cycle end to end; it is not inferred from documentation alone.
 
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -29,6 +28,31 @@ import { enrich } from './ollama.mjs';
 import { buildManifest } from './manifest.mjs';
 
 /**
+ * Reports a degradation on stderr when `CONTEXT_GC_DEBUG` is set to a non-empty value.
+ *
+ * Fail-open and fail-SILENT are separate choices, and only the first is forced by the exit-0
+ * contract: a SessionStart hook's stderr does not affect its exit status and does not enter model
+ * context, so there is room for a diagnostic without risking session resume. Without one, the
+ * fragile transcript seam degrading after a harness format change is indistinguishable from "no
+ * tasks were in flight", and a misconfigured Ollama host is indistinguishable from "the model
+ * found nothing" — permanently, and for every user.
+ *
+ * Off by default: a hook that chatters on every resume is its own problem.
+ *
+ * @param {string} stage the module or step that degraded
+ * @param {unknown} [detail] optional error or value, rendered best-effort
+ */
+function reportDegradation(stage, detail) {
+  try {
+    if (!process.env.CONTEXT_GC_DEBUG) return;
+    const suffix = detail === undefined ? '' : `: ${detail && detail.message ? detail.message : detail}`;
+    process.stderr.write(`[context-gc] degraded at ${stage}${suffix}\n`);
+  } catch {
+    // A diagnostic that throws must never become the failure it is reporting on.
+  }
+}
+
+/**
  * Calls `getChangedFiles(cwd)`, degrading to `[]` on any unexpected throw. `getChangedFiles` is
  * already documented fail-open (never throws), but this call is still wrapped per the
  * architectural constraint that each source call degrades only its own field, not the run — a
@@ -37,7 +61,8 @@ import { buildManifest } from './manifest.mjs';
 function safeGetChangedFiles(cwd) {
   try {
     return getChangedFiles(cwd);
-  } catch {
+  } catch (error) {
+    reportDegradation('git.getChangedFiles', error);
     return [];
   }
 }
@@ -49,7 +74,8 @@ function safeGetChangedFiles(cwd) {
 function safeReadTranscript(transcriptPath, tailRecords) {
   try {
     return readTranscript(transcriptPath, tailRecords);
-  } catch {
+  } catch (error) {
+    reportDegradation('transcript.readTranscript', error);
     return { tail: [], tasks: [] };
   }
 }
@@ -122,7 +148,8 @@ async function safeEnrich(tail, config, fetchImpl) {
       timeoutMs: config.timeoutMs,
       ...(fetchImpl ? { fetchImpl } : {}),
     });
-  } catch {
+  } catch (error) {
+    reportDegradation('ollama.enrich', error);
     return null;
   }
 }
@@ -160,7 +187,8 @@ export async function recoverEnriched(payload, options = {}) {
 
     const manifest = buildManifest(sources, config.maxBytes);
     return typeof manifest === 'string' ? manifest : '';
-  } catch {
+  } catch (error) {
+    reportDegradation('recoverEnriched', error);
     return '';
   }
 }
@@ -174,7 +202,8 @@ function readStdinPayload() {
   try {
     const raw = readFileSync(0, 'utf8');
     return JSON.parse(raw || '{}');
-  } catch {
+  } catch (error) {
+    reportDegradation('readStdinPayload', error);
     return {};
   }
 }
@@ -188,17 +217,29 @@ function readStdinPayload() {
  * Ollama here degrades quietly to the same deterministic manifest `recover()` would have
  * produced — this function does not need its own Ollama-specific fallback.
  *
- * Async (unlike Task 5's `main()`) because `recoverEnriched()` awaits the Ollama HTTP call.
- * Deliberately never calls `process.exit()`: on POSIX (Linux/macOS), a `process.stdout.write()`
- * to a piped fd is ASYNCHRONOUS (per Node's "note on process I/O"; Windows pipes are the
- * synchronous case), so `process.exit()` immediately after `write()` can terminate the process
- * before the OS finishes flushing — silently truncating the `additionalContext` JSON the harness
- * reads (the manifest can run up to `CONTEXT_GC_MAX_BYTES`, far past a single-chunk write).
+ * Async because `recoverEnriched()` awaits the Ollama HTTP call.
+ *
+ * Deliberately never calls `process.exit()`. Per Node's "note on process I/O", writes to a PIPE
+ * are synchronous on Linux and Windows but ASYNCHRONOUS on macOS — and a hook's stdout is always
+ * a pipe. So `process.exit()` immediately after `write()` can terminate the process before the OS
+ * finishes flushing, silently truncating the `additionalContext` JSON the harness reads (the
+ * manifest can run up to `CONTEXT_GC_MAX_BYTES`, far past a single-chunk write). macOS is the
+ * platform that loses the race; the guard is unconditional because the cost of being wrong about
+ * the platform is a corrupt manifest.
+ *
  * `process.exitCode = 0` sets the eventual exit status without forcing an early exit; with stdin
  * fully consumed (`readFileSync(0, ...)` above) and no other pending handles, the event loop
- * drains stdout and the process exits naturally on its own once the write completes.
+ * drains stdout and the process exits naturally once the write completes.
  */
 async function main() {
+  // Because that same pipe write is asynchronous on macOS, a failure (EPIPE when the harness
+  // closes the read end early) arrives as an 'error' EVENT, not as a throw from write() — the
+  // try/catch below cannot see it. With no listener, Node surfaces it as an uncaught exception
+  // and a non-zero exit: precisely the resume-blocking outcome this function exists to avoid.
+  process.stdout.on('error', () => {
+    reportDegradation('stdout');
+  });
+
   let manifest = '';
   try {
     manifest = await recoverEnriched(readStdinPayload());
@@ -211,9 +252,10 @@ async function main() {
       process.stdout.write(JSON.stringify({
         hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: manifest },
       }));
-    } catch {
-      // Writing the output failed unexpectedly; fall through to the unconditional exit-0 below
-      // rather than let a stdout error surface as a non-zero exit that could block resume.
+    } catch (error) {
+      // A SYNCHRONOUS throw from write(). The asynchronous failure path is covered by the
+      // 'error' listener above; between them the write cannot produce a non-zero exit.
+      reportDegradation('stdout.write', error);
     }
   }
 
@@ -226,5 +268,3 @@ const isEntryPoint = process.argv[1] !== undefined
 if (isEntryPoint) {
   main();
 }
-
-export default recover;

@@ -40,9 +40,10 @@ function renderTailForPrompt(tail) {
  * Builds the `/api/generate` prompt: strict grounding instructions followed by the normalized
  * tail. The model is told to answer ONLY from the transcript given, to never invent a decision
  * it can't point to in the tail, and to return empty fields when the tail doesn't support a
- * claim — this is the "grounding" the PRD calls for (§Success criteria: "Enriched fields
- * grounded and marked"), enforced at the prompt level and paired with `temperature: 0` in the
- * request options (see `callOllama`) rather than a post-hoc trace check.
+ * claim. Grounding is enforced at the prompt level and paired with `temperature: 0` in the
+ * request options (see `callOllama`) rather than by a post-hoc trace check: enriched fields must
+ * be traceable to the tail they were derived from, and they always render under the
+ * model-inferred tag (manifest.mjs) so a reader knows they are not verified fact.
  * @param {Array<{role: string, text: string}>} tail
  * @returns {string}
  */
@@ -165,5 +166,3 @@ export async function enrich({ tail, model, host, timeoutMs, fetchImpl = fetch }
     return null;
   }
 }
-
-export default enrich;
