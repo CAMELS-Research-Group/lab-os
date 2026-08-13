@@ -29,8 +29,28 @@ const MODEL_INFERRED_TAG = 'model-inferred — local Ollama; verify before treat
 // is never read as a complete enumeration. Only ever appended when at least one entry survives:
 // a section trimmed to nothing is omitted entirely, which is unambiguous on its own and keeps a
 // pathological cap reachable (a marker on an empty section would consume bytes forever).
+const TRUNCATION_MARKER_PREFIX = '- … ';
+
 function renderTruncationMarker(droppedCount) {
-  return `- … ${droppedCount} more (trimmed to fit the byte cap)`;
+  // Deliberately terse. This line competes with real entries for the same byte cap, so every
+  // word it spends is an entry it may cost; "… N more" carries the whole signal.
+  return `${TRUNCATION_MARKER_PREFIX}${droppedCount} more`;
+}
+
+/**
+ * Counts the real entry lines in a rendered manifest — list items that carry content, excluding
+ * any truncation marker. This is the quantity the byte cap is spent on, and therefore the one
+ * the two competing trims in `buildManifest` are compared by.
+ *
+ * @param {string} markdown
+ * @returns {number}
+ */
+function countEntryLines(markdown) {
+  if (typeof markdown !== 'string' || markdown === '') return 0;
+  return markdown
+    .split('\n')
+    .filter((line) => line.startsWith('- ') && !line.startsWith(TRUNCATION_MARKER_PREFIX))
+    .length;
 }
 
 /**
@@ -159,8 +179,10 @@ function render(files, tasks, objective, decisions, dropped = { files: 0, tasks:
  * content (emoji, non-ASCII paths) is bounded correctly. If even the empty-of-content header
  * cannot fit (a pathological `maxBytes`), the result falls back to `''`, which is always ≤ any
  * non-negative cap. A partially-trimmed `files`/`tasks` section carries a truncation marker, so
- * the floor is never silently presented as a complete enumeration; a section trimmed away
- * entirely is omitted, which carries no such claim.
+ * the floor is never silently presented as a complete enumeration. The marker is preferred even
+ * when it costs an entry line — an unmarked short list makes a completeness claim, which is the
+ * more expensive error. It is dropped ONLY at a cap so tight that paying for it would leave no
+ * entries at all. A section trimmed away entirely is omitted, making no completeness claim.
  *
  * The byte bound is enforced only for a finite `maxBytes`. A non-finite cap (`undefined`, `NaN`,
  * `Infinity`) returns the untrimmed manifest — callers in this plugin always pass the integer
@@ -217,9 +239,18 @@ export function buildManifest(sources, maxBytes) {
     return overCap() ? '' : markdown;
   };
 
-  // A truncation marker can cost more bytes than the entry whose absence it reports, so at a
-  // tight cap the honest marker and the content compete for the same budget. Content wins:
-  // markers are attempted first, and only when that leaves nothing at all does the trim rerun
-  // without them. A caller therefore never loses a real line to a marker about a lost line.
-  return trim(true) || trim(false);
+  // A truncation marker costs bytes against the same cap as the content it describes, so the two
+  // compete directly and the trade has to be chosen rather than assumed.
+  //
+  // The MARKED result is preferred whenever it carries any content at all, even though it can
+  // cost an entry line. Rationale: an unmarked short list is read as a COMPLETE list — the
+  // resuming agent concludes those are all the files in flight — and this plugin's whole posture
+  // is that absent or qualified output beats confidently wrong output. One fewer path, plus
+  // "… N more", beats one more path presented as the whole truth.
+  //
+  // The unmarked trim is the fallback for the degenerate case only: a cap so tight that paying
+  // for the marker leaves no entries at all, where the marker would be describing an emptiness
+  // the reader can already see.
+  const marked = trim(true);
+  return countEntryLines(marked) > 0 ? marked : trim(false);
 }

@@ -191,6 +191,22 @@ export function readTranscript(transcriptPath, tailRecords) {
   }
   if (markerIndex === -1) return EMPTY_RESULT;
 
+  // A corrupt line AFTER the selected marker may itself have been a NEWER compaction marker. If
+  // it was, everything below reports the previous compaction cycle's tail and task list as the
+  // current pre-compaction floor — stale state presented as fact, with nothing marking it stale.
+  // That is the one failure this module must not have, so an unreadable record anywhere newer
+  // than the marker degrades the whole read. Corruption OLDER than the marker stays tolerated:
+  // it cannot hide a newer marker, and that is what the positional sentinel buys.
+  //
+  // Note this does not cover a TORN TRAILING record, which `readRecords` drops rather than
+  // retaining — the harness is legitimately mid-append at exactly the moment this hook fires, so
+  // treating every torn tail as corruption would forfeit recovery in the common case. A torn
+  // trailing record that was itself a compaction summary can therefore still select an older
+  // marker; that residual is accepted deliberately, not overlooked.
+  for (let i = markerIndex + 1; i < records.length; i += 1) {
+    if (records[i] === CORRUPT) return EMPTY_RESULT;
+  }
+
   const windowSize = resolveWindowSize(tailRecords);
   const startIndex = Math.max(0, markerIndex - windowSize);
   const window = records.slice(startIndex, markerIndex);

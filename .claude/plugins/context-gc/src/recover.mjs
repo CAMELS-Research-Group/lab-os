@@ -21,14 +21,14 @@
 
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { getConfig } from './config.mjs';
+import { getConfig, isDebugEnabled } from './config.mjs';
 import { getChangedFiles } from './git.mjs';
 import { readTranscript } from './transcript.mjs';
 import { enrich } from './ollama.mjs';
 import { buildManifest } from './manifest.mjs';
 
 /**
- * Reports a degradation on stderr when `CONTEXT_GC_DEBUG` is set to a non-empty value.
+ * Reports a degradation on stderr when the debug flag is enabled (`CONTEXT_GC_DEBUG=1`).
  *
  * Fail-open and fail-SILENT are separate choices, and only the first is forced by the exit-0
  * contract: a SessionStart hook's stderr does not affect its exit status and does not enter model
@@ -44,9 +44,12 @@ import { buildManifest } from './manifest.mjs';
  */
 function reportDegradation(stage, detail) {
   try {
-    if (!process.env.CONTEXT_GC_DEBUG) return;
-    const suffix = detail === undefined ? '' : `: ${detail && detail.message ? detail.message : detail}`;
-    process.stderr.write(`[context-gc] degraded at ${stage}${suffix}\n`);
+    if (!isDebugEnabled()) return;
+    // Only the error's NAME/CODE is rendered, never its message: V8 embeds a prefix of the
+    // offending input in JSON parse errors, and the stdin payload carries `cwd`,
+    // `transcript_path`, and session identifiers.
+    const label = detail && (detail.code || detail.name);
+    process.stderr.write(`[context-gc] degraded at ${stage}${label ? `: ${label}` : ''}\n`);
   } catch {
     // A diagnostic that throws must never become the failure it is reporting on.
   }
@@ -232,12 +235,20 @@ function readStdinPayload() {
  * drains stdout and the process exits naturally once the write completes.
  */
 async function main() {
-  // Because that same pipe write is asynchronous on macOS, a failure (EPIPE when the harness
-  // closes the read end early) arrives as an 'error' EVENT, not as a throw from write() — the
-  // try/catch below cannot see it. With no listener, Node surfaces it as an uncaught exception
-  // and a non-zero exit: precisely the resume-blocking outcome this function exists to avoid.
+  // Stream errors on process.stdout/stderr are delivered as an 'error' EVENT on every platform,
+  // never as a throw from write() — so the try/catch below cannot see them. With no listener,
+  // Node promotes the event to an uncaught exception and a non-zero exit: precisely the
+  // resume-blocking outcome this function exists to avoid. (This is unrelated to the sync/async
+  // split above, which governs FLUSH timing, not error delivery — the listener is unconditional
+  // insurance, and gating it behind a platform check would reintroduce the failure elsewhere.)
+  //
+  // stderr needs the same guard as stdout: the diagnostic channel writes there, so without it a
+  // closed stderr would let the reporter added to make failures visible become one.
   process.stdout.on('error', () => {
     reportDegradation('stdout');
+  });
+  process.stderr.on('error', () => {
+    // Nothing to report the failure ON at this point; swallowing is the only non-fatal option.
   });
 
   let manifest = '';
@@ -253,8 +264,8 @@ async function main() {
         hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: manifest },
       }));
     } catch (error) {
-      // A SYNCHRONOUS throw from write(). The asynchronous failure path is covered by the
-      // 'error' listener above; between them the write cannot produce a non-zero exit.
+      // A synchronous throw from write() (e.g. an already-destroyed stream). Stream 'error'
+      // events are covered by the listener above; between them the write cannot exit non-zero.
       reportDegradation('stdout.write', error);
     }
   }
@@ -266,5 +277,10 @@ const isEntryPoint = process.argv[1] !== undefined
   && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isEntryPoint) {
-  main();
+  // main() is async, so a rejection escaping it would become an unhandled rejection and a
+  // non-zero exit — the one outcome the always-exit-0 contract exists to prevent. Nothing inside
+  // is expected to reject; this is the backstop that makes "always exits 0" unconditional.
+  main().catch(() => {
+    process.exitCode = 0;
+  });
 }

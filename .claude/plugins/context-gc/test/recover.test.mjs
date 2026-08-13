@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { recover } from '../src/recover.mjs';
-import { createTempGitRepo, cleanup } from './helpers.mjs';
+import { createTempGitRepo, cleanup, git } from './helpers.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => path.join(__dirname, 'fixtures', name);
@@ -21,8 +21,8 @@ test('source "compact" with a real repo + fixture transcript returns a manifest 
   const dir = createTempGitRepo('context-gc-recover-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'tracked.txt');
+    git(dir, 'commit', '-m', 'init');
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v2\n');
     fs.writeFileSync(path.join(dir, 'new-file.txt'), 'new\n');
 
@@ -140,8 +140,8 @@ test('spawned as a real process, a large manifest reaches stdout uncorrupted (re
   let transcriptDir;
   try {
     fs.writeFileSync(path.join(repoDir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: repoDir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: repoDir });
+    git(repoDir, 'add', 'tracked.txt');
+    git(repoDir, 'commit', '-m', 'init');
     fs.writeFileSync(path.join(repoDir, 'tracked.txt'), 'v2\n');
     fs.writeFileSync(path.join(repoDir, 'new-file.txt'), 'new\n');
 
@@ -280,8 +280,8 @@ test('an empty manifest writes nothing at all, not an empty additionalContext en
   const dir = createTempGitRepo('context-gc-recover-clean-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'tracked.txt');
+    git(dir, 'commit', '-m', 'init');
 
     const result = spawnSync(process.execPath, [entry], {
       input: JSON.stringify({ source: 'compact', cwd: dir }),

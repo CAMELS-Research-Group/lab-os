@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { recover, recoverEnriched } from '../src/recover.mjs';
-import { createTempGitRepo, cleanup } from './helpers.mjs';
+import { createTempGitRepo, cleanup, git } from './helpers.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => path.join(__dirname, 'fixtures', name);
@@ -38,8 +38,8 @@ test('enrichment success: merges tagged objective + decisions into the manifest,
   const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'tracked.txt');
+    git(dir, 'commit', '-m', 'init');
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v2\n');
 
     const fetchImpl = async () => jsonResponse({
@@ -180,8 +180,8 @@ test('cap-trim: enriched content is dropped before the deterministic floor under
   const dir = createTempGitRepo('context-gc-recover-enriched-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'tracked.txt');
+    git(dir, 'commit', '-m', 'init');
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v2\n');
 
     const payload = { source: 'compact', cwd: dir, transcript_path: fixture('todo-write.jsonl') };

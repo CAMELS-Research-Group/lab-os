@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { getConfig } from '../src/config.mjs';
 
 const DEFAULTS = {
+  debug: false,
   ollamaModel: 'hermes3:8b',
   ollamaHost: 'http://127.0.0.1:11434',
   tailRecords: 40,
@@ -38,6 +39,7 @@ test('applies env overrides for every tunable', () => {
     CONTEXT_GC_MAX_BYTES: '8000',
   });
   assert.deepEqual(config, {
+    debug: false,
     ollamaModel: 'qwen2.5:7b',
     ollamaHost: 'http://localhost:9999',
     tailRecords: 100,

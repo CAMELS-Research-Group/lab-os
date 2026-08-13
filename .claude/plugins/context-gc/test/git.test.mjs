@@ -9,14 +9,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { getChangedFiles } from '../src/git.mjs';
-import { createTempGitRepo, cleanup } from './helpers.mjs';
+import { createTempGitRepo, cleanup, git } from './helpers.mjs';
 
 test('reports a modified tracked file with status "modified"', () => {
   const dir = createTempGitRepo('context-gc-git-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'tracked.txt');
+    git(dir, 'commit', '-m', 'init');
 
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v2\n');
 
@@ -33,8 +33,8 @@ test('reports a new untracked file with status "untracked"', () => {
   const dir = createTempGitRepo('context-gc-git-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'tracked.txt');
+    git(dir, 'commit', '-m', 'init');
 
     fs.writeFileSync(path.join(dir, 'new-file.txt'), 'new\n');
 
@@ -109,10 +109,10 @@ test('a staged rename yields exactly one entry for the new path, not a phantom f
   const dir = createTempGitRepo('context-gc-git-rename-test-');
   try {
     fs.writeFileSync(path.join(dir, 'old.txt'), 'contents\n');
-    spawnSync('git', ['add', 'old.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'old.txt');
+    git(dir, 'commit', '-m', 'init');
 
-    spawnSync('git', ['mv', 'old.txt', 'new.txt'], { cwd: dir });
+    git(dir, 'mv', 'old.txt', 'new.txt');
 
     const files = getChangedFiles(dir);
     const paths = files.map((f) => f.path).sort();
@@ -127,8 +127,29 @@ test('a staged rename yields exactly one entry for the new path, not a phantom f
 test('an absent cwd reports nothing rather than the process working directory', () => {
   // Deferring to process.cwd() would return a real-looking file list from an unrelated repo —
   // fabricated floor content, which is worse than an absent section.
-  for (const value of [undefined, null, '', '   ']) {
-    assert.deepEqual(getChangedFiles(value), []);
+  //
+  // The assertion must run with the process cwd inside a DIRTY repo, or it is vacuous: in a
+  // clean checkout `git status` returns nothing either way, so the guard could be deleted and
+  // this would still pass — which is exactly the CI case, the only runner that matters.
+  const dir = createTempGitRepo('context-gc-git-cwd-test-');
+  const originalCwd = process.cwd();
+  try {
+    fs.writeFileSync(path.join(dir, 'dirty-file.txt'), 'uncommitted\n');
+    process.chdir(dir);
+
+    // Sanity-check the fixture itself: if the cwd is not actually dirty, the test below proves
+    // nothing, so fail loudly rather than passing for the wrong reason.
+    assert.ok(
+      getChangedFiles(dir).some((f) => f.path === 'dirty-file.txt'),
+      'fixture repo is not dirty — the guard assertion would be vacuous'
+    );
+
+    for (const value of [undefined, null, '', '   ']) {
+      assert.deepEqual(getChangedFiles(value), [], `expected [] for ${JSON.stringify(value)}`);
+    }
+  } finally {
+    process.chdir(originalCwd);
+    cleanup(dir);
   }
 });
 
@@ -138,8 +159,8 @@ test('a malformed porcelain record is skipped rather than coerced into a floor e
   const dir = createTempGitRepo('context-gc-git-clean-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');
-    spawnSync('git', ['add', 'tracked.txt'], { cwd: dir });
-    spawnSync('git', ['commit', '-m', 'init'], { cwd: dir });
+    git(dir, 'add', 'tracked.txt');
+    git(dir, 'commit', '-m', 'init');
 
     const files = getChangedFiles(dir);
     assert.deepEqual(files, []);

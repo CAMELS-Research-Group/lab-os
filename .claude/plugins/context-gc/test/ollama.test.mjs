@@ -119,8 +119,16 @@ test('network throw / unreachable host: fails open to null, never throws', async
 test('timeout/abort: fails open to null within the configured timeout, never hangs', async () => {
   // Never resolves on its own; only rejects when the AbortController fires, mirroring how the
   // real global `fetch` behaves against an aborted signal.
+  let sawRealSignal = false;
+  let abortFired = false;
   const fetchImpl = (url, opts) => new Promise((_resolve, reject) => {
+    // Assert the wiring explicitly. Without this, removing `signal: controller.signal` from the
+    // fetch options makes `opts.signal` undefined, the line below THROWS, enrich()'s outer catch
+    // swallows it, and the test still sees null-and-fast — passing while a real hung Ollama
+    // would stall session resume forever.
+    sawRealSignal = opts && opts.signal instanceof AbortSignal;
     opts.signal.addEventListener('abort', () => {
+      abortFired = true;
       const err = new Error('The operation was aborted');
       err.name = 'AbortError';
       reject(err);
@@ -137,6 +145,8 @@ test('timeout/abort: fails open to null within the configured timeout, never han
   });
   const elapsed = Date.now() - start;
 
+  assert.ok(sawRealSignal, 'fetch was called without a real AbortSignal — the deadline is not wired');
+  assert.ok(abortFired, 'the abort never fired — the timeout did not drive the cancellation');
   assert.equal(result, null);
   assert.ok(elapsed < 2000, `expected the abort to resolve quickly, took ${elapsed}ms`);
 });

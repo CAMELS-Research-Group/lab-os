@@ -46,6 +46,14 @@ test('the SessionStart hook command points at a file that exists', () => {
     assert.ok(match, `hook command does not resolve against CLAUDE_PLUGIN_ROOT: ${command}`);
     const target = path.join(pluginRoot, match[1]);
     assert.ok(fs.existsSync(target), `hook command targets a missing file: ${target}`);
+    // "A file that exists" is too weak: repointing the hook at any other module in the plugin
+    // would satisfy it while the plugin silently stopped working. The entrypoint is the module
+    // that actually exports the recovery orchestration.
+    assert.equal(
+      path.resolve(target),
+      path.resolve(pluginRoot, 'src/recover.mjs'),
+      'hook command does not target the recovery entrypoint'
+    );
   }
 });
 
@@ -75,6 +83,11 @@ test('the plugin version is declared once in effect: manifest and marketplace ag
   const marketplace = readJson(path.join(repoRoot, '.claude-plugin/marketplace.json'));
   const entry = marketplace.plugins.find((p) => p.name === 'context-gc');
 
+  // Compare only after proving both sides are real: two `undefined`s are equal, so deleting
+  // `version` from both manifests would otherwise pass vacuously.
+  assert.equal(typeof plugin.version, 'string');
+  assert.ok(plugin.version.length > 0);
+  assert.equal(typeof entry.version, 'string');
   assert.equal(entry.version, plugin.version);
   assert.equal(entry.name, plugin.name);
 });

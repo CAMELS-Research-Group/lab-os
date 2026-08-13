@@ -5,6 +5,12 @@
 // same on a machine with an opinionated global git config as on a bare CI runner. It lives in
 // exactly one place so a future hermeticity fix cannot land in some callers and miss others —
 // a divergence that would surface as a flake on one developer's machine only.
+//
+// The guarantee only holds for git invocations that actually USE the hermetic env, so tests run
+// their own git commands through the exported `git()` helper below. It does NOT extend to the
+// `spawnSync` inside `src/git.mjs` (the code under test, which correctly inherits the real
+// environment) — a global config that changes what `git status` reports can still red those
+// assertions. That failure is loud (a red suite), never a false green.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -28,13 +34,27 @@ const HERMETIC_ENV = {
  */
 export function createTempGitRepo(prefix = 'context-gc-test-') {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-  const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8', env: HERMETIC_ENV });
 
-  git('init', '--initial-branch=main');
-  git('config', 'user.email', 'context-gc-test@example.com');
-  git('config', 'user.name', 'context-gc test');
-  git('config', 'commit.gpgsign', 'false');
+  git(dir, 'init', '--initial-branch=main');
+  git(dir, 'config', 'user.email', 'context-gc-test@example.com');
+  git(dir, 'config', 'user.name', 'context-gc test');
+  git(dir, 'config', 'commit.gpgsign', 'false');
   return dir;
+}
+
+/**
+ * Runs a git command inside `dir` under the same hermetic environment `createTempGitRepo` uses.
+ *
+ * Tests must route their own `git add`/`commit`/`mv` calls through this rather than calling
+ * `spawnSync('git', …)` directly: the hermetic env is what keeps an opinionated global git config
+ * (a `core.excludesFile`, `status.showUntrackedFiles=no`) from turning the suite red on one
+ * machine only. A direct call silently opts out of it.
+ *
+ * @param {string} dir repo created by `createTempGitRepo`
+ * @param {...string} args git arguments
+ */
+export function git(dir, ...args) {
+  return spawnSync('git', args, { cwd: dir, encoding: 'utf8', env: HERMETIC_ENV });
 }
 
 /**

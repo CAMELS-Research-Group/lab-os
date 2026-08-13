@@ -166,3 +166,28 @@ test('a window that reaches back over the corrupt line is still fatal (blast rad
 
   assert.deepEqual(result, { tail: [], tasks: [] });
 });
+
+test('corruption NEWER than the selected marker degrades: a stale cycle is never served as current', () => {
+  // The highest-consequence failure this module can have. With two compaction cycles and the
+  // NEWER summary record corrupt, a backward scan happily finds the OLDER marker and returns
+  // cycle 1's tail and task list as the current pre-compaction floor — stale state presented as
+  // fact, with nothing marking it stale. Tolerating far-history corruption is what makes this
+  // reachable, so the tolerance is bounded at the marker: anything unreadable NEWER than the
+  // chosen marker might itself have been a newer marker, and the read degrades instead.
+  const result = readTranscript(fixture('corrupt-hides-newer-marker.jsonl'), 40);
+
+  assert.deepEqual(result, { tail: [], tasks: [] });
+  assert.doesNotMatch(JSON.stringify(result), /OLD task from cycle 1/);
+});
+
+test('the compaction-summary record itself is never included in the tail', () => {
+  // The window's exclusive upper bound was unpinnable with the original fixtures: every one used
+  // an inert `{"type":"summary"}` marker that normalizeTail drops regardless, so an off-by-one
+  // including the marker was invisible. The harness's real marker may carry a user/assistant
+  // type — this fixture does — in which case the compaction summary would be injected into both
+  // additionalContext and the Ollama prompt.
+  const { tail } = readTranscript(fixture('typed-marker-record.jsonl'), 40);
+
+  assert.equal(tail.length, 2);
+  assert.doesNotMatch(JSON.stringify(tail), /COMPACTION SUMMARY BODY/);
+});

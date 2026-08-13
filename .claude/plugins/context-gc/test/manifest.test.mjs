@@ -141,7 +141,12 @@ test('byte cap: drops whole lines, never splitting a line mid-way', () => {
       if (line.startsWith('- ')) {
         const matchesFile = files.some((f) => line.includes(f.path));
         const matchesTask = tasks.some((t) => line.includes(t.content));
-        assert.ok(matchesFile || matchesTask, `unexpected fragment line: ${JSON.stringify(line)}`);
+        // The truncation marker is itself a complete rendered line, not a fragment.
+        const isMarker = /^- … \d+ more$/.test(line);
+        assert.ok(
+          matchesFile || matchesTask || isMarker,
+          `unexpected fragment line: ${JSON.stringify(line)}`
+        );
       }
     }
   }
@@ -364,7 +369,7 @@ test('a partially-trimmed section carries a truncation marker naming the dropped
   const manifest = buildManifest({ files, tasks: [] }, 4000);
 
   assert.ok(Buffer.byteLength(manifest, 'utf8') <= 4000);
-  const marker = manifest.match(/^- … (\d+) more \(trimmed to fit the byte cap\)$/m);
+  const marker = manifest.match(/^- … (\d+) more$/m);
   assert.ok(marker, 'expected a truncation marker on the trimmed files section');
   // The count must be the real remainder, not a placeholder.
   const shown = manifest.match(/^- modified: src\/module-\d+\.mjs$/gm).length;
@@ -381,12 +386,13 @@ test('a section trimmed away entirely carries no marker (absence is unambiguous)
 
   assert.match(manifest, /survives\.mjs/);
   assert.doesNotMatch(manifest, /## Tasks/);
-  assert.doesNotMatch(manifest, /trimmed to fit/);
+  assert.doesNotMatch(manifest, /- … /);
 });
 
-test('content outranks the marker: a cap too tight for both keeps the content', () => {
-  // The marker can cost more bytes than the entry whose absence it reports. At a cap where both
-  // cannot fit, a real line must never be sacrificed to a note about a lost line.
+test('the marker is kept even when it costs an entry line: a short list never claims to be whole', () => {
+  // The deliberate trade. An UNMARKED short list is read as a complete list — the resuming agent
+  // concludes those are all the files in flight — and confidently-wrong output is the failure
+  // this plugin exists to avoid. So the marker is preferred even though it can cost a path.
   const files = [
     { path: 'src/plain.mjs', status: 'modified' },
     { path: 'src/second.mjs', status: 'modified' },
@@ -395,9 +401,26 @@ test('content outranks the marker: a cap too tight for both keeps the content', 
   const unclamped = buildManifest({ files, tasks: [] }, 10000);
   const clamped = buildManifest({ files, tasks: [] }, Buffer.byteLength(unclamped, 'utf8') - 1);
 
+  assert.ok(Buffer.byteLength(clamped, 'utf8') <= Buffer.byteLength(unclamped, 'utf8') - 1);
   assert.match(clamped, /src\/plain\.mjs/);
   assert.doesNotMatch(clamped, /src\/second\.mjs/);
-  assert.doesNotMatch(clamped, /trimmed to fit/);
+  assert.match(clamped, /^- … 1 more$/m, 'the surviving list must declare itself incomplete');
+});
+
+test('the marker is dropped only when paying for it would leave no entries at all', () => {
+  // The degenerate fallback: at a cap this tight the marker would describe an emptiness the
+  // reader can already see, so the single surviving entry wins instead.
+  const files = [
+    { path: 'a.mjs', status: 'modified' },
+    { path: 'b.mjs', status: 'modified' },
+    { path: 'c.mjs', status: 'modified' },
+  ];
+
+  const manifest = buildManifest({ files, tasks: [] }, 90);
+
+  assert.ok(Buffer.byteLength(manifest, 'utf8') <= 90);
+  assert.match(manifest, /- modified: a\.mjs/);
+  assert.doesNotMatch(manifest, /- … /);
 });
 
 test('a file entry with no usable status degrades to unknown, never an invented modified', () => {
@@ -410,4 +433,22 @@ test('a file entry with no usable status degrades to unknown, never an invented 
 
   assert.match(manifest, /^- unknown: src\/mystery\.mjs$/m);
   assert.doesNotMatch(manifest, /modified/);
+});
+
+test('the TASKS section carries its own truncation marker, not just the files section', () => {
+  // The tasks marker was previously unobserved: deleting it left the suite green. A truncated
+  // todo list read as a complete one is the more consequential of the two, since the resuming
+  // agent uses it to decide what is left to do.
+  const tasks = Array.from({ length: 200 }, (_, i) => ({
+    content: `task number ${i} with enough text to consume budget`,
+    status: 'pending',
+  }));
+
+  const manifest = buildManifest({ files: [], tasks }, 4000);
+
+  assert.ok(Buffer.byteLength(manifest, 'utf8') <= 4000);
+  const marker = manifest.match(/^- … (\d+) more$/m);
+  assert.ok(marker, 'expected a truncation marker on the trimmed tasks section');
+  const shown = manifest.match(/^- \[pending\] task number \d+/gm).length;
+  assert.equal(Number(marker[1]), tasks.length - shown);
 });
