@@ -298,6 +298,17 @@ def self_test() -> int:
     check("rules 12,289 is FAIL", classify(12_289, BUDGET_RULES_MD) == ZONE_FAIL)
     check("log boundary 23,040 is WARN", classify(23_040, BUDGET_PROJECT_LOG) == ZONE_WARN)
     check("log 23,041 is FAIL", classify(23_041, BUDGET_PROJECT_LOG) == ZONE_FAIL)
+    # Pin the aggregate cap to the exact byte, the same way the per-file
+    # constants above are pinned: the OK/WARN pair fixes it at 49,152 (any
+    # smaller value reds the first check, any larger value reds the second).
+    check("aggregate boundary 49,152 is OK",
+          classify(49_152, BUDGET_ALWAYS_LOADED_TOTAL) == ZONE_OK)
+    check("aggregate 49,153 is WARN",
+          classify(49_153, BUDGET_ALWAYS_LOADED_TOTAL) == ZONE_WARN)
+    check("aggregate boundary 73,728 is WARN",
+          classify(73_728, BUDGET_ALWAYS_LOADED_TOTAL) == ZONE_WARN)
+    check("aggregate 73,729 is FAIL",
+          classify(73_729, BUDGET_ALWAYS_LOADED_TOTAL) == ZONE_FAIL)
 
     print("always-loaded membership:")
     check("root CLAUDE.md is always-loaded", is_always_loaded("CLAUDE.md"))
@@ -400,7 +411,8 @@ def self_test() -> int:
         code_w, lines_w = run(agg_warn_repo, enforce=False)
         code_e, lines_e = run(agg_warn_repo, enforce=True)
         check("aggregate reported in the WARN zone",
-              any("[WARN] always-loaded total (7 surface(s)) — 56,000 B" in l
+              any("[WARN] always-loaded total (7 surface(s)) — 56,000 B "
+                  "/ 49,152 B budget" in l
                   for l in lines_e),
               f"got {[l for l in lines_e if 'always-loaded' in l]}")
         check("aggregate warn emits a fileless ::warning",
@@ -437,6 +449,39 @@ def self_test() -> int:
               any("always-loaded total (1 surface(s)) — 1,000 B" in l
                   for l in lines_l),
               f"got {[l for l in lines_l if 'always-loaded' in l]}")
+
+        # The summary line's aggregate clause, and its "n/a" false branch,
+        # were both unasserted: a log-only repo has no always-loaded surface
+        # at all, so it must read "n/a" and stay exit 0 — distinct from a
+        # repo that was checked and passed.
+        check("summary line names the aggregate zone",
+              any("always-loaded total FAIL (mode: enforce)." in l
+                  for l in lines_e),
+              f"got {[l for l in lines_e if l.startswith('docs-budget:')]}")
+        log_only_repo = _build_repo(
+            tmp / "log_only_repo", {"project_log.md": 1_000},
+        )
+        code_n, lines_n = run(log_only_repo, enforce=True)
+        check("log-only repo reports the aggregate as n/a",
+              any("always-loaded total n/a (mode: enforce)." in l
+                  for l in lines_n),
+              f"got {[l for l in lines_n if l.startswith('docs-budget:')]}")
+        check("log-only repo emits no aggregate report line",
+              not any("always-loaded total (" in l for l in lines_n))
+        check("log-only repo exits 0 in enforce mode", code_n == 0)
+
+        # Both CLAUDE.md locations may coexist; is_always_loaded's docstring
+        # calls the nested one an alternate, so pin that the aggregate sums
+        # both rather than picking one.
+        both_claude_repo = _build_repo(
+            tmp / "both_claude_repo",
+            {"CLAUDE.md": 1_000, ".claude/CLAUDE.md": 2_000},
+        )
+        _, lines_b = run(both_claude_repo, enforce=True)
+        check("both CLAUDE.md locations sum into the aggregate",
+              any("always-loaded total (2 surface(s)) — 3,000 B" in l
+                  for l in lines_b),
+              f"got {[l for l in lines_b if 'always-loaded' in l]}")
 
         # --- 5. missing surfaces skipped silently -------------------------
         print("missing surfaces:")
