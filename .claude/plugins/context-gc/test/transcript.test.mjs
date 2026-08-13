@@ -191,3 +191,37 @@ test('the compaction-summary record itself is never included in the tail', () =>
   assert.equal(tail.length, 2);
   assert.doesNotMatch(JSON.stringify(tail), /COMPACTION SUMMARY BODY/);
 });
+
+test('a TORN trailing summary cannot serve a previous cycle as current when the session ran past the marker', () => {
+  // The newest compaction summary is the record most likely to be mid-append at the exact moment
+  // a SessionStart(compact) hook fires, so a torn tail that WAS that summary is not a corner
+  // case. Here the tear hides cycle 2's marker; a backward scan would otherwise select cycle 1's
+  // and serve its tasks and tail as the current pre-compaction floor, unlabelled as stale.
+  //
+  // The discriminator is whether the session demonstrably ran past the selected marker: intact
+  // records sit between it and the torn tail, so the marker is not the one just written.
+  const result = readTranscript(fixture('torn-summary-hides-newer-marker.jsonl'), 40);
+
+  assert.deepEqual(result, { tail: [], tasks: [] });
+  assert.doesNotMatch(JSON.stringify(result), /OLD task from cycle 1/);
+});
+
+test('a torn tail directly after the marker still recovers: the tolerance is bounded, not removed', () => {
+  // The other side of the same discriminator, and the reason the guard is not simply "any torn
+  // record newer than the marker is fatal". Here the marker IS the newest intact record, so the
+  // torn line is a record being appended after the compaction that just fired — the marker is
+  // current and recovery must proceed. Without this pairing the fix would silently delete the
+  // torn-tail tolerance the module exists to provide.
+  const { tail } = readTranscript(fixture('torn-trailing-line.jsonl'), 10);
+
+  assert.ok(tail.length > 0, 'a torn tail directly after the marker must still recover');
+});
+
+test('an older typed marker inside the window never leaks into the tail or the prompt', () => {
+  // normalizeTail drops only non-user/assistant records; a compaction-summary record carrying a
+  // user/assistant type would otherwise put a PREVIOUS cycle's summary into both additionalContext
+  // and the Ollama enrichment prompt.
+  const { tail } = readTranscript(fixture('typed-marker-record.jsonl'), 40);
+
+  assert.doesNotMatch(JSON.stringify(tail), /COMPACTION SUMMARY BODY/);
+});

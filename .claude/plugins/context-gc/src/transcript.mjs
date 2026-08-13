@@ -29,6 +29,13 @@ const EMPTY_RESULT = Object.freeze({ tail: [], tasks: [] });
 // or confines the sentinel to a region no caller sees.
 const CORRUPT = Object.freeze({ __contextGcCorruptRecord: true });
 
+// Marks a TORN trailing record — the last non-blank line, unparseable because the harness was
+// still appending when this read happened. Distinct from CORRUPT: a torn tail is expected at the
+// moment a SessionStart(compact) hook fires, whereas mid-file corruption is not. Retained
+// positionally (rather than dropped) so `readTranscript` can reason about what it might have
+// been — it is the single record most likely to have BEEN the newest compaction summary.
+const TORN = Object.freeze({ __contextGcTornRecord: true });
+
 /**
  * Normalizes a raw `message.content` value (string, block array, or anything else) to a plain
  * string: a string passes through as-is; an array joins its `type: "text"` blocks' `text` with
@@ -54,6 +61,9 @@ function normalizeTail(window) {
   const tail = [];
   for (const record of window) {
     if (!record || (record.type !== 'user' && record.type !== 'assistant')) continue;
+    // An older typed marker inside the window would otherwise put a PREVIOUS cycle's compaction
+    // summary into both the tail and the Ollama prompt.
+    if (record.isCompactSummary === true) continue;
     const content = record.message && record.message.content;
     tail.push({ role: record.type, text: normalizeContent(content) });
   }
@@ -125,8 +135,9 @@ function resolveWindowSize(tailRecords) {
  * rather than collapsing the read. Returns `null` (instead of throwing) only when the file is
  * missing or unreadable.
  *
- * A torn trailing line is tolerated and dropped: the harness can still be appending to the file
- * when this reads it, leaving the last line half-written.
+ * A torn trailing line is retained as a distinct `TORN` sentinel rather than dropped: the harness
+ * can still be appending when this reads, leaving the last line half-written, and that record is
+ * the one most likely to have been the newest compaction summary.
  *
  * Keeping the sentinel in place is what lets `readTranscript` decide whether the corruption
  * actually matters. A transcript can hold tens of thousands of records while only the few
@@ -149,8 +160,8 @@ function readRecords(transcriptPath) {
     try {
       records.push(JSON.parse(lines[i]));
     } catch {
-      if (i === lines.length - 1) break; // tolerate a torn trailing line
-      records.push(CORRUPT); // keep the position; readTranscript decides if it matters
+      // A torn LAST line is the expected mid-append case; anything else is real corruption.
+      records.push(i === lines.length - 1 ? TORN : CORRUPT);
     }
   }
   return records;
@@ -164,10 +175,19 @@ function readRecords(transcriptPath) {
  * PRECEDING it as the window, normalizes that window to format-neutral `{role,text}` tail
  * entries, and extracts task state from the window's most recent task-tool record.
  *
- * Fail-open: a missing/unreadable file, no `isCompactSummary` marker anywhere in the file, or an
- * unparseable line WITHIN the consulted window all degrade to `{ tail: [], tasks: [] }`. Never
- * throws. An unparseable line outside that window — in the far history the plugin would never
- * have read — is ignored, and a torn trailing line is tolerated (see `readRecords`).
+ * Fail-open — the complete list of degradations to `{ tail: [], tasks: [] }`; this enumeration is
+ * exhaustive and load-bearing, so keep it in step with the body. Never throws.
+ *   1. a missing or unreadable file;
+ *   2. no `isCompactSummary` marker anywhere in the file;
+ *   3. an unparseable line WITHIN the consulted window;
+ *   4. an unparseable line NEWER than the selected marker (it may have been a newer marker, and
+ *      serving the previous cycle as current is the failure this module must not have);
+ *   5. a TORN trailing record when intact records sit between it and the selected marker — i.e.
+ *      the session ran past that compaction, so the marker is not the one just written.
+ *
+ * Tolerated, NOT degraded: an unparseable line OLDER than the selected marker (far history the
+ * plugin would never have read — it cannot hide a newer marker), and a torn trailing record where
+ * the marker is the newest intact record (the ordinary mid-append case this hook fires during).
  *
  * Task state comes from the window's most recent PARSEABLE task-tool record.
  *
@@ -191,20 +211,42 @@ export function readTranscript(transcriptPath, tailRecords) {
   }
   if (markerIndex === -1) return EMPTY_RESULT;
 
-  // A corrupt line AFTER the selected marker may itself have been a NEWER compaction marker. If
-  // it was, everything below reports the previous compaction cycle's tail and task list as the
+  // An unreadable record NEWER than the selected marker may itself have been a newer compaction
+  // marker. If it was, everything below reports the previous cycle's tail and task list as the
   // current pre-compaction floor — stale state presented as fact, with nothing marking it stale.
-  // That is the one failure this module must not have, so an unreadable record anywhere newer
-  // than the marker degrades the whole read. Corruption OLDER than the marker stays tolerated:
-  // it cannot hide a newer marker, and that is what the positional sentinel buys.
+  // That is the one failure this module must not have. Anything unreadable OLDER than the marker
+  // stays tolerated: it cannot hide a newer marker, and that is what the positional sentinels buy.
   //
   // Note this does not cover a TORN TRAILING record, which `readRecords` drops rather than
   // retaining — the harness is legitimately mid-append at exactly the moment this hook fires, so
   // treating every torn tail as corruption would forfeit recovery in the common case. A torn
   // trailing record that was itself a compaction summary can therefore still select an older
   // marker; that residual is accepted deliberately, not overlooked.
+  let sawIntactAfterMarker = false;
   for (let i = markerIndex + 1; i < records.length; i += 1) {
-    if (records[i] === CORRUPT) return EMPTY_RESULT;
+    const record = records[i];
+
+    // Mid-file corruption newer than the marker is always fatal: it may itself have been a newer
+    // compaction summary, in which case everything below reports the PREVIOUS cycle's state as
+    // current — stale content in the deterministic floor, with nothing marking it stale.
+    if (record === CORRUPT) return EMPTY_RESULT;
+
+    // A torn tail is fatal only when the marker we selected is NOT the newest intact record.
+    // The discriminator is whether the session demonstrably continued past that compaction:
+    //   · marker is the newest intact record (nothing intact after it) — the torn tail is a
+    //     record being appended after the compaction that just fired, and the marker is current.
+    //     Recovery proceeds; this is the common case the tolerance exists for.
+    //   · intact records sit between the marker and the torn tail — the session ran on past that
+    //     compaction, so the marker is demonstrably not the one just written, and the torn record
+    //     is a plausible newer summary. Degrade rather than serve a previous cycle as current.
+    // Sniffing the torn text for `isCompactSummary` would narrow this but not close it, since the
+    // tear can fall before that key appears.
+    if (record === TORN) {
+      if (sawIntactAfterMarker) return EMPTY_RESULT;
+      continue;
+    }
+
+    sawIntactAfterMarker = true;
   }
 
   const windowSize = resolveWindowSize(tailRecords);
