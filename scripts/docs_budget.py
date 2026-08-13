@@ -23,6 +23,13 @@ context: per-file budgets alone permit unbounded growth by adding rules
 files, and every rules file sitting at its full budget would blow the
 total on its own. Same zone semantics as a per-file budget.
 
+The aggregate is only reported when it can be computed. A surface
+that is present but unmeasurable (stat failure, or a path resolving
+outside the repo root) is excluded from the sum, so the total would
+read low; the run then reports PARTIAL instead of a zone and, under
+--enforce, fails closed. A per-file skip loses one verdict, but a
+short aggregate is a wrong number presented as authoritative.
+
 Zone semantics (size measured in bytes on disk):
 
     size <= budget                 -> OK    (no output beyond the report line)
@@ -51,6 +58,7 @@ Stdlib only; compatible with Python 3.11+.
 from __future__ import annotations
 
 import argparse
+import stat
 import sys
 import tempfile
 from pathlib import Path
@@ -72,6 +80,8 @@ ALWAYS_LOADED_RULES_PREFIX = ".claude/rules/"
 ZONE_OK = "OK"
 ZONE_WARN = "WARN"
 ZONE_FAIL = "FAIL"
+# Not a size zone: the aggregate could not be computed at all.
+ZONE_PARTIAL = "PARTIAL"
 
 
 def fail_threshold(budget: int) -> int:
@@ -119,63 +129,125 @@ def escapes_root(path: Path, root: Path) -> bool:
     return not resolved.is_relative_to(resolved_root)
 
 
-def collect_surfaces(root: Path) -> list[tuple[Path, int]]:
-    """(path, budget) pairs for every scanned surface present under root.
+def probe(path: Path) -> tuple[str, str]:
+    """Classify a surface path as 'file', 'missing', or 'error'.
 
-    Missing surfaces are skipped silently; surfaces resolving outside the
-    repo root (junction/symlink escape) are skipped silently too.
+    Path.is_file() collapses these three: it returns False for a path that
+    does not exist AND for one whose stat() raises (ELOOP on a
+    self-referential symlink, EACCES on an unreadable parent). That
+    collapse is what let a present-but-unmeasurable surface leave the scan
+    with no trace. Absent is normal; unmeasurable is an anomaly, and the
+    caller must be able to tell them apart.
+    """
+    try:
+        st = path.stat()
+    except FileNotFoundError:
+        return "missing", ""
+    except OSError as exc:
+        return "error", f"{exc.__class__.__name__}: {exc}"
+    return ("file" if stat.S_ISREG(st.st_mode) else "missing"), ""
+
+
+def collect_surfaces(root: Path) -> tuple[
+    list[tuple[Path, int]], list[tuple[str, str, str]]
+]:
+    """((path, budget) pairs, skips) for the scanned surfaces under root.
+
+    Missing surfaces are skipped silently — not every repo has every file.
+    A surface that *is* present but cannot be measured is recorded as a
+    skip (rel, kind, detail), kind being 'escaped' (resolves outside the
+    repo root — junction/symlink) or 'error' (stat failed). Skips are what
+    let the aggregate declare itself partial instead of quietly reporting
+    a short total as authoritative.
     """
     surfaces: list[tuple[Path, int]] = []
+    skips: list[tuple[str, str, str]] = []
 
-    fixed = [
+    def rel_of(path: Path) -> str:
+        try:
+            return path.relative_to(root).as_posix()
+        except ValueError:
+            return str(path)
+
+    def consider(path: Path, budget: int) -> None:
+        kind, detail = probe(path)
+        if kind == "missing":
+            return
+        if kind == "error":
+            skips.append((rel_of(path), "error", detail))
+            return
+        if escapes_root(path, root):
+            skips.append((rel_of(path), "escaped", "resolves outside the repo root"))
+            return
+        surfaces.append((path, budget))
+
+    for path, budget in (
         (root / "CLAUDE.md", BUDGET_CLAUDE_MD),
         (root / ".claude" / "CLAUDE.md", BUDGET_CLAUDE_MD),
         (root / "project_log.md", BUDGET_PROJECT_LOG),
-    ]
-    for path, budget in fixed:
-        if path.is_file() and not escapes_root(path, root):
-            surfaces.append((path, budget))
+    ):
+        consider(path, budget)
 
     rules_dir = root / ".claude" / "rules"
-    if rules_dir.is_dir() and not escapes_root(rules_dir, root):
-        for path in sorted(rules_dir.glob("*.md")):
-            if path.is_file() and not escapes_root(path, root):
-                surfaces.append((path, BUDGET_RULES_MD))
+    if rules_dir.is_dir():
+        if escapes_root(rules_dir, root):
+            skips.append((
+                f"{rel_of(rules_dir)}/*.md", "escaped",
+                "rules directory resolves outside the repo root",
+            ))
+        else:
+            for path in sorted(rules_dir.glob("*.md")):
+                consider(path, BUDGET_RULES_MD)
 
-    return surfaces
+    return surfaces, skips
 
 
-def scan(root: Path) -> tuple[list[tuple[str, int, int, str]], list[str]]:
+def scan(root: Path) -> tuple[
+    list[tuple[str, int, int, str]], list[str], list[tuple[str, str, str]]
+]:
     """Scan surfaces under root.
 
-    Returns (findings, warnings): findings are (relative posix path,
-    size bytes, budget bytes, zone) per readable surface; warnings are
-    ready-to-print ::warning lines for surfaces that could not be stat'd.
+    Returns (findings, warnings, skips): findings are (relative posix
+    path, size bytes, budget bytes, zone) per readable surface; warnings
+    are ready-to-print annotation lines; skips are (rel, kind, detail)
+    for present-but-unmeasurable surfaces, carried so the aggregate can
+    declare itself partial rather than report a short total as complete.
     """
     findings: list[tuple[str, int, int, str]] = []
     warnings: list[str] = []
-    for path, budget in collect_surfaces(root):
+    surfaces, skips = collect_surfaces(root)
+    for rel, kind, detail in skips:
+        suffix = f" ({detail})" if detail else ""
+        warnings.append(
+            f"::warning file={rel}::{rel} is a scanned surface but could not "
+            f"be measured{suffix}; it is excluded from its per-file check and "
+            f"from the always-loaded aggregate."
+        )
+    for path, budget in surfaces:
         rel = path.relative_to(root).as_posix()
         try:
             size = path.stat().st_size
         except OSError as exc:
             # Unreadable surfaces (permission denied, TOCTOU-vanished file)
-            # are warned about and skipped — never a failure, even in
-            # --enforce mode: a budget check must not turn a filesystem
-            # hiccup into a red CI run.
+            # are warned about and skipped rather than crashing the run. The
+            # skip is recorded, not swallowed: a per-file check can lose one
+            # verdict harmlessly, but the aggregate would otherwise report a
+            # short total as authoritative.
+            detail = f"{exc.__class__.__name__}: {exc}"
             warnings.append(
                 f"::warning file={rel}::{rel} could not be read "
-                f"({exc.__class__.__name__}: {exc}); skipping its budget check."
+                f"({detail}); skipping its budget check."
             )
+            skips.append((rel, "error", detail))
             continue
         findings.append((rel, size, budget, classify(size, budget)))
-    return findings, warnings
+    return findings, warnings, skips
 
 
 def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     """Scan `root` and build the report. Returns (exit_code, output_lines)."""
     lines: list[str] = []
-    findings, unreadable = scan(root)
+    findings, unreadable, skips = scan(root)
     lines.extend(unreadable)
     failed = False
 
@@ -205,12 +277,42 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
                     f"this will fail once enforcement is on."
                 )
 
-    # Aggregate always-loaded budget. Unreadable surfaces never reached
-    # `findings`, so they are excluded here too — a filesystem hiccup must
-    # not redden the aggregate any more than it reddens a per-file check.
+    # Aggregate always-loaded budget. A surface that could not be measured
+    # is excluded from the sum, so the total would otherwise read low — and
+    # a low total is not a lost verdict like a per-file skip, it is a wrong
+    # number presented as authoritative, able to turn a real FAIL into a
+    # green WARN. So an incomplete always-loaded scan makes the aggregate
+    # PARTIAL, and under --enforce it fails closed: better a red run naming
+    # the unmeasurable file than a green one computed from a short sum.
     always_loaded = [f for f in findings if is_always_loaded(f[0])]
+    missed = [sk for sk in skips if is_always_loaded(sk[0])
+              or sk[0].startswith(ALWAYS_LOADED_RULES_PREFIX)]
     aggregate_zone = None
-    if always_loaded:
+    if missed:
+        measured = sum(f[1] for f in always_loaded)
+        cap = BUDGET_ALWAYS_LOADED_TOTAL
+        aggregate_zone = ZONE_PARTIAL
+        named = ", ".join(sk[0] for sk in missed)
+        lines.append(
+            f"[{aggregate_zone:<4}] always-loaded total "
+            f"({len(always_loaded)} surface(s) measured, {len(missed)} "
+            f"unmeasurable) — {measured:,} B counted / {cap:,} B budget; "
+            f"total is incomplete."
+        )
+        detail = (
+            f"the always-loaded aggregate could not be computed: "
+            f"{len(missed)} surface(s) present but unmeasurable ({named}). "
+            f"The {measured:,} B counted is a floor, not the total"
+        )
+        if enforce:
+            failed = True
+            lines.append(f"::error::{detail}.")
+        else:
+            lines.append(
+                f"::warning::{detail} — warn-only mode; this will fail once "
+                f"enforcement is on."
+            )
+    elif always_loaded:
         total = sum(f[1] for f in always_loaded)
         cap = BUDGET_ALWAYS_LOADED_TOTAL
         aggregate_zone = classify(total, cap)
@@ -325,7 +427,7 @@ def self_test() -> int:
     print("static under-budget fixture:")
     fixtures = Path(__file__).resolve().parent.parent / "tests" / "docs_budget"
     under = fixtures / "under_budget_repo"
-    findings, _ = scan(under)
+    findings, _, _ = scan(under)
     check(
         "scans 3 surfaces (CLAUDE.md, one rules file, project_log.md)",
         len(findings) == 3,
@@ -351,7 +453,7 @@ def self_test() -> int:
                 "project_log.md": 20_000,      # 15,360 < size <= 23,040
             },
         )
-        findings, _ = scan(warn_repo)
+        findings, _, _ = scan(warn_repo)
         check("scans 4 surfaces incl. .claude/CLAUDE.md", len(findings) == 4,
               f"got {[f[0] for f in findings]}")
         check("all surfaces in WARN zone", all(f[3] == ZONE_WARN for f in findings))
@@ -381,7 +483,7 @@ def self_test() -> int:
                 "project_log.md": 23_041,
             },
         )
-        findings, _ = scan(fail_repo)
+        findings, _, _ = scan(fail_repo)
         check("all surfaces in FAIL zone",
               len(findings) == 3 and all(f[3] == ZONE_FAIL for f in findings))
         code_w, lines_w = run(fail_repo, enforce=False)
@@ -406,7 +508,7 @@ def self_test() -> int:
             # 7 x 8,000 B = 56,000 B -> 1.14x of 49,152 B
             {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 8)},
         )
-        findings, _ = scan(agg_warn_repo)
+        findings, _, _ = scan(agg_warn_repo)
         check("every per-file zone is OK", all(f[3] == ZONE_OK for f in findings))
         code_w, lines_w = run(agg_warn_repo, enforce=False)
         code_e, lines_e = run(agg_warn_repo, enforce=True)
@@ -424,7 +526,7 @@ def self_test() -> int:
             # 10 x 8,000 B = 80,000 B -> 1.63x, past the 73,728 B fail line
             {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 11)},
         )
-        findings, _ = scan(agg_fail_repo)
+        findings, _, _ = scan(agg_fail_repo)
         check("every per-file zone is still OK",
               all(f[3] == ZONE_OK for f in findings))
         code_w, lines_w = run(agg_fail_repo, enforce=False)
@@ -490,7 +592,7 @@ def self_test() -> int:
         code_w, _ = run(empty_repo, enforce=False)
         code_e, _ = run(empty_repo, enforce=True)
         check("empty repo finds nothing and exits 0 in both modes",
-              scan(empty_repo) == ([], []) and code_w == 0 and code_e == 0)
+              scan(empty_repo) == ([], [], []) and code_w == 0 and code_e == 0)
 
         # --- 5b. unreadable surface (stat() raises) ------------------------
         # Cross-platform simulation: monkeypatch collect_surfaces to hand
@@ -501,13 +603,14 @@ def self_test() -> int:
         ghost_repo = tmp / "ghost_repo"
         _write_sized(ghost_repo / "CLAUDE.md", 100)
         _orig_collect = collect_surfaces
-        def _collect_with_ghost(root: Path) -> list[tuple[Path, int]]:
-            return _orig_collect(root) + [
-                (root / "project_log.md", BUDGET_PROJECT_LOG)
-            ]
+        def _collect_with_ghost(root: Path) -> tuple[
+            list[tuple[Path, int]], list[tuple[str, str, str]]
+        ]:
+            surfaces, skips = _orig_collect(root)
+            return surfaces + [(root / "project_log.md", BUDGET_PROJECT_LOG)], skips
         try:
             globals()["collect_surfaces"] = _collect_with_ghost
-            findings, unreadable = scan(ghost_repo)
+            findings, unreadable, _ = scan(ghost_repo)
             check("unreadable surface excluded from findings",
                   [f[0] for f in findings] == ["CLAUDE.md"],
                   f"got {[f[0] for f in findings]}")
@@ -552,13 +655,86 @@ def self_test() -> int:
         except OSError:
             link_made = False
         if link_made:
-            findings, _ = scan(repo)
+            findings, _, skips = scan(repo)
             check("rules dir resolving outside repo is skipped",
                   [f[0] for f in findings] == ["CLAUDE.md"],
                   f"got {[f[0] for f in findings]}")
+            check("escaped rules dir is recorded as a skip, not dropped",
+                  any(sk[1] == "escaped" for sk in skips),
+                  f"got {skips}")
+            code_esc, lines_esc = run(repo, enforce=True)
+            check("escaped rules dir makes the aggregate PARTIAL and fails closed",
+                  code_esc == 1
+                  and any("[PARTIAL] always-loaded total" in l for l in lines_esc),
+                  f"got exit {code_esc}, "
+                  f"{[l for l in lines_esc if 'always-loaded' in l]}")
         else:
             print("  [SKIP] symlink creation unavailable on this platform; "
                   "pure-comparison checks above cover the logic")
+
+        # --- 7. aggregate completeness -------------------------------------
+        # The failure this guards: an always-loaded surface that is present
+        # but unmeasurable leaves the sum, and a genuine over-cap total reads
+        # as comfortably under. Reproduced with the fail-zone fixture — 10 x
+        # 8,000 B = 80,000 B is past the 73,728 B fail line, but drop one
+        # file and the naive sum is 72,000 B, a green WARN.
+        print("aggregate completeness (an incomplete scan must not read green):")
+        agg_drop_repo = _build_repo(
+            tmp / "agg_drop_repo",
+            {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 11)},
+        )
+        _orig_collect_2 = collect_surfaces
+        dropped_rel = ".claude/rules/01-r.md"
+
+        def _collect_dropping_one(root: Path) -> tuple[
+            list[tuple[Path, int]], list[tuple[str, str, str]]
+        ]:
+            surfaces, skips = _orig_collect_2(root)
+            kept = [(pth, bud) for pth, bud in surfaces
+                    if pth.relative_to(root).as_posix() != dropped_rel]
+            return kept, skips + [(dropped_rel, "error", "OSError: simulated")]
+
+        try:
+            globals()["collect_surfaces"] = _collect_dropping_one
+            code_w, lines_w = run(agg_drop_repo, enforce=False)
+            code_e, lines_e = run(agg_drop_repo, enforce=True)
+            check("an unmeasurable surface makes the aggregate PARTIAL",
+                  any("[PARTIAL] always-loaded total" in l for l in lines_e),
+                  f"got {[l for l in lines_e if 'always-loaded' in l]}")
+            check("the partial line reports the counted bytes as a floor",
+                  any("72,000 B counted" in l and "total is incomplete" in l
+                      for l in lines_e),
+                  f"got {[l for l in lines_e if 'always-loaded' in l]}")
+            check("no zone/ratio verdict is printed for a partial aggregate",
+                  not any("[OK  ] always-loaded" in l or "[WARN] always-loaded" in l
+                          or "[FAIL] always-loaded" in l for l in lines_e))
+            check("partial aggregate fails closed in enforce mode", code_e == 1)
+            check("partial aggregate emits a fileless ::error naming the surface",
+                  any(l.startswith("::error::") and dropped_rel in l
+                      for l in lines_e),
+                  f"got {[l for l in lines_e if l.startswith('::error')]}")
+            check("partial aggregate exits 0 in warn-only mode", code_w == 0)
+            check("warn-only downgrades the partial ::error to ::warning",
+                  any(l.startswith("::warning::") and dropped_rel in l
+                      for l in lines_w)
+                  and not any(l.startswith("::error") for l in lines_w))
+            check("summary line names the aggregate as PARTIAL",
+                  any("always-loaded total PARTIAL (mode: enforce)." in l
+                      for l in lines_e),
+                  f"got {[l for l in lines_e if l.startswith('docs-budget:')]}")
+            check("the skipped surface is also warned about by file",
+                  any(l.startswith(f"::warning file={dropped_rel}::")
+                      for l in lines_e))
+        finally:
+            globals()["collect_surfaces"] = _orig_collect_2
+
+        # project_log.md is not always-loaded, so losing it must NOT make the
+        # aggregate partial — the fail-closed rule is scoped to the tier the
+        # aggregate actually measures.
+        check("an unmeasurable non-always-loaded surface leaves the "
+              "aggregate authoritative",
+              not any("PARTIAL" in l for l in run(ghost_repo, enforce=True)[1]),
+              f"got {[l for l in run(ghost_repo, enforce=True)[1] if 'always-loaded' in l]}")
 
     print(f"self-test: {'FAIL — ' + str(len(failures)) + ' failure(s)' if failures else 'all checks passed'}")
     return 1 if failures else 0
