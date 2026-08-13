@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-08-13 10:55 — Terminal bundles fold into the scope's main bundle, then delete · #81
 - 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
@@ -27,6 +28,25 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-08-13 10:55 — Terminal bundles fold into the scope's main bundle, then delete
+
+**Decision:** Each scope keeps one main bundle — `_specs/<scope>/main/{prd,spec,design,plan,log}.md`,
+never dated, never deleted, budget-exempt — the single source of truth for what is implemented. A
+bundle reaching a terminal `Status:` folds file-to-file into it and its directory is deleted; git
+history is the archival record. `design.md` joins the bundle file contract in the same change: the
+main bundle is a slice's file set and names it. Reverses the retain-in-place clause, which arrived
+as vendored text under 2026-07-31 13:22 (#58) and was never ratified here (origin:
+WatsonWBlair/Agentic_Workspace#95).
+**Why:** Retain-in-place cannot produce a decision register: an index over N dated bundles still
+makes every reader reconstruct current state — the gap that left lab-os without one. Deletion is
+what forces the fold to happen; git history already archives the rest.
+**Alternatives:** Retain-in-place with the main bundle as an index over retained bundles (rejected —
+two authoritative surfaces whose divergence nobody owns). Defer (rejected — lab-os holds one bundle
+and nothing terminal, so the change is free now and only gets costlier).
+**Refs:** #81, CAMELS-Research-Group/Caravan#9, CAMELS-Research-Group/Caravan#14
 
 ---
 
