@@ -54,11 +54,11 @@ All of the following, verified at merge time:
 2. PR template complete; checklist items ticked only where true
 3. Review findings resolved, or routed to issues (a finding meeting an entry trigger in `03-logging.md` additionally gets a log entry)
 4. **Log cleanup done** (entry rules: `03-logging.md`): this PR's loggable events have entries; entries verified against the final diff; compressed to budget; refs filled (PR#); no edits to pre-existing entries; Standing Decisions index updated — line added per new standing decision, superseded lines removed; log over cap → overflow chore PR filed
-5. **Bundle-backed changes: log maintenance — spec-log current and overflow archived** (`03-logging.md` spec-log altitude): the bundle's `log.md` captures this slice's decisions, discarded detail, and execution log (deviations, gate evidence); any bundle `log.md` overflow archived to `log_archive.md` co-located in the bundle
+5. **Bundle-backed changes: log maintenance — spec-log current and overflow archived** (`03-logging.md` spec-log altitude): the bundle's `log.md` captures this slice's decisions, discarded detail, and execution log (deviations, gate evidence); any bundle `log.md` overflow archived to `log_archive.md` co-located in the bundle; a code-touching slice's bundle carries `design.md` (`04-docs.md` §ENG)
 6. Doc-sync triggers checked (Documentation Update Triggers below)
-7. Single concern; on a bundle-backed slice, once the slice is done the owner flips the bundle's PRD `Status` to a terminal state (`complete`) in place (bundle lifecycle: `04-docs.md`) — bundles are retained dated under `_specs/`, never moved or deleted
+7. Single concern; on a bundle-backed slice, once the slice is done the owner flips the bundle's PRD `Status` to a terminal state (`complete`), then folds the bundle file-to-file into the scope's main bundle and deletes its directory (`04-docs.md` §Bundle lifecycle — git history is the archive)
 
-Review check: bundle-backed PR? → bundle `log.md` current and overflow archived; on slice done, PRD `Status:` flipped to a terminal state.
+Review check: bundle-backed PR? → bundle `log.md` current and overflow archived; on slice done, PRD `Status:` flipped terminal and the bundle folded into the main bundle + deleted.
 
 ## Documentation Update Triggers
 

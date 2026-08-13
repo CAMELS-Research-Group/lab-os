@@ -51,7 +51,7 @@ Keep the PR scoped to a single concern — split if it spans multiple phases.
 - [ ] Log entries finalized (verified against final diff, index updated)
 - [ ] No loggable events in this PR
 <!-- Bundle lifecycle: tick only when the owner declares a slice done (see PR-LIFECYCLE.md, Merge mechanics). -->
-- [ ] Bundle PRD `Status:` flipped to `complete` in place (slice declared done)
+- [ ] Bundle PRD `Status:` flipped to `complete`, bundle folded into the scope's main bundle and its directory deleted (slice declared done)
 
 ## Related
 
