@@ -12,6 +12,12 @@
 
 **Branch:** `docs/logging-and-docs-standard` (spec already committed there). All tasks land on this branch; one PR at the end.
 
+> **Superseded 2026-08-12** (budget numbers only): the per-file byte budgets quoted in the task
+> acceptance and verification lines below — `CLAUDE.md` 8,192 and each `.claude/rules/*.md` 5,120 —
+> were raised to 12,288 and 8,192, and a 48 KB always-loaded aggregate cap was added.
+> `project_log.md` is unchanged at 15,360. Current bytes live in `.claude/rules/04-docs.md`
+> §Tiers & budgets — the numbers below are historical, like the sibling design doc's §7.2 table.
+
 ---
 
 ## Phase A — rules and core docs
