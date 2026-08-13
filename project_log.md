@@ -34,17 +34,18 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 ## 2026-08-12 17:33 — Raise always-loaded doc budgets to 12/8 KB; add a 48 KB aggregate cap
 
 **Decision:** `CLAUDE.md` 8→12 KB, each `.claude/rules/*.md` 5→8 KB, and a new 48 KB
-**aggregate** cap over the always-loaded tier (`CLAUDE.md` + rules; `project_log.md` excluded,
-unchanged at 15 KB). Over aggregate the remedy is demoting a surface to grep-only, not raising
-the cap. `.claude/rules/04-docs.md` owns the bytes; `scripts/docs_budget.py` enforces them.
+**aggregate** cap over the always-loaded tier (`project_log.md` excluded, unchanged at 15 KB).
+Over aggregate the remedy is demoting a surface to grep-only, not raising the cap. A scan that
+cannot measure a present always-loaded surface reports PARTIAL and fails closed under
+`--enforce`. `.claude/rules/04-docs.md` owns the bytes; `scripts/docs_budget.py` enforces.
 **Why:** The 8/5 KB numbers were never calibrated — the design doc logged them as a first guess
-(§13) and recorded every flagship repo already over 8 KB at adoption (§7.2). Caravan's
-`.claude/CLAUDE.md` had two bytes of headroom. A per-file raise alone removes the pressure that
-forces the always-loaded/grep-only tiering decision and invites silent instruction dilution, so
-the aggregate — what context costs per session and per subagent — is the binding number.
-**Alternatives:** Flat 20 KB per file (rejected: +75 KB of ceiling on a rules glob that only
-grows, 30 KB effective at the 1.5× fail line). Per-file raise with no aggregate (rejected:
-leaves the add-more-rules-files hole open).
+(§13) and recorded every flagship repo already over 8 KB at adoption (§7.2). A per-file raise
+alone removes the pressure that forces the always-loaded/grep-only tiering decision, so the
+aggregate — what context costs per session and per subagent — is the binding number, and it
+only binds if a surface it could not measure cannot silently shrink it.
+**Alternatives:** Flat 20 KB per file (rejected: +75 KB of ceiling on a glob that only grows).
+Per-file raise with no aggregate (rejected: leaves the add-a-rules-file hole open). Partial
+aggregate reported but green (rejected: a short total still reads authoritative).
 **Refs:** #79, `.claude/rules/04-docs.md`, `scripts/docs_budget.py`
 
 ---
