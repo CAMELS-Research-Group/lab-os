@@ -46,6 +46,18 @@ jobs:
           repository: CAMELS-Research-Group/lab-os
           path: .lab-os
 
+      - name: Self-test docs-budget (unconditional — never gated on enforce)
+        run: |
+          # A self-test failure is a code defect, not a content warning: it
+          # always fails the job, regardless of the enforce input. Without
+          # this step the aggregate-cap checks never execute in CI — lab-os'
+          # own run sits at 0.47x and exercises no annotation path.
+          SCRIPT=".lab-os/scripts/docs_budget.py"
+          if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then
+            SCRIPT="scripts/docs_budget.py"
+          fi
+          python3 "$SCRIPT" --self-test
+
       - name: Run docs-budget
         env:
           ENFORCE: ${{ inputs.enforce }}
