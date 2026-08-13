@@ -14,7 +14,8 @@
 # PATH-FILTERED ON PURPOSE, AND THEREFORE NOT A REQUIRED STATUS CHECK. A required check that is
 # path-filtered never reports on PRs that do not touch its paths, and those PRs then block forever
 # waiting for a check that will never run. Keep this off the required list (same rule as
-# rules-sync-selftest).
+# Caravan's rules-sync-selftest, which is path-filtered on scripts/rules_sync.py for the same
+# reason -- that job lives in Caravan, not in this repo).
 
 name: plugin-tests
 

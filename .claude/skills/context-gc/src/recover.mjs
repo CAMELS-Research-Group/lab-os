@@ -114,7 +114,8 @@ function gatherDeterministicSources(payload) {
  * Never throws: the whole body is wrapped so any unexpected failure (e.g. `getConfig()` itself
  * misbehaving, a payload shape nobody anticipated) degrades to `''` rather than propagating —
  * this is the orchestrator's own fail-open floor, on top of (not instead of) each source module's
- * own fail-open contract.
+ * own fail-open contract. The failure is reported on the `CONTEXT_GC_DEBUG` channel, mirroring
+ * `recoverEnriched()`, so degrading here is not also silent.
  *
  * @param {{source?: string, cwd?: string, transcript_path?: string}} payload
  * @returns {string}
@@ -127,7 +128,8 @@ export function recover(payload) {
     const manifest = buildManifest({ files, tasks }, config.maxBytes);
 
     return typeof manifest === 'string' ? manifest : '';
-  } catch {
+  } catch (error) {
+    reportDegradation('recover', error);
     return '';
   }
 }
@@ -235,8 +237,11 @@ function readStdinPayload() {
  * drains stdout and the process exits naturally once the write completes.
  */
 async function main() {
-  // Stream errors on process.stdout/stderr are delivered as an 'error' EVENT on every platform,
-  // never as a throw from write() — so the try/catch below cannot see them. With no listener,
+  // Stream I/O errors on process.stdout/stderr (EPIPE, a closed read end, a destroyed pipe) are
+  // delivered as an 'error' EVENT on every platform, never as a throw from write() — so the
+  // try/catch below cannot see THAT class. (A synchronous throw from write() is a different
+  // class — an already-destroyed stream, an invalid argument — and IS catchable; the catch below
+  // exists for it. The two are complementary, not contradictory.) With no listener,
   // Node promotes the event to an uncaught exception and a non-zero exit: precisely the
   // resume-blocking outcome this function exists to avoid. (This is unrelated to the sync/async
   // split above, which governs FLUSH timing, not error delivery — the listener is unconditional

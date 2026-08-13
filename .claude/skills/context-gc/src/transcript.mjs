@@ -99,6 +99,13 @@ function normalizeTaskBlock(block) {
  * tool ran" from "the assistant intentionally cleared its list" — both surface as `[]` — but it
  * does correctly prefer a more recent cleared list over a stale non-empty one. Returns `[]` when
  * no task-tool block in the window parses.
+ *
+ * A THIRD case currently folds in with those two: `normalizeTaskBlock` drops entries whose
+ * `content` is not a string, so a `TodoWrite` whose entries ALL fail that filter (a harness
+ * field rename, say) normalizes to `[]` — a successful parse — and outranks an older, still
+ * valid list, surfacing to the reader as "the assistant cleared its list". Whether a block that
+ * survives the filter empty should instead return `null`, so the previous valid list holds, is
+ * an open question and not settled here.
  */
 function extractTasks(window) {
   const taskBlocks = [];

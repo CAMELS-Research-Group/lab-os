@@ -151,7 +151,8 @@ test('corruption outside the consulted window is tolerated, not fatal to the who
   // A transcript can hold tens of thousands of records while only the few preceding the last
   // compaction marker are ever read. A bad line in far history is in a region the plugin would
   // never have consulted, so discarding the tail AND the task list for it costs the user
-  // everything and gains nothing. Corruption inside the window stays fatal — see the test above.
+  // everything and gains nothing. Corruption inside the window stays fatal — see 'a window that
+  // reaches back over the corrupt line is still fatal (blast radius, not amnesty)' below.
   const result = readTranscript(fixture('garbage-outside-window.jsonl'), 2);
 
   assert.deepEqual(result.tasks, [{ content: 'task A', status: 'completed' }]);

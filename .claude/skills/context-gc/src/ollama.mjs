@@ -95,8 +95,9 @@ async function callOllama({ host, model, prompt, timeoutMs, fetchImpl }) {
     const payload = await response.json();
     return payload && typeof payload.response === 'string' ? payload.response : null;
   } catch {
-    // Covers: network throw (unreachable/DNS/refused), abort/timeout, and a body that fails to
-    // parse as JSON at the transport level — all fold into the same fail-open outcome.
+    // Covers: network throw (unreachable/DNS/refused), abort/timeout, and a response body that
+    // `response.json()` rejects on (the body is not valid JSON) — all fold into the same
+    // fail-open outcome.
     return null;
   } finally {
     clearTimeout(timer);

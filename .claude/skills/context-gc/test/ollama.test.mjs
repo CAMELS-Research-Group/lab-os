@@ -293,7 +293,7 @@ test('decisions filtered: non-string / blank entries in the decisions array are 
   });
 });
 
-// --- Prompt bounding, transport-level parse failure, and model-shape tolerance ---
+// --- Prompt bounding, response-body parse failure, and model-shape tolerance ---
 
 test('the prompt is bounded regardless of tail size, keeping the NEWEST context', async () => {
   // PROMPT_TAIL_CHAR_CAP is the only bound on prompt size and is documented as holding
@@ -325,7 +325,7 @@ test('the prompt is bounded regardless of tail size, keeping the NEWEST context'
   assert.doesNotMatch(captured, /OLDEST-MARKER/);
 });
 
-test('a body that fails to parse as JSON at the transport level fails open to null', async () => {
+test('a response body that response.json() rejects on fails open to null', async () => {
   // Distinct from the "malformed response" case, which returns a well-formed body containing bad
   // text. Here response.json() itself rejects — the failure class the catch comment names.
   const fetchImpl = async () => ({
