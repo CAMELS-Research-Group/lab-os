@@ -26,6 +26,13 @@ adds no review value, so:
     the always-loaded tier as a whole over the cap
   - aggregate-exclusion repo — `CLAUDE.md` 1,000 B + `project_log.md`
     15,000 B, proving the log is not counted in the aggregate
+  - log-only repo — `project_log.md` 1,000 B alone, so the aggregate has
+    nothing to measure and must report `n/a` rather than a passing zone
+  - both-CLAUDE.md repo — `CLAUDE.md` 1,000 B + `.claude/CLAUDE.md`
+    2,000 B, pinning that the aggregate sums both locations (3,000 B)
+  - completeness repo — the 10 x 8,000 B fail-zone aggregate with one
+    rules file made unmeasurable, so the naive sum (72,000 B) would fall
+    back under the fail line
   - empty repo — missing-surface silence
   - symlink repo — `.claude/rules` linked outside the root, when the
     platform allows symlink creation
@@ -41,8 +48,18 @@ adds no review value, so:
 - Missing surfaces skipped silently
 - Unreadable surfaces (permission denied / TOCTOU-vanished; simulated
   cross-platform by monkeypatching `collect_surfaces` to hand `scan()` a
-  vanished path): excluded from findings, named in a `::warning` line,
-  exit 0 in both modes — unreadability never fails the run
+  vanished path): excluded from findings, named in a `::warning` line.
+  A surface outside the always-loaded tier — `project_log.md` — still
+  exits 0 in both modes, because losing one per-file verdict is harmless
+- Aggregate completeness: when the unmeasurable surface **is** always-
+  loaded, the total would read low, so the run reports `PARTIAL` with the
+  counted bytes as a floor instead of a zone, names every unmeasurable
+  surface in a fileless annotation, and fails closed under `--enforce`
+  (warn-only still exits 0). Covers both drop paths — a `stat()` failure
+  and a path resolving outside the repo root
+- The aggregate cap constant pinned to the byte by an OK/WARN boundary
+  pair, and the summary line's aggregate clause including its `n/a`
+  branch
 - Junction/symlink escape: `escapes_root()` is a pure resolved-path
   containment comparison, always tested directly with plain paths
   (junctions cannot be created portably from stdlib Python, and Windows
