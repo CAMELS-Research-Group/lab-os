@@ -7,7 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-08-12 16:56 — lab-os owns Claude Code plugins; an org marketplace replaces the personal one · #78
+- 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/` · #78
 - 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
@@ -31,19 +31,21 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ---
 
-## 2026-08-12 16:56 — lab-os owns Claude Code plugins; an org marketplace replaces the personal one
+## 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/`
 
-**Decision:** lab-os takes ownership of the lab's Claude Code **plugins** alongside the skills it
-already owns, and gains an org marketplace manifest at `.claude-plugin/marketplace.json` (name
-`lab-os`). `context-gc` — post-compaction session-state recovery via a `SessionStart(compact)` hook —
-lands as its first entry, ported from the workspace fork where it merged as fork PR #91.
-**Why:** the plugin was reachable only through a per-machine `~/.claude/settings.json` naming an
-absolute path inside a personal fork, so coverage was machine- and path-bound and no teammate had it
-at all. The prior marketplace was itself a personal repo (`WatsonWBlair/lab-claude-plugins`, now
-deprecated). An org-owned marketplace puts plugin distribution on the same footing as skills.
-**Alternatives:** vendor a copy into each member repo (duplicates the bytes the sync rules exist to
-prevent); extend `rules_sync.py` to carry it (its manifest is markdown-only by construction).
-**Refs:** #78, `.claude/plugins/context-gc/`, `.claude-plugin/marketplace.json`
+**Decision:** lab-os owns the lab's Claude Code **plugins** alongside its skills, and distributes them
+the same way: vendored under `.claude/skills/<name>/` carrying a `.claude-plugin/plugin.json`, which
+Claude Code loads as `<name>@skills-dir` — no marketplace, no install step. `context-gc` (recovers
+session state after auto-compaction, via a `SessionStart(compact)` hook) is the first.
+**Why:** one distribution mechanism, not two. 2026-07-24 16:20 already rejected marketplace
+distribution for skills, and `ATTRIBUTION.md` states a clone or fork is self-contained; a marketplace
+for plugins alone re-introduces the install step that decision removed. Vendoring widens the stated
+security boundary from assets executing as *instructions* to assets executing as *code*, so
+`plugin-tests` gates the suite in CI.
+**Alternatives:** an org marketplace at `.claude-plugin/marketplace.json` — built and reviewed on this
+PR, then dropped as the second mechanism; per-member-repo vendoring (N copies the sync rules exist to
+prevent — skills-dir needs one, `~/.claude/skills/` being machine-level).
+**Refs:** #78, `.claude/skills/context-gc/`, `.claude/scripts/link-lab-assets.sh`
 
 ---
 

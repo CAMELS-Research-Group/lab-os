@@ -1,9 +1,15 @@
-# plugin-tests — runs the Node test suite for every plugin under .claude/plugins/.
+# plugin-tests — runs the Node test suite for every vendored plugin under .claude/skills/.
 #
-# Why this exists: a plugin ships executable code that runs on every installer's machine, and its
+# Why this exists: a plugin ships executable code that runs on every member's machine, and its
 # whole safety argument is its test suite. Without a gate, that suite is evidence about the commit
 # that last ran it locally and nothing more — the next edit can go red, or a future Node version
-# can break it, with the PR still showing all green.
+# can break it, with the PR still showing all green. `.claude/skills/ATTRIBUTION.md` already names
+# review rigor on this tree as a security boundary; a vendored plugin widens that boundary from
+# assets that execute as *instructions* to assets that execute as *code*, so the suite is gated.
+#
+# DISCOVERY: a plugin is a directory under .claude/skills/ carrying .claude-plugin/plugin.json.
+# Keying on the manifest rather than the directory is deliberate — the plain markdown skills
+# alongside it have no manifest, so they are not swept up and not held to the has-tests rule below.
 #
 # PATH-FILTERED ON PURPOSE, AND THEREFORE NOT A REQUIRED STATUS CHECK. A required check that is
 # path-filtered never reports on PRs that do not touch its paths, and those PRs then block forever
@@ -15,8 +21,10 @@ name: plugin-tests
 on:
   pull_request:
     paths:
-      - '.claude/plugins/**'
-      - '.claude-plugin/**'
+      - '.claude/skills/**'
+      # The wiring test executes this script to prove the plugin is still discovered and linked
+      # into the user scope, so a change to it can redden the suite without touching the plugin.
+      - '.claude/scripts/link-lab-assets.sh'
       - '.github/workflows/plugin-tests.yml'
 
 permissions:
@@ -34,20 +42,21 @@ jobs:
           # install and nothing to cache — only a runtime is needed.
           node-version: '22'
 
-      - name: Discover and test every plugin
+      - name: Discover and test every vendored plugin
         shell: bash
         run: |
           set -euo pipefail
 
           shopt -s nullglob
-          plugins=(.claude/plugins/*/)
-          if [ ${#plugins[@]} -eq 0 ]; then
-            echo "No plugins found under .claude/plugins/ — nothing to test."
+          manifests=(.claude/skills/*/.claude-plugin/plugin.json)
+          if [ ${#manifests[@]} -eq 0 ]; then
+            echo "No plugins found under .claude/skills/ — nothing to test."
             exit 0
           fi
 
           failed=0
-          for plugin in "${plugins[@]}"; do
+          for manifest in "${manifests[@]}"; do
+            plugin="$(dirname "$(dirname "$manifest")")/"
             name="$(basename "$plugin")"
             tests=("$plugin"test/*.test.mjs)
 
@@ -70,13 +79,13 @@ jobs:
 
           exit "$failed"
 
-      - name: Validate plugin and marketplace manifests parse
+      - name: Validate plugin manifests parse
         shell: bash
         run: |
           set -euo pipefail
 
           shopt -s nullglob
-          for manifest in .claude-plugin/marketplace.json .claude/plugins/*/.claude-plugin/plugin.json .claude/plugins/*/hooks/hooks.json; do
+          for manifest in .claude/skills/*/.claude-plugin/plugin.json .claude/skills/*/hooks/hooks.json; do
             python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$manifest"
             echo "ok: $manifest"
           done

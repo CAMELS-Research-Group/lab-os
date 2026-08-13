@@ -68,13 +68,28 @@ resume is worse than one that silently no-ops.
 
 ## Install
 
-`context-gc` is distributed through the lab's org-owned plugin marketplace, declared at
-`.claude-plugin/marketplace.json` in this repository. Add the marketplace once, then install:
+There is nothing to install. `context-gc` is **vendored**, like every other asset under
+`.claude/skills/` — a clone or fork of this repo carries the plugin itself, with no marketplace to
+add and no install step to run (`.claude/skills/ATTRIBUTION.md`).
+
+It is a plugin, not a skill: the `.claude-plugin/plugin.json` manifest is what makes Claude Code
+load this directory as `context-gc@skills-dir` rather than as a model-invocable skill. Only a
+plugin can register a hook, which is the whole point — recovery has to fire on an event, not wait
+to be chosen.
+
+Run the standard asset link script once per machine to deploy it user-scope:
 
 ```
-/plugin marketplace add CAMELS-Research-Group/lab-os
-/plugin install context-gc@lab-os
+bash .claude/scripts/link-lab-assets.sh
 ```
+
+That symlink is **required for always-on coverage**, not a convenience. A project-scope
+skills-dir plugin loads only from the `.claude/skills/` of the directory Claude Code was started
+in and does not walk up to the repository root, so a session opened in a nested `projects/<repo>`
+clone would never see it. Linked into `~/.claude/skills/`, it loads at personal scope in every
+session on the machine. The plugin's [wiring test](test/wiring.test.mjs) asserts the link script
+discovers it, because a hook that is never registered is indistinguishable from one that had
+nothing to recover.
 
 ## Enable / disable
 
@@ -82,9 +97,18 @@ The plugin ships one hook registration — a `SessionStart` hook matching `compa
 [`hooks/hooks.json`](hooks/hooks.json) (that file is the source of truth for the exact command;
 it is not reproduced here, so the two cannot drift).
 
-Installing the plugin registers that hook, so it runs automatically on every
-`SessionStart(compact)` event — no separate opt-in step, no command to run. To disable recovery,
-disable or remove the plugin so Claude Code no longer registers the hook.
+Discovery registers that hook, so it runs automatically on every `SessionStart(compact)` event —
+no separate opt-in step, no command to run. Changes to `hooks/hooks.json` need `/reload-plugins`
+or a restart to take effect; only `SKILL.md` edits are picked up live, and this plugin ships none.
+
+To disable recovery:
+
+```
+claude plugin disable context-gc@skills-dir
+```
+
+There is no `uninstall`, because nothing was installed from a marketplace — removing the symlink
+from `~/.claude/skills/` (or the directory itself) also stops it loading.
 
 ## Configuration
 
