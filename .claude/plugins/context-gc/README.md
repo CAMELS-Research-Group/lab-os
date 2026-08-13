@@ -66,39 +66,38 @@ The hook always injects whatever it has, and if every source comes up empty, it 
 (no bare/lonely manifest header) and exits 0 either way — a hook that blocks or errors session
 resume is worse than one that silently no-ops.
 
-## Enable / disable
+## Install
 
-The plugin ships one hook registration, in `hooks/hooks.json`:
+`context-gc` is distributed through the lab's org-owned plugin marketplace, declared at
+`.claude-plugin/marketplace.json` in this repository. Add the marketplace once, then install:
 
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "compact",
-        "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/recover.mjs\"" }
-        ]
-      }
-    ]
-  }
-}
+```
+/plugin marketplace add CAMELS-Research-Group/lab-os
+/plugin install context-gc@lab-os
 ```
 
-Installing/enabling this plugin through Claude Code's plugin mechanism registers that hook, so it
-runs automatically on every `SessionStart(compact)` event — no separate opt-in step, no command to
-run. To disable recovery, disable or remove the plugin (or delete/rename `hooks/hooks.json`) so
-Claude Code no longer registers the `SessionStart` hook.
+## Enable / disable
+
+The plugin ships one hook registration — a `SessionStart` hook matching `compact`, defined in
+[`hooks/hooks.json`](hooks/hooks.json) (that file is the source of truth for the exact command;
+it is not reproduced here, so the two cannot drift).
+
+Installing the plugin registers that hook, so it runs automatically on every
+`SessionStart(compact)` event — no separate opt-in step, no command to run. To disable recovery,
+disable or remove the plugin so Claude Code no longer registers the hook.
 
 ## Configuration
 
 All configuration is via environment variables; every one is optional and falls back to its
-default when unset, blank, or (for the numeric ones) unparseable. `src/config.mjs` is the single
-place these are read and defaulted.
+default when unset, blank, or — for the numeric ones — unparseable, non-integer, or not positive.
+Zero and negative values are rejected rather than honoured: each would silently disable a feature
+(a `0` byte cap empties the manifest; a non-positive tail window empties the transcript read and
+with it enrichment), which is indistinguishable from having nothing to recover. String values are
+trimmed. `src/config.mjs` is the single place these are read and defaulted.
 
 | Variable | Default | Controls |
 |---|---|---|
-| `CONTEXT_GC_OLLAMA_MODEL` | `hermes3:8b` | The local Ollama model used for enrichment. An ~8B model was chosen for fidelity: on a corrected-decision tail, a 3B model was observed reporting a *superseded* decision as current, where the 8B model reported the settled one. Override with a smaller/faster model (e.g. `llama3.2:3b`) if you prefer lower latency and accept softer recovery. |
+| `CONTEXT_GC_OLLAMA_MODEL` | `hermes3:8b` | The local Ollama model used for enrichment. An ~8B model is the default for fidelity: smaller models are more prone to reporting a *superseded* decision as current on a corrected-decision tail. Override with a smaller/faster model (e.g. `llama3.2:3b`) if you prefer lower latency and accept softer recovery. |
 | `CONTEXT_GC_OLLAMA_HOST` | `http://127.0.0.1:11434` | Base URL of the local Ollama server (`/api/generate` is appended). |
 | `CONTEXT_GC_TAIL_RECORDS` | `40` | Number of transcript records immediately preceding the compaction marker to read for task state and to feed the enrichment prompt. |
 | `CONTEXT_GC_TIMEOUT_MS` | `20000` | Milliseconds before the Ollama call is aborted; a timeout degrades the enriched layer only (see Fail-open above). The budget is generous on purpose: it is the resume-stall ceiling, reached only when the model is genuinely slow (cold load, or the machine busy mid-compaction) — an *unreachable* Ollama still fails in milliseconds via connection-refused, never waiting out this cap. |
@@ -106,15 +105,34 @@ place these are read and defaulted.
 
 ## Requirements
 
-- **Node** — ships with Claude Code; no separate install. No external npm dependencies.
+- **Node** — the hook's only command is `node …`, making it the plugin's one hard, non-degradable
+  dependency: unlike git and Ollama below, its absence fails the hook invocation itself rather than
+  degrading a field. It is normally present wherever Claude Code runs, and the plugin needs no
+  external npm dependencies.
 - **Git** — for the deterministic files layer; its absence degrades that field only, it doesn't
   block the hook.
 - **Local Ollama** (optional) — for the enriched layer only. Pull the default model once with
   `ollama pull hermes3:8b` (or point `CONTEXT_GC_OLLAMA_MODEL` at a model you already have). Without
   Ollama (not installed, not running, or the configured model not pulled), the hook still ships the
-  deterministic floor. A warm 8B model answers well inside the default 20s timeout (~3–7s observed,
-  even under concurrent compaction load); the *first* compaction of a session may cold-load past the
-  timeout and fail open to the floor.
+  deterministic floor. A warm 8B model answers well inside the default 20s
+  timeout; the *first* compaction of a session may cold-load past the timeout and fail open to the
+  floor.
+
+## Diagnostics
+
+Every failure in this plugin degrades silently by design — that is what keeps a broken hook from
+blocking session resume. The cost is that a genuinely broken plugin looks exactly like a session
+with nothing to recover. Set `CONTEXT_GC_DEBUG=1` to have each degradation report itself on
+stderr (which does not affect the hook's exit status and does not enter model context):
+
+```
+CONTEXT_GC_DEBUG=1
+```
+
+Reported stages include `git.getChangedFiles`, `transcript.readTranscript`, `ollama.enrich`,
+`readStdinPayload`, and `stdout`. This is the first thing to reach for if the manifest stops
+appearing, or if the Tasks section goes missing after a Claude Code upgrade — the transcript
+format is harness-owned and undocumented, so a format change degrades this plugin quietly.
 
 ## Data protection
 

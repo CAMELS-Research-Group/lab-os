@@ -1,0 +1,82 @@
+# plugin-tests — runs the Node test suite for every plugin under .claude/plugins/.
+#
+# Why this exists: a plugin ships executable code that runs on every installer's machine, and its
+# whole safety argument is its test suite. Without a gate, that suite is evidence about the commit
+# that last ran it locally and nothing more — the next edit can go red, or a future Node version
+# can break it, with the PR still showing all green.
+#
+# PATH-FILTERED ON PURPOSE, AND THEREFORE NOT A REQUIRED STATUS CHECK. A required check that is
+# path-filtered never reports on PRs that do not touch its paths, and those PRs then block forever
+# waiting for a check that will never run. Keep this off the required list (same rule as
+# rules-sync-selftest).
+
+name: plugin-tests
+
+on:
+  pull_request:
+    paths:
+      - '.claude/plugins/**'
+      - '.claude-plugin/**'
+      - '.github/workflows/plugin-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  plugin-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          # The plugin has no npm dependencies and no package.json, so there is nothing to
+          # install and nothing to cache — only a runtime is needed.
+          node-version: '22'
+
+      - name: Discover and test every plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          plugins=(.claude/plugins/*/)
+          if [ ${#plugins[@]} -eq 0 ]; then
+            echo "No plugins found under .claude/plugins/ — nothing to test."
+            exit 0
+          fi
+
+          failed=0
+          for plugin in "${plugins[@]}"; do
+            name="$(basename "$plugin")"
+            tests=("$plugin"test/*.test.mjs)
+
+            if [ ${#tests[@]} -eq 0 ]; then
+              # A plugin with no tests is a finding, not a pass. Surfaced loudly rather than
+              # skipped silently, so an untested plugin cannot ride in behind a green check.
+              echo "::error title=Untested plugin::$name ships no test/*.test.mjs files"
+              failed=1
+              continue
+            fi
+
+            echo "::group::$name ($((${#tests[@]})) test files)"
+            # Unpiped: piping would swallow the exit code and let a red suite read green.
+            if ! ( cd "$plugin" && node --test "test/*.test.mjs" ); then
+              echo "::error title=Plugin tests failed::$name"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          exit "$failed"
+
+      - name: Validate plugin and marketplace manifests parse
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          for manifest in .claude-plugin/marketplace.json .claude/plugins/*/.claude-plugin/plugin.json .claude/plugins/*/hooks/hooks.json; do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$manifest"
+            echo "ok: $manifest"
+          done
