@@ -94,7 +94,7 @@ function renderFileLine(file) {
 
 /**
  * Renders one task entry as a single markdown list line.
- * @param {{content: string, status: string}} task
+ * @param {{content: string, status: string | undefined}} task
  * @returns {string}
  */
 function renderTaskLine(task) {
@@ -144,7 +144,7 @@ function renderEnrichedSection(objective, decisions) {
  * were dropped, so a short list is never mistaken for a complete one.
  *
  * @param {Array<{path: string, status: string}>} files
- * @param {Array<{content: string, status: string}>} tasks
+ * @param {Array<{content: string, status: string | undefined}>} tasks
  * @param {string|null} objective
  * @param {string[]} decisions
  * @param {{files: number, tasks: number}} [dropped] entries removed by the byte cap, per section
@@ -198,7 +198,7 @@ function render(files, tasks, objective, decisions, dropped = { files: 0, tasks:
  * Pure and stateless: does not read, write, or merge with any prior manifest; does not mutate any
  * `sources` field. A fresh call with the same inputs always returns the same output.
  *
- * @param {{files: Array<{path: string, status: string}>, tasks: Array<{content: string, status: string}>,
+ * @param {{files: Array<{path: string, status: string}>, tasks: Array<{content: string, status: string | undefined}>,
  *   objective?: string|null, decisions?: string[]}} sources
  * @param {number} maxBytes
  * @returns {string}

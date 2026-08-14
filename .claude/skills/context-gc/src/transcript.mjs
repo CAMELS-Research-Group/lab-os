@@ -206,7 +206,7 @@ function readRecords(transcriptPath) {
  *
  * @param {string} transcriptPath
  * @param {number} tailRecords
- * @returns {{tail: Array<{role: 'user'|'assistant', text: string}>, tasks: Array<{content: string, status: string}>}}
+ * @returns {{tail: Array<{role: 'user'|'assistant', text: string}>, tasks: Array<{content: string, status: string | undefined}>}}
  */
 export function readTranscript(transcriptPath, tailRecords) {
   const records = readRecords(transcriptPath);
