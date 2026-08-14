@@ -33,7 +33,17 @@ permissions:
 
 jobs:
   plugin-tests:
-    runs-on: ubuntu-latest
+    # MATRIX, not redundancy: the suite's largest regression test guards a race that only exists
+    # on darwin — writes to a pipe are synchronous on Linux and Windows but ASYNCHRONOUS on macOS
+    # (see `src/recover.mjs` main()), so a linux-only run executes that test somewhere it can
+    # never fail. macos-latest is where it is actually a test.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Both legs report: a red linux leg must not cancel the darwin leg, which is the only one
+      # carrying the platform-specific signal.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v5
 
