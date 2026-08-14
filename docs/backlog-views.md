@@ -11,6 +11,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 | B1 | Convention-setting exercise | Jean |
 | B2 | Workshop process + feedback iteration | Watson |
 | B4 | Time-boxing PRDs / working sessions | Arya |
+| B9 | Sweep the remaining fork-era staging-surface residue | Watson |
 
 ## By owner
 
@@ -26,6 +27,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 
 ### Watson
 - B2 — Workshop process + feedback iteration (M, ready)
+- B9 — Sweep the remaining fork-era staging-surface residue (S, ready)
 
 ## Dependency graph
 
