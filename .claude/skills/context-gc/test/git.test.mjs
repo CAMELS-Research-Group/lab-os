@@ -154,8 +154,11 @@ test('an absent cwd reports nothing rather than the process working directory', 
 });
 
 test('a malformed porcelain record is skipped rather than coerced into a floor entry', () => {
-  // Simulated via a repo whose status output is empty: the guard itself is unit-verified by the
-  // rename case above (the continuation record is exactly a record with no `XY ` prefix).
+  // Simulated via a repo whose status output is empty, which does NOT reach the guard: this
+  // assertion is tautological on its own, and deleting the malformed-record guard leaves the
+  // suite green. The rename case above does not cover it either — its continuation record is
+  // consumed by `skipNext` before the guard sees it. The coverage gap is real and tracked in #88;
+  // do not read this test as pinning the guard.
   const dir = createTempGitRepo('context-gc-git-clean-test-');
   try {
     fs.writeFileSync(path.join(dir, 'tracked.txt'), 'v1\n');

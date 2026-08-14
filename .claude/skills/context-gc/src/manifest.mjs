@@ -31,6 +31,13 @@ const MODEL_INFERRED_TAG = 'model-inferred — local Ollama; verify before treat
 // pathological cap reachable (a marker on an empty section would consume bytes forever).
 const TRUNCATION_MARKER_PREFIX = '- … ';
 
+// The fewest bytes an entry line can occupy in the rendered document: `- M: ` — the shortest form
+// `renderFileLine` can emit (a one-character status and an empty path) — plus the newline that
+// joins it to its neighbour. Used ONLY as a safe lower bound when pre-bounding the deterministic
+// arrays in `buildManifest`. Understating it is harmless (a looser ceiling, still O(cap));
+// overstating it would discard an entry that could have survived, so it stays conservative.
+const MIN_ENTRY_BYTES = 6;
+
 function renderTruncationMarker(droppedCount) {
   // Deliberately terse. This line competes with real entries for the same byte cap, so every
   // word it spends is an entry it may cost; "… N more" carries the whole signal.
@@ -208,6 +215,37 @@ export function buildManifest(sources, maxBytes) {
       : [];
 
     const dropped = { files: 0, tasks: 0 };
+
+    // Bound the deterministic arrays BEFORE the tier loop below. That loop pops ONE entry and
+    // re-renders the WHOLE document per drop, so it costs O(n²) in whatever `git status` emitted.
+    // Nothing upstream bounds n: `git.mjs`'s `GIT_TIMEOUT_MS` caps how long git may RUN, not how
+    // much it may EMIT, and a mass reformat, an EOL/`.gitattributes` flip, or a generated tracked
+    // tree reaches five figures routinely. Unbounded, this pure function alone stalls session
+    // resume for tens of seconds (measured on this tree: 20,000 entries → ~34 s) — the exact
+    // outcome every other slow path here is capped to prevent, and worse than git and Ollama
+    // combined.
+    //
+    // Output-neutral by construction, which is why this is a bound and not a policy change: the
+    // tier loop drops from the END, so whatever survives is a PREFIX of the array, and no entry
+    // past `maxBytes / MIN_ENTRY_BYTES` can survive a cap of `maxBytes`. Entries removed here are
+    // credited to the same `dropped` counters the loop uses, so the truncation marker still names
+    // the true total and never understates what was withheld.
+    //
+    // RESIDUAL, stated rather than silently left: the bound's strength tracks `maxBytes`, it is
+    // not constant. The loop is still O(ceiling²), and `ceiling` is `maxBytes / MIN_ENTRY_BYTES` —
+    // ~667 entries at the 4,000-byte default (immaterial), but `CONTEXT_GC_MAX_BYTES` is
+    // operator-settable with no upper limit, so a very large cap re-opens the window for a working
+    // tree large enough to overflow it. An absolute entry cap would close it, but would also
+    // change what a large cap renders, forfeiting the output-neutrality above — the property that
+    // makes this a safe bound rather than a policy change. Closing it properly means making the
+    // trim itself sub-quadratic (bulk-drop by prefix byte sums instead of one entry per
+    // re-render), which is a larger change than this bound.
+    if (Number.isFinite(maxBytes)) {
+      const ceiling = Math.max(0, Math.ceil(maxBytes / MIN_ENTRY_BYTES));
+      if (files.length > ceiling) dropped.files += files.splice(ceiling).length;
+      if (tasks.length > ceiling) dropped.tasks += tasks.splice(ceiling).length;
+    }
+
     const counts = () => (withMarkers ? dropped : { files: 0, tasks: 0 });
     const rerender = () => render(files, tasks, objective, decisions, counts());
 

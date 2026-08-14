@@ -51,8 +51,12 @@ jobs:
           shopt -s nullglob
           manifests=(.claude/skills/*/.claude-plugin/plugin.json)
           if [ ${#manifests[@]} -eq 0 ]; then
-            echo "No plugins found under .claude/skills/ — nothing to test."
-            exit 0
+            # Zero plugins is a finding, not a pass — the same rule the untested-plugin branch
+            # below applies. This repo always carries at least one vendored plugin, so an empty
+            # glob means the layout moved and this gate is now testing nothing while reading
+            # green.
+            echo "::error title=No plugins discovered::.claude/skills/*/.claude-plugin/plugin.json matched nothing"
+            exit 1
           fi
 
           failed=0
@@ -86,7 +90,16 @@ jobs:
           set -euo pipefail
 
           shopt -s nullglob
+          # Counted for the same reason the discovery step fails on an empty glob: under nullglob
+          # this loop validates zero files and exits 0 if the layout ever moves.
+          validated=0
           for manifest in .claude/skills/*/.claude-plugin/plugin.json .claude/skills/*/hooks/hooks.json; do
             python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$manifest"
             echo "ok: $manifest"
+            validated=$((validated + 1))
           done
+
+          if [ "$validated" -eq 0 ]; then
+            echo "::error title=No plugin manifests validated::the manifest globs matched nothing"
+            exit 1
+          fi

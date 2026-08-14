@@ -297,3 +297,37 @@ test('an empty manifest writes nothing at all, not an empty additionalContext en
     cleanup(dir);
   }
 });
+
+test('CONTEXT_GC_DEBUG=1 reports a real degradation on stderr, and is silent without the flag', () => {
+  // Pins `reportDegradation` itself, which no other test reaches: replacing its whole body with
+  // `return;` — or hard-coding `isDebugEnabled` to `false` — left the rest of the suite green,
+  // because every call site it has is entered only under the debug flag and no test sets it. The
+  // remediation that added the diagnostic channel was therefore unpinned by the commit that
+  // claimed it.
+  //
+  // Spawned rather than called: `reportDegradation` is module-private and writes to the process's
+  // real stderr, so the observable contract is the spawned hook's stderr, not a return value.
+  //
+  // Malformed stdin is the degradation used because `readStdinPayload` is the one stage today
+  // whose failure genuinely THROWS into the reporter — the other stages named in README
+  // §Diagnostics signal by returning a sentinel and never reach it (tracked in #86). If that
+  // changes, this test keeps working; it asserts the channel, not the stage inventory.
+  const entry = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src', 'recover.mjs');
+  const spawnWith = (env) => spawnSync(process.execPath, [entry], {
+    input: 'not json at all',
+    encoding: 'utf8',
+    env: { ...process.env, CONTEXT_GC_OLLAMA_HOST: 'http://127.0.0.1:1', ...env },
+  });
+
+  const noisy = spawnWith({ CONTEXT_GC_DEBUG: '1' });
+  assert.equal(noisy.status, 0, 'the diagnostic must not change the always-exit-0 contract');
+  assert.match(
+    noisy.stderr,
+    /^\[context-gc] degraded at readStdinPayload: SyntaxError$/m,
+    `expected a degradation line on stderr, got: ${JSON.stringify(noisy.stderr)}`
+  );
+
+  const quiet = spawnWith({ CONTEXT_GC_DEBUG: '0' });
+  assert.equal(quiet.status, 0);
+  assert.equal(quiet.stderr, '', 'the channel is off by default; a hook that chatters every resume is its own problem');
+});

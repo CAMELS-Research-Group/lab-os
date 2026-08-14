@@ -27,7 +27,8 @@ section records only the ones whose provenance needs stating explicitly.
 
 - `context-gc` — authored in-lab (bundle
   `WatsonWBlair/Agentic_Workspace:_specs/lab-os/2026-07-02-context-gc/`, `Status: complete`);
-  hardened through two `/pr-review-loop` passes on PR #78. No third-party attribution owed.
+  hardened through `/pr-review-loop` and `/pr-round` review on PR #78. No third-party
+  attribution owed.
   **A plugin, not a skill** — it carries `.claude-plugin/plugin.json` and `hooks/hooks.json`,
   ships no `SKILL.md`, and is never model-invoked; see its `README.md`. It is the one asset in
   this tree that versions itself (`plugin.json`) rather than per §Versioning below.

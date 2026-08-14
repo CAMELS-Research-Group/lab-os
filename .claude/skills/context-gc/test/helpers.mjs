@@ -16,12 +16,26 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-// Global and system git config are pointed at the null device rather than merely overridden
+// Global and system git config are pointed at a single EMPTY FILE rather than merely overridden
 // per-key, so a setting nobody thought to override cannot leak into a test repo.
+//
+// An empty real file, not `os.devNull`: on Windows `os.devNull` is `\\.\nul`, and Git for Windows
+// (MSYS) mangles that to `//./nul` and dies with `fatal: unable to access '//./nul': Invalid
+// argument` on EVERY invocation — including the `git init` in `createTempGitRepo` — so every
+// git-backed test reds on Windows while passing on the Linux runner. `link-lab-assets.sh`
+// documents Windows/MSYS as a supported host, so that is a real member running the documented
+// verify command. An empty file is portable and gives git exactly the same thing to read: nothing.
+const HERMETIC_CONFIG_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-gitconfig-'));
+const HERMETIC_CONFIG = path.join(HERMETIC_CONFIG_DIR, 'gitconfig');
+fs.writeFileSync(HERMETIC_CONFIG, '');
+process.on('exit', () => {
+  fs.rmSync(HERMETIC_CONFIG_DIR, { recursive: true, force: true });
+});
+
 const HERMETIC_ENV = {
   ...process.env,
-  GIT_CONFIG_GLOBAL: os.devNull,
-  GIT_CONFIG_SYSTEM: os.devNull,
+  GIT_CONFIG_GLOBAL: HERMETIC_CONFIG,
+  GIT_CONFIG_SYSTEM: HERMETIC_CONFIG,
 };
 
 /**

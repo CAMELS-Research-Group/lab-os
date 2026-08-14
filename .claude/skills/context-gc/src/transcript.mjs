@@ -22,7 +22,10 @@
 import { readFileSync } from 'node:fs';
 
 const TASK_TOOL_NAMES = new Set(['TodoWrite', 'TaskCreate', 'TaskUpdate']);
-const EMPTY_RESULT = Object.freeze({ tail: [], tasks: [] });
+// Deep-frozen, not shallow: `readTranscript`'s docstring calls the function pure, and this
+// singleton is returned on every degraded read in the process. Left shallow, a caller that pushed
+// onto the returned `tail` would silently poison every later degraded read.
+const EMPTY_RESULT = Object.freeze({ tail: Object.freeze([]), tasks: Object.freeze([]) });
 
 // Marks a line that did not parse as JSON, held at its original index so the read stays
 // position-accurate. Never leaves this module: `readTranscript` either rejects the read outright
@@ -224,11 +227,14 @@ export function readTranscript(transcriptPath, tailRecords) {
   // That is the one failure this module must not have. Anything unreadable OLDER than the marker
   // stays tolerated: it cannot hide a newer marker, and that is what the positional sentinels buy.
   //
-  // Note this does not cover a TORN TRAILING record, which `readRecords` drops rather than
-  // retaining — the harness is legitimately mid-append at exactly the moment this hook fires, so
-  // treating every torn tail as corruption would forfeit recovery in the common case. A torn
-  // trailing record that was itself a compaction summary can therefore still select an older
-  // marker; that residual is accepted deliberately, not overlooked.
+  // A TORN TRAILING record is handled separately and more permissively, by the loop below.
+  // `readRecords` RETAINS it as the `TORN` sentinel rather than dropping it (see that constant's
+  // docstring) precisely so this loop can judge it positionally: the harness is legitimately
+  // mid-append at the moment this hook fires, so treating every torn tail as corruption would
+  // forfeit recovery in the common case. The loop degrades on a torn tail only when an intact
+  // record sits between it and the marker. The residual, accepted deliberately: a torn trailing
+  // record with NO intact record after the marker is tolerated, so if that torn record was itself
+  // a newer compaction summary, an older marker is still selected.
   let sawIntactAfterMarker = false;
   for (let i = markerIndex + 1; i < records.length; i += 1) {
     const record = records[i];
