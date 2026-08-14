@@ -24,9 +24,10 @@ the review tooling that applies them, and the CI that scores adherence.
   header, and drift is detectable mechanically rather than by reading.
 - A convention change has exactly one place it can be authored and one path it travels:
   staged in Caravan, reviewed there, round-tripped here, vendored out.
-- The adherence gates (`docs-budget`, `merge-bar-check`, `log-lint`, `backlog-lint`) are
-  callable by any member repo as reusable workflows, so no repo carries a second copy of
-  the check.
+- The adherence gates (`docs-budget`, `merge-bar-check`, `log-lint`) are callable by any
+  member repo as reusable workflows, so no repo carries a second copy of the check.
+  `backlog-lint` and `backlog-views` are the same shape but lab-os-only in practice — the
+  lab-wide `BACKLOG.md` lives here, and `standards.yml`'s downstream caller block omits them.
 - A reader arriving cold can answer "what is implemented here right now" from
   [design.md](./design.md) without reconstructing it from history.
 
@@ -41,10 +42,12 @@ lab-wide backlog · `reference/` contracts that rules and skills derive from.
 - Per-repo rules (`10+`) and per-repo gate commands — owned by the member repo.
 - Project/product code. lab-os holds conventions and tooling, not applications.
 - The `_specs` archive of the pre-Caravan dev home. `WatsonWBlair/Agentic_Workspace` stays
-  live as the browsable archive and nothing there is deleted (D16); this scope governs
+  live as the browsable archive and nothing there is deleted — D16, owned by that fork's
+  `_specs/lab-os/2026-08-06-spec-home-migration/decisions.md` §D16; this scope governs
   lab-os's own bundles only.
-- Staging of rule edits. Caravan is the staging surface (D17); this repo receives the
-  round-trip.
+- Staging of rule edits. Caravan is the staging surface — D17, same register §D17, carried
+  forward in Caravan's `project_log.md` at 2026-08-10 19:40 (Caravan #2); this repo receives
+  the round-trip.
 
 ## Constraints
 
@@ -68,7 +71,9 @@ lab-wide backlog · `reference/` contracts that rules and skills derive from.
   then [spec.md](./spec.md) registers only decisions folded from lab-os's own bundles.
 - **Does the register file keep the name `spec.md`?** The fork's `spec-home-migration` bundle
   renamed it `decisions.md` and that rename has not landed here. `spec.md` is the ratified
-  name and the one this bundle uses. *Trigger:* Caravan backlog item B7.
+  name and the one this bundle uses. *Trigger:* Caravan backlog item
+  [B7](https://github.com/CAMELS-Research-Group/Caravan/blob/main/BACKLOG.md#b7--re-vendor-when-the-bundle-decision-file-rename-lands-upstream)
+  (Caravan's `B<n>` namespace, not this repo's).
 - **Is the `2026-07-31-timeboxing` bundle actually still active?** Its PRD reads
   `Status: active — in review, PR #66`, but #66 is merged. If it is done, it is the first
   bundle to fold. *Trigger:* its owner's call — finality is hindsight, not an agent's read.
