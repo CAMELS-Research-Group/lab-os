@@ -77,3 +77,13 @@ lab-wide backlog · `reference/` contracts that rules and skills derive from.
 - **Is the `2026-07-31-timeboxing` bundle actually still active?** Its PRD reads
   `Status: active — in review, PR #66`, but #66 is merged. If it is done, it is the first
   bundle to fold. *Trigger:* its owner's call — finality is hindsight, not an agent's read.
+
+- **Is lab-os a workspace root, or a member repo whose main bundle belongs at `_specs/main/`?**
+  `03-logging.md` reserves the `<repo>` path segment for workspace-root altitude, while this
+  bundle records Caravan as the shared dev home — which would read lab-os as a member repo.
+  Current resolution: keep `_specs/lab-os/main/`, matching the sibling `2026-07-31-timeboxing`
+  bundle; one path convention per repo beats a split tree. *Trigger:* a ruling or a
+  `03-logging.md` change that settles lab-os's altitude, or lab-os ceasing to be worked as its
+  own root. Correcting it later is a cross-file rename — the recovery command in
+  [spec.md](./spec.md), the `_specs/lab-os/` entry in [design.md](./design.md), and every fold
+  path — so it is cheaper to decide than to drift.
