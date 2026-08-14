@@ -34,6 +34,9 @@ has a Problem and a Done-when and an owner. -->
 - Virtual servers — retro Try
 - Interoperable milestones / handing off between workstreams — retro Try
 - Bot routines — retro running task
+- Gemini integration for document editing — Claude researched statements of work well, Gemini
+  made the smoother editing pass over the doc itself; scope which model owns which half of a
+  doc workflow and what the integration surface is
 
 ## Items
 
