@@ -39,9 +39,6 @@ jobs:
     # never fail. macos-latest is where it is actually a test.
     runs-on: ${{ matrix.os }}
     strategy:
-      # Both legs report: a red linux leg must not cancel the darwin leg, which is the only one
-      # carrying the platform-specific signal.
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
