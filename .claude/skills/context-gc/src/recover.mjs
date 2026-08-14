@@ -19,7 +19,7 @@
 // The `hookSpecificOutput`/`additionalContext` shape below is the one verified to survive a real
 // compact-and-resume cycle end to end; it is not inferred from documentation alone.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { getConfig, isDebugEnabled } from './config.mjs';
 import { getChangedFiles } from './git.mjs';
@@ -278,8 +278,42 @@ async function main() {
   process.exitCode = 0;
 }
 
-const isEntryPoint = process.argv[1] !== undefined
-  && import.meta.url === pathToFileURL(process.argv[1]).href;
+/**
+ * Whether this module is the process entry point — i.e. the hook was invoked, rather than the
+ * module imported by a test.
+ *
+ * Compares REALPATHS as a fallback, and that is the whole point of the function. Node resolves an
+ * ESM entry module through symlinks before setting `import.meta.url`, but leaves `process.argv[1]`
+ * exactly as the process was handed it. `link-lab-assets.sh` deploys this plugin as a DIRECTORY
+ * SYMLINK at `~/.claude/skills/context-gc`, and that symlink is what makes the hook always-on — so
+ * on every real installation `argv[1]` is the symlinked path while `import.meta.url` is the repo
+ * realpath. A plain string compare is `false` there, `main()` never runs, and the process exits 0
+ * having written nothing.
+ *
+ * That failure is invisible by construction: a hook that never fires is indistinguishable from a
+ * session with nothing to recover, and `CONTEXT_GC_DEBUG=1` says nothing either, because the
+ * diagnostic lives inside the `main()` that never ran. It is pinned by a wiring test that spawns
+ * the plugin THROUGH the deployed symlink, because no amount of testing the module in place can
+ * observe it.
+ *
+ * The plain comparison is tried first and the realpath comparison is the fallback, so an
+ * unstattable `argv[1]` can only ever forfeit the symlink fix — it can never make this stricter
+ * than the plain compare was.
+ *
+ * @returns {boolean}
+ */
+function resolveIsEntryPoint() {
+  const invokedAs = process.argv[1];
+  if (invokedAs === undefined) return false;
+  if (import.meta.url === pathToFileURL(invokedAs).href) return true;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(invokedAs)).href;
+  } catch {
+    return false;
+  }
+}
+
+const isEntryPoint = resolveIsEntryPoint();
 
 if (isEntryPoint) {
   // main() is async, so a rejection escaping it would become an unhandled rejection and a

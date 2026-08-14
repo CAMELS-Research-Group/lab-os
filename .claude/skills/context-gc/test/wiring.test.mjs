@@ -15,11 +15,12 @@
 // nothing else in the repo notices if the plugin stops being found.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createTempGitRepo, cleanup, git } from './helpers.mjs';
 
 const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = path.resolve(pluginRoot, '..', '..', '..');
@@ -149,6 +150,101 @@ test('link-lab-assets.sh actually links this plugin into the user scope', () => 
       `link-lab-assets.sh did not report linking context-gc:\n${out}`
     );
   } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('the plugin still produces a manifest when run THROUGH the deployed symlink', () => {
+  // The one test that runs the plugin AS INSTALLED. Everything else in this suite — and every
+  // other file — reaches the modules by relative path inside the repo tree, which is the one
+  // arrangement no member ever runs.
+  //
+  // `link-lab-assets.sh` deploys this plugin as a DIRECTORY SYMLINK into ~/.claude/skills/, and
+  // that symlink is what makes the hook always-on, because project scope does not reach nested
+  // `projects/<repo>` sessions. Node resolves an ESM entry through symlinks before setting
+  // `import.meta.url` but leaves `process.argv[1]` as given, so an entry-point guard that compares
+  // the two as plain strings is FALSE on every real installation: the hook exits 0 having written
+  // nothing, `CONTEXT_GC_DEBUG=1` prints nothing (the diagnostic is inside the main() that never
+  // ran), and the result is indistinguishable from a session with nothing to recover. That
+  // regression shipped past a full green suite once; only spawning through the link catches it.
+  const script = path.join(repoRoot, '.claude/scripts/link-lab-assets.sh');
+  assert.ok(fs.existsSync(script), 'link-lab-assets.sh is missing');
+
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-deployed-'));
+  // Via the shared helper, not a local `git` wrapper: the helper owns the hermetic-env details in
+  // one place precisely so a portability fix cannot land in some callers and miss others.
+  const repo = createTempGitRepo('context-gc-deployed-repo-');
+  try {
+    // Real link, not --dry-run: the symlink itself is the thing under test.
+    execFileSync('bash', [script], {
+      env: { ...process.env, CLAUDE_HOME: home },
+      encoding: 'utf8',
+    });
+    const linked = path.join(home, 'skills', 'context-gc');
+    assert.ok(fs.existsSync(linked), 'link-lab-assets.sh did not deploy context-gc');
+    assert.ok(
+      fs.lstatSync(linked).isSymbolicLink(),
+      'expected a symlink — the realpath/argv[1] divergence this test guards only exists through one'
+    );
+
+    // A dirty git repo gives the deterministic floor something real to report, so an empty
+    // manifest cannot be mistaken for "nothing to say".
+    fs.writeFileSync(path.join(repo, 'tracked.txt'), 'v1\n');
+    git(repo, 'add', 'tracked.txt');
+    git(repo, 'commit', '-qm', 'init');
+    fs.writeFileSync(path.join(repo, 'tracked.txt'), 'v2\n');
+    fs.writeFileSync(path.join(repo, 'untracked.txt'), 'new\n');
+
+    const entry = path.join(linked, 'src', 'recover.mjs');
+    const result = spawnSync(process.execPath, [entry], {
+      input: JSON.stringify({
+        source: 'compact',
+        cwd: repo,
+        transcript_path: path.join(repo, 'no-such-transcript.jsonl'),
+      }),
+      encoding: 'utf8',
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: linked, CONTEXT_GC_OLLAMA_HOST: 'http://127.0.0.1:1' },
+    });
+
+    assert.equal(result.status, 0, `hook exited ${result.status}: ${result.stderr}`);
+    assert.notEqual(
+      result.stdout.trim(),
+      '',
+      'the hook wrote NOTHING when spawned through the deployed symlink — main() did not run'
+    );
+    const parsed = JSON.parse(result.stdout);
+    assert.equal(parsed.hookSpecificOutput.hookEventName, 'SessionStart');
+    assert.match(parsed.hookSpecificOutput.additionalContext, /## Files in flight/);
+    assert.match(parsed.hookSpecificOutput.additionalContext, /untracked\.txt/);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+    cleanup(repo);
+  }
+});
+
+test('link-lab-assets.sh skips a skills/ directory carrying neither marker', () => {
+  // The negative half of the discovery predicate this PR widened. The positive half is asserted
+  // above; with only that, replacing the whole predicate with `true` leaves the suite green, so
+  // nothing pins that a plain directory under `.claude/skills/` stays unlinked. It must: the
+  // directory is also where ATTRIBUTION.md and any future non-asset folder live, and a link
+  // deploys its contents into every session on the machine.
+  const script = path.join(repoRoot, '.claude/scripts/link-lab-assets.sh');
+  const decoy = path.join(repoRoot, '.claude/skills', `not-an-asset-${process.pid}`);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'context-gc-negative-'));
+  fs.mkdirSync(decoy);
+  fs.writeFileSync(path.join(decoy, 'notes.md'), 'neither a SKILL.md nor a plugin manifest\n');
+  try {
+    const out = execFileSync('bash', [script, '--dry-run'], {
+      env: { ...process.env, CLAUDE_HOME: home },
+      encoding: 'utf8',
+    });
+    assert.doesNotMatch(
+      out,
+      new RegExp(`\\b${path.basename(decoy)}\\b`),
+      `a directory with neither SKILL.md nor .claude-plugin/plugin.json was reported as linked:\n${out}`
+    );
+  } finally {
+    fs.rmSync(decoy, { recursive: true, force: true });
     fs.rmSync(home, { recursive: true, force: true });
   }
 });
