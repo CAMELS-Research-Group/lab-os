@@ -47,6 +47,11 @@ adds no review value, so:
   - rules-scope repos — a `.txt` beside a rules file (neither budgeted nor
     counted) and a *directory* named `01-r.md` (not budgeted on its inode
     size)
+  - irregular-path repos — a FIFO standing in for a rules **file**, and a
+    FIFO standing in for the rules **directory**. `stat()` succeeds on
+    both, so neither reaches an error branch; they exercise `probe()`'s
+    non-regular fallthrough, which records an unmeasurable skip. Guarded —
+    the checks print SKIP where `os.mkfifo` is unavailable (Windows)
 
 ## What the self-test covers
 
@@ -66,10 +71,14 @@ adds no review value, so:
   loaded, the total would read low, so the run reports `PARTIAL` with the
   counted bytes as a floor instead of a zone, names every unmeasurable
   surface in a fileless annotation, and fails closed under `--enforce`
-  (warn-only still exits 0). Covers the three drop paths — a `stat()`
-  failure on a file, a path resolving outside the repo root, and an
-  unmeasurable or unlistable `.claude/rules` **directory**, which is
-  classified by the same `probe()` the files go through
+  (warn-only still exits 0). Covers the four drop paths — a `stat()`
+  failure on a file, a path resolving outside the repo root, an
+  unmeasurable or unlistable `.claude/rules` **directory**, and a path
+  that is present but not a regular file (FIFO/socket/device node) —
+  every one of them classified by the same `probe()`. No exemption by
+  skip kind and none by surface shape: an escaped surface and a stat
+  failure are the same class, and losing the whole rules directory
+  counts exactly like losing one rules file
 - Exit codes through `main()`, not only `run()`: CI reads `main()`'s code,
   so the fail-closed assertions are pinned at the seam CI actually uses
 - Fail-closed guards that are invisible in a passing run: `escapes_root()`

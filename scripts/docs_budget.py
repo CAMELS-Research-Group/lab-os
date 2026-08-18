@@ -24,9 +24,9 @@ files, and every rules file sitting at its full budget would blow the
 total on its own. Same zone semantics as a per-file budget.
 
 The aggregate is only reported when it can be computed. A surface
-that is present but unmeasurable (stat failure, or a path resolving
-outside the repo root) is excluded from the sum, so the total would
-read low; the run then reports PARTIAL instead of a zone and, under
+that is present but unmeasurable (stat failure, a non-regular file, or a
+path resolving outside the repo root) is excluded from the sum, so the
+total would read low; the run then reports PARTIAL instead of a zone and, under
 --enforce, fails closed. A per-file skip loses one verdict, but a
 short aggregate is a wrong number presented as authoritative.
 
@@ -107,9 +107,12 @@ def is_always_loaded(rel: str) -> bool:
     """True when a scanned surface loads into every session's context.
 
     CLAUDE.md (either location) and every .claude/rules/*.md file load
-    unconditionally. project_log.md does not — it is first-read tier (an
-    agent reads its head, not the file) and carries its own overflow-to-
-    archive path — so it is excluded from the aggregate.
+    unconditionally — lab-owned `0x` rules and per-repo `10+` rules alike,
+    because a session loads the directory, not a numbering range
+    (04-docs.md, section Tiers & budgets, states the same scope).
+    project_log.md does not — it is first-read tier (an agent reads its
+    head, not the file) and carries its own overflow-to-archive path — so
+    it is excluded from the aggregate.
     """
     if rel in ALWAYS_LOADED_FILES:
         return True
@@ -162,7 +165,12 @@ def probe(path: Path) -> tuple[str, str]:
         return "file", ""
     if stat.S_ISDIR(st.st_mode):
         return "dir", ""
-    return "missing", ""
+    # Present, stat-able, and neither a regular file nor a directory: a
+    # FIFO, socket, or device node standing where a document belongs. It is
+    # unmeasurable, not absent, and calling it "missing" dropped an
+    # always-loaded surface with no skip recorded — exactly the short-sum-
+    # as-authoritative failure the skip channel exists to prevent.
+    return "error", "not a regular file"
 
 
 def collect_surfaces(root: Path) -> tuple[
@@ -173,7 +181,8 @@ def collect_surfaces(root: Path) -> tuple[
     Missing surfaces are skipped silently — not every repo has every file.
     A surface that *is* present but cannot be measured is recorded as a
     skip (rel, kind, detail), kind being 'escaped' (resolves outside the
-    repo root — junction/symlink) or 'error' (stat failed). Skips are what
+    repo root — junction/symlink) or 'error' (stat failed, or the path
+    is present but not a regular file). Skips are what
     let the aggregate declare itself partial instead of quietly reporting
     a short total as authoritative.
     """
@@ -330,6 +339,15 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     # PARTIAL, and under --enforce it fails closed: better a red run naming
     # the unmeasurable file than a green one computed from a short sum.
     always_loaded = [f for f in findings if is_always_loaded(f[0])]
+    # Doctrine, stated once here because this is where it bites: EVERY
+    # unmeasurable always-loaded surface fails closed, with no exemption by
+    # skip kind and none by surface shape. An "escaped" skip (resolves
+    # outside the repo root) and an "error" skip (stat/scandir failed) are
+    # the same class to this computation, and an unmeasurable rules
+    # DIRECTORY counts exactly like an unmeasurable rules file — losing the
+    # whole tier is the worse of the two, not the excusable one. Any of
+    # them makes the aggregate PARTIAL and, under --enforce, red.
+    #
     # The prefix clause is not redundant with is_always_loaded(): its one
     # input is the rules-directory skip, whose rel is the bare directory
     # (".claude/rules/") and so does not end in ".md". Every other skip

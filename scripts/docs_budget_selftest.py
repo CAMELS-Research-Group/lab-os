@@ -541,6 +541,47 @@ def run_self_test() -> int:
         check("a directory named *.md is not an unmeasurable skip either",
               skips_d == [], f"got {skips_d}")
 
+        # A FIFO standing where a budgeted document belongs: stat() succeeds,
+        # so none of the error branches above fire, and probe()'s fallthrough
+        # used to call it "missing" — an always-loaded surface dropped with no
+        # skip recorded, leaving the aggregate to report a short total as
+        # authoritative. Same class as the ELOOP and escaped cases in
+        # section 8, reached through the one branch they do not exercise.
+        fifo_repo = _build_repo(tmp / "fifo_rules_repo", {"CLAUDE.md": 1_000})
+        fifo_path = fifo_repo / ".claude" / "rules" / "01-r.md"
+        fifo_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            os.mkfifo(fifo_path)
+            fifo_ok = True
+        except (AttributeError, NotImplementedError, OSError):
+            fifo_ok = False
+        if fifo_ok:
+            check("probe() reports a FIFO as 'error', not 'missing'",
+                  probe(fifo_path) == ("error", "not a regular file"),
+                  f"got {probe(fifo_path)}")
+            _, skips_f = docs_budget.collect_surfaces(fifo_repo)
+            check("a FIFO in a rules file's place is a recorded skip",
+                  [(sk[0], sk[1]) for sk in skips_f]
+                  == [(".claude/rules/01-r.md", "error")],
+                  f"got {skips_f}")
+            partial_closed(fifo_repo, "FIFO rules file")
+
+            # The same fallthrough on the rules DIRECTORY itself: losing the
+            # whole always-loaded tier must fail closed too, not read as a
+            # repo that simply has no rules.
+            fifo_dir_repo = _build_repo(
+                tmp / "fifo_rules_dir_repo", {"CLAUDE.md": 1_000})
+            (fifo_dir_repo / ".claude").mkdir(parents=True, exist_ok=True)
+            os.mkfifo(fifo_dir_repo / ".claude" / "rules")
+            _, skips_fd = docs_budget.collect_surfaces(fifo_dir_repo)
+            check("a FIFO in the rules directory's place is a recorded skip",
+                  [(sk[0], sk[1]) for sk in skips_fd]
+                  == [(".claude/rules/", "error")],
+                  f"got {skips_fd}")
+            partial_closed(fifo_dir_repo, "FIFO rules dir")
+        else:
+            print("  [SKIP] mkfifo unavailable on this platform")
+
         class _UnresolvablePath:
             """Stand-in: a resolve() that raises is not portably reproducible
             with a real path on every platform."""
