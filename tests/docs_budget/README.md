@@ -36,6 +36,17 @@ adds no review value, so:
   - empty repo — missing-surface silence
   - symlink repo — `.claude/rules` linked outside the root, when the
     platform allows symlink creation
+  - real-trigger repos — the unmeasurable cases built on a real filesystem
+    rather than by monkeypatching `collect_surfaces`: `.claude/rules` as a
+    symlink loop, as a symlink whose target does not resolve, and (via
+    `chmod 000`) as an unlistable directory and under an unreadable
+    `.claude`; a rules *file* that is a symlink loop; and a `CLAUDE.md`
+    that resolves outside the root. Each is guarded — the checks print
+    SKIP where the platform refuses symlinks, or where `chmod` does not
+    restrict access
+  - rules-scope repos — a `.txt` beside a rules file (neither budgeted nor
+    counted) and a *directory* named `01-r.md` (not budgeted on its inode
+    size)
 
 ## What the self-test covers
 
@@ -55,8 +66,15 @@ adds no review value, so:
   loaded, the total would read low, so the run reports `PARTIAL` with the
   counted bytes as a floor instead of a zone, names every unmeasurable
   surface in a fileless annotation, and fails closed under `--enforce`
-  (warn-only still exits 0). Covers both drop paths — a `stat()` failure
-  and a path resolving outside the repo root
+  (warn-only still exits 0). Covers the three drop paths — a `stat()`
+  failure on a file, a path resolving outside the repo root, and an
+  unmeasurable or unlistable `.claude/rules` **directory**, which is
+  classified by the same `probe()` the files go through
+- Exit codes through `main()`, not only `run()`: CI reads `main()`'s code,
+  so the fail-closed assertions are pinned at the seam CI actually uses
+- Fail-closed guards that are invisible in a passing run: `escapes_root()`
+  returning `True` when resolution raises, and a skips-only scan reporting
+  its unmeasurable count instead of "nothing to check"
 - The aggregate cap constant pinned to the byte by an OK/WARN boundary
   pair, and the summary line's aggregate clause including its `n/a`
   branch
@@ -66,5 +84,11 @@ adds no review value, so:
   symlinks need privileges); when a symlink **can** be created, the
   scan-level skip is additionally tested end-to-end — otherwise that one
   check prints SKIP.
+
+The fixtures and assertions live in `scripts/docs_budget_selftest.py` so
+`scripts/docs_budget.py` stays under the Class-1 1,000-line budget
+(`reference/code-quality-taxonomy.md`) — the same split
+`backlog_lint.py` / `backlog_lint_selftest.py` uses. The entry point is
+unchanged.
 
 Run: `python scripts/docs_budget.py --self-test`
