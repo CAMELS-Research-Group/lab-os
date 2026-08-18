@@ -4,7 +4,7 @@
      New work uses the planning bundle in templates/docs/planning/
      (prd/spec/design/plan/log) — the sole PRD home going forward. The docs/work/... paths below
      describe the retired work-bundle lifecycle and are HISTORICAL: do not update them to
-     the current layout. The current lifecycle is .claude/rules/04-docs.md §Bundle lifecycle. -->
+     the current layout. The current lifecycle is .claude/rules/04-docs.md §Bundle lifecycle & the main bundle. -->
 
 <!-- This is a living document at a stable path; its lifecycle is the one named above.
      Decisions made while executing this PRD live in project_log.md — never embedded here.
