@@ -43,11 +43,11 @@ not-run dimension instead of reviewing against invented criteria (dispatch refer
 
 Every agent body here cites `reference/code-quality-taxonomy.md` classes **where one applies**.
 Ownership of that file runs the same direction as § Byte ownership below: upstream lab-os owns the
-convention and the canonical bytes; the lab's workspace fork is the staging surface where its bytes
-are edited and where the fork-side `scripts/rules_sync.py` (§ Manifest) vendors it into member
-repos. Wherever the file does not resolve — including a lab-os clone that does not yet carry it —
-no class applies and the citation is simply absent. All bodies are phrased conditionally
-for exactly this reason.
+convention and the canonical bytes; Caravan (github.com/CAMELS-Research-Group/Caravan) is the
+staging surface where its bytes are edited and where Caravan's `scripts/rules_sync.py`
+(§ Manifest) vendors it into member repos. Wherever the file does not resolve — including a lab-os
+clone that does not yet carry it — no class applies and the citation is simply absent. All bodies
+are phrased conditionally for exactly this reason.
 
 ## Byte ownership
 
