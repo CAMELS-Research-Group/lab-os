@@ -51,9 +51,10 @@ lab-wide backlog · `reference/` contracts that rules and skills derive from.
 
 ## Constraints
 
-- **Byte budgets** bind the always-loaded tier — `CLAUDE.md` and every `.claude/rules/*.md`.
-  Over budget is a demotion decision (move detail to a grep-only surface), not a cap raise;
-  a raise is a logged lab-level decision.
+- **Byte budgets** bind the always-loaded tier and `project_log.md`. Which surfaces are
+  bound, the numbers, and the WARN/FAIL thresholds are owned by
+  [`04-docs.md`](../../../.claude/rules/04-docs.md) §Tiers & budgets and are read there,
+  never restated here; `docs_budget.py` is the enforcer, not the source.
 - **Upstream owns the canonical bytes; Caravan stages the edits.** A rule is never edited
   first here — it lands here as a reviewed round-trip.
 - **Approval gates** apply to anything posted under a member's own identity, spend above a

@@ -49,14 +49,23 @@ with a `--self-test` mode plus a reusable `workflow_call` wrapper: `log_lint.py`
 `docs_budget.py` / `merge_bar_check.py` / `backlog_lint.py` / `backlog_view.py`.
 `backlog_digest.py` sits beside them but is not a check and has no `workflow_call` wrapper:
 it posts a scheduled digest, and `backlog-digest.yml` runs on `schedule` /
-`workflow_dispatch` only. `standards.yml` is lab-os's own caller and doubles as the copy-paste
-template for member repos, which call the same workflows by `@main` rather than copying the
-scripts — so there is never a second copy of a check to drift.
+`workflow_dispatch` only. `backlog_lint_selftest.py` holds `backlog_lint`'s self-test cases,
+split out so the check itself stays inside its line budget. `standards.yml` is lab-os's own
+caller and doubles as the copy-paste template for member repos, which call the same workflows
+by `@main` rather than copying the scripts — so there is never a second copy of a check to
+drift.
 
-**`templates/`** — scaffolds: per-repo and personal `CLAUDE.md` seeds, the normative
-`project_log.template.md` that `log-lint` parses, `docs/planning/` (per-slice bundle) and
-`docs/main-bundle/` (per-scope current state), `backlog-item.template.md`, and the
-`desktop-control-panel` app starter.
+**`tests/`** — the fixture corpora every `--self-test` reads, one directory per check
+(`backlog_digest`, `backlog_view`, `docs_budget`, `log_lint`, `merge_bar_check`). The
+self-tests are the checks' own regression suite; there is no separate test runner.
+
+**`tools/`** — one-off authoring utilities that are not gates and are not called by CI:
+`build_deck.py` and its `README.md`.
+
+**`templates/`** — scaffolds: three `CLAUDE.md` seeds (`repo-`, `global-`, and
+`dev-root-CLAUDE.template.md`), the normative `project_log.template.md` that `log-lint`
+parses, `docs/planning/` (per-slice bundle) and `docs/main-bundle/` (per-scope current
+state), `backlog-item.template.md`, and the `desktop-control-panel` app starter.
 
 **`docs/`** — long-form human docs that are not part of the site build: the workshop
 program (`workshops/`), the timeboxing runbooks and quickref, `conventions-collection/`,
@@ -74,12 +83,18 @@ the human-facing docs. `BOOTSTRAP.md` and `WORKING-WITH-CLAUDE.md` are pointer s
 
 ## Contracts & schemas
 
-- **Gate contract.** Every check script exits 0 pass / 1 violation / 2 usage error and
-  carries a `--self-test`. An `enforce` input separating warn-only from failing is carried by
-  `docs-budget`, `backlog-lint`, and `backlog-views` only; `log-lint` and `merge-bar-check`
-  declare no such input and fail on any violation. Each wrapper under `.github/workflows/`
-  owns its own posture, stated in its header. lab-os's own caller runs `docs-budget` and
-  `backlog-views` with `enforce: true`; `backlog-lint` warn-only.
+- **Gate contract.** Every check script exits `0` on pass and `2` on usage error, and carries
+  a `--self-test`. **The violation code is per script, not universal:** `log_lint.py` and
+  `merge_bar_check.py` exit `1` on any violation; `docs_budget.py` and `backlog_lint.py` exit
+  `0` warn-only and `1` under `--enforce`; `backlog_view.py --check` reserves `3` for
+  staleness and uses `1` for script/parse failure, so `backlog-views.yml` can branch on the
+  two without reporting a broken source as staleness. An `enforce` input separating warn-only
+  from failing is carried by the `docs-budget`, `backlog-lint`, and `backlog-views` wrappers
+  only; `log-lint` and `merge-bar-check` declare no such input. Each wrapper under
+  `.github/workflows/` owns its own posture, stated in its header. lab-os's own caller runs
+  `docs-budget` and `backlog-views` with `enforce: true`; `backlog-lint` warn-only.
+  `merge-bar-check` validates a PR body against `.github/pull_request_template.md`, the
+  artifact that defines the checklist it scores.
 - **Budget contract.** The per-surface byte budgets — `CLAUDE.md`, each
   `.claude/rules/*.md`, `project_log.md` — are owned by
   [`04-docs.md`](../../../.claude/rules/04-docs.md) §Tiers & budgets and are read there, never
@@ -110,7 +125,8 @@ the human-facing docs. `BOOTSTRAP.md` and `WORKING-WITH-CLAUDE.md` are pointer s
   correct; the README has not caught up. *Tracking:* [plan.md](./plan.md) §Blocked on the
   operator.
 - **`templates/PRD.template.md` is a superseded scaffold** retained pending consolidation
-  with `templates/docs/planning/prd.template.md`.
+  with `templates/docs/planning/prd.template.md`. *Tracking:*
+  [`BACKLOG.md`](../../../BACKLOG.md) B13.
 - **The `06-timeboxing` rule has no member-repo vendoring row.** `rules_sync.py`'s manifest
   (in Caravan) lists five base rules; `06` is not among them, so member repos do not receive
   it. Either the manifest or the rule's scope needs a decision. *Tracking:*
@@ -122,22 +138,32 @@ the human-facing docs. `BOOTSTRAP.md` and `WORKING-WITH-CLAUDE.md` are pointer s
   [`04-docs.md`](../../../.claude/rules/04-docs.md) §Tiers & budgets.
 - **Path-filtered CI jobs must never become required status checks.** A required context that
   never reports holds PRs at "Expected" forever. This is a live constraint on branch
-  protection, enforced by convention rather than by anything mechanical.
-- **`project_log.md` is over budget and close to failing CI.** It measures 22,979 B against
-  a 15,360 B budget with `docs-budget` running `enforce: true` in `standards.yml`, leaving it
-  inside the 1.5x FAIL threshold by a margin one more entry can spend. The prescribed
-  `chore: archive log overflow` PR (`03-logging.md` §File structure & overflow) is unfiled.
+  protection, enforced by convention rather than by anything mechanical. *Tracking:*
+  [`BACKLOG.md`](../../../BACKLOG.md) B14.
+- **`project_log.md` is over budget and close to failing CI.** `docs-budget` runs
+  `enforce: true` in `standards.yml`, and the file sits inside the 1.5x FAIL threshold by a
+  margin one more entry can spend; `python3 scripts/docs_budget.py --root .` reports the
+  figures in force. The prescribed `chore: archive log overflow` PR (`03-logging.md` §File
+  structure & overflow) is filed as
+  [#82](https://github.com/CAMELS-Research-Group/lab-os/pull/82) and is stack-ordered ahead
+  of this bundle. *Tracking:* [`BACKLOG.md`](../../../BACKLOG.md) B17.
 - **`project_log.md`'s Standing Decisions index still lists superseded entries.**
   "2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43" and
-  "2026-06-23 07:51 — Plans track at the fork level · #44" are indexed as standing, yet
-  D16/D17 moved the dev home to Caravan. No local superseding entry has been written, so this
-  bundle's current-state claims and the project-altitude index disagree; `03-logging.md`
-  §Immutability & supersession describes the entry that would remove those index lines.
+  "2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44" are
+  indexed as standing, yet D16/D17 moved the dev home to Caravan. No local superseding entry
+  has been written, so this bundle's current-state claims and the project-altitude index
+  disagree; `03-logging.md` §Immutability & supersession describes the entry that would
+  remove those index lines. *Tracking:* [`BACKLOG.md`](../../../BACKLOG.md) B18.
 - **`docs/`'s legacy planning surfaces have no stated disposition.** `docs/prds/`,
   `docs/proposals/`, and `docs/superpowers/{plans,specs}` predate the `_specs/` bundle
   convention this scope codifies, and nothing states whether they are in scope, frozen, or
   slated to fold. Until that is decided, `_specs/lab-os/` is not the whole planning record
-  for this repo.
+  for this repo. *Tracking:* [`BACKLOG.md`](../../../BACKLOG.md) B16.
 - **`_specs/lab-os/` bundle statuses are not mechanically checked.** Nothing fails CI when a
   PRD `Status:` goes stale against its shipping PR; `spec-plan-analyzer` flags it only when a
-  PR happens to touch the bundle.
+  PR happens to touch the bundle. *Tracking:* [`BACKLOG.md`](../../../BACKLOG.md) B15.
+- **The one dated slice carries fewer files than the bundle contract grandfathers.**
+  `_specs/lab-os/2026-07-31-timeboxing/` holds `prd.md` and `log.md` only;
+  [`04-docs.md`](../../../.claude/rules/04-docs.md) §ENG grandfathers *three*-file bundles,
+  not two, so the slice is outside both the current contract and its grandfather clause.
+  *Tracking:* [`BACKLOG.md`](../../../BACKLOG.md) B15.
