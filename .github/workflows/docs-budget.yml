@@ -6,9 +6,10 @@
 # project_log.md 15,360 B; plus the always-loaded aggregate (CLAUDE.md +
 # rules, excluding project_log.md) 49,152 B.
 # Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.
-# Default is warn-only (the §7.2 warn-only-until-first-green posture):
-# the budget check never fails the job, it only emits ::warning
-# annotations. The self-test step below is NOT gated: a self-test failure
+# Default is warn-only until a repo first passes green, per
+# .claude/rules/04-docs.md (section Tiers & budgets) — the same file the
+# numbers above come from: the budget check never fails the job, it only
+# emits ::warning annotations. The self-test step below is NOT gated: a self-test failure
 # is a code defect and always fails the job.
 #
 # Caller example (any lab repo):
@@ -64,8 +65,17 @@ jobs:
         env:
           ENFORCE: ${{ inputs.enforce }}
         run: |
+          # Fail closed on an unrecognized enforce value: anything that is not
+          # literally "true"/"false" (an empty caller expression, "True",
+          # "yes") must not silently degrade the job to warn-only. Same
+          # handling as backlog-lint.yml.
           ARGS=""
-          if [ "$ENFORCE" = "true" ]; then ARGS="--enforce"; fi
+          if [ "$ENFORCE" = "true" ]; then
+            ARGS="--enforce"
+          elif [ "$ENFORCE" != "false" ]; then
+            echo "::error::docs-budget: unrecognized enforce input '$ENFORCE' (expected true or false)"
+            exit 1
+          fi
           # lab-os' own PRs must run the PR's script (main's copy is absent/stale there); gate on repo name, not file-exists, so downstream repos can't shadow the canonical script
           SCRIPT=".lab-os/scripts/docs_budget.py"
           if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then SCRIPT="scripts/docs_budget.py"; fi
