@@ -13,18 +13,18 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
 - 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
 - 2026-07-31 13:22 — Adopt the workspace fork's rules at current HEAD; agent-runtime HARD RULE stands · #58
-- 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61
-- 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59
+- 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61 → project_log_archive.md
+- 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59 → project_log_archive.md
 - 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI · #67
-- 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44
-- 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43
-- 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42
-- 2026-06-19 05:58 — Workshop Program supersedes onboarding-project and one-day Building · #39
-- 2026-06-13 15:00 — Handbook content rework gates tester launch · #25
-- 2026-06-12 12:00 — Plan-execution logs close with their shipping PR · #18
-- 2026-06-11 19:45 — Site owns human-facing docs · #15
-- 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9
-- 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
+- 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44 → project_log_archive.md
+- 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43 → project_log_archive.md
+- 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42 → project_log_archive.md
+- 2026-06-19 05:58 — Workshop Program supersedes onboarding-project and one-day Building · #39 → project_log_archive.md
+- 2026-06-13 15:00 — Handbook content rework gates tester launch · #25 → project_log_archive.md
+- 2026-06-12 12:00 — Plan-execution logs close with their shipping PR · #18 → project_log_archive.md
+- 2026-06-11 19:45 — Site owns human-facing docs · #15 → project_log_archive.md
+- 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9 → project_log_archive.md
+- 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6 → project_log_archive.md
 
 ## Entries
 
