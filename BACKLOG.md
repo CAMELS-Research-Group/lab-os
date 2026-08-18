@@ -31,6 +31,7 @@ Read the **Index** first — it is the "what's ready right now" surface. Full it
 | B17 | Archive the `project_log.md` overflow (time-critical) | Watson | S | ready |
 | B18 | Retire the two superseded Standing Decisions index lines | Watson | S | ready |
 | B19 | Amend `04-docs.md` for the main bundle's `**Living**` header | Watson | M | ready |
+| B20 | Land the rules-tier budget-raise round-trip in lab-os | Watson | S | ready |
 
 ## Inbox
 
@@ -280,5 +281,23 @@ has a Problem and a Done-when and an owner. -->
 - **Rough size:** M
 - **Done when:** `04-docs.md` §Bundle lifecycle states how a main bundle's header relates to
   the `Status:` enum
+- **Depends on:** —
+- **Status:** ready
+
+## B20 — Land the rules-tier budget-raise round-trip in lab-os
+
+- **Problem:** `.claude/rules/04-docs.md` sits above 1.0x of the per-file budget in force here,
+  so `docs-budget` reports a WARN on every lab-os PR and the check's signal is permanently
+  noisy. The raise (12 KB `CLAUDE.md` / 8 KB per rules file) plus the 48 KB always-loaded
+  aggregate cap is staged in Caravan; lab-os holds the canonical bytes and receives it as a
+  round-trip, open as PR #79 and not yet landed
+- **Who it helps:** every lab-os contributor reading a PR's checks, and every member repo that
+  calls the reusable `docs-budget` workflow and inherits the thresholds
+- **Value:** a check that warns on every PR trains readers to ignore it; landing the round-trip
+  restores WARN as a signal rather than background noise
+- **Owner:** Watson
+- **Rough size:** S
+- **Done when:** `python3 scripts/docs_budget.py --root .` reports no warn-zone
+  `.claude/rules/*.md` surface on lab-os `main`
 - **Depends on:** —
 - **Status:** ready

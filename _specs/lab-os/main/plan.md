@@ -33,8 +33,5 @@ and the PR red.
 - **Doc-sync of `README.md`** — gap stated in [design.md](./design.md) §Known gaps. What is
   blocked here is the call on how much of the fork-as-dev-home onboarding path survives; that
   is a decision about how members are onboarded, not a docs edit.
-- **A decision on the `06-timeboxing` vendoring row** — gap stated in
-  [design.md](./design.md) §Known gaps. What is blocked here is the choice: member repos
-  receive the rule, or its scope is stated as lab-os-only.
 - **A decision on the pre-Caravan bundles** — whether and how they enter
   [spec.md](./spec.md)'s register ([prd.md](./prd.md) §Open questions).

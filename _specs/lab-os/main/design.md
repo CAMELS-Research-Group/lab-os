@@ -129,13 +129,18 @@ the human-facing docs. `BOOTSTRAP.md` and `WORKING-WITH-CLAUDE.md` are pointer s
   [`BACKLOG.md`](../../../BACKLOG.md) B13.
 - **The `06-timeboxing` rule has no member-repo vendoring row.** `rules_sync.py`'s manifest
   (in Caravan) lists five base rules; `06` is not among them, so member repos do not receive
-  it. Either the manifest or the rule's scope needs a decision. *Tracking:*
-  [plan.md](./plan.md) §Blocked on the operator.
+  it. *Tracking:* Caravan
+  [B22](https://github.com/CAMELS-Research-Group/Caravan/blob/main/BACKLOG.md#b22--carry-06-timeboxingmd-through-the-vendoring-path-to-member-repos)
+  (Caravan's `B<n>` namespace, not this repo's), which owns the `MANIFEST_FILES` edit and the
+  `templates/repo-CLAUDE.template.md` mismatch that rides with it. B22 presumes `06` should
+  vendor, reading `04-docs.md` §Rules numbering on verbatim copies; it does not pose the
+  alternative of stating the rule's scope as lab-os-only.
 - **`docs-budget` warns on the rules tier.** At least one `.claude/rules/*.md` file sits
   above 1.0x of the per-file budget in force, so the check reports a WARN on every PR. A
   budget raise plus an always-loaded aggregate cap is staged in Caravan and reaches this repo
   as a round-trip; whichever numbers are in force are the ones in
-  [`04-docs.md`](../../../.claude/rules/04-docs.md) §Tiers & budgets.
+  [`04-docs.md`](../../../.claude/rules/04-docs.md) §Tiers & budgets. *Tracking:*
+  [`BACKLOG.md`](../../../BACKLOG.md) B20.
 - **Path-filtered CI jobs must never become required status checks.** A required context that
   never reports holds PRs at "Expected" forever. This is a live constraint on branch
   protection, enforced by convention rather than by anything mechanical. *Tracking:*

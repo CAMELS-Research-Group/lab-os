@@ -20,6 +20,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 | B16 | Dispose of the legacy `docs/` planning surfaces | Watson |
 | B17 | Archive the `project_log.md` overflow (time-critical) | Watson |
 | B19 | Amend `04-docs.md` for the main bundle's `**Living**` header | Watson |
+| B20 | Land the rules-tier budget-raise round-trip in lab-os | Watson |
 
 ## By owner
 
@@ -45,6 +46,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 - B17 — Archive the `project_log.md` overflow (time-critical) (S, ready)
 - B18 — Retire the two superseded Standing Decisions index lines (S, ready)
 - B19 — Amend `04-docs.md` for the main bundle's `**Living**` header (M, ready)
+- B20 — Land the rules-tier budget-raise round-trip in lab-os (S, ready)
 
 ## Dependency graph
 
