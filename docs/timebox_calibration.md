@@ -22,7 +22,8 @@ Session types prefixed `agent-` are agent-executed task boxes — see
 mechanics, and the review-override convention. Agent boxes log to the
 calibration file of the repo the task belongs to; rows here are lab-os work,
 plus rows that fell through from repos that have not adopted the practice
-(no calibration file of their own — see that guide's § Logging rules).
+(no calibration file of their own and no permitted `TIMEBOX_CALIBRATION_FILE`
+— see that guide's § Logging rules).
 
 | Date | Session type | Artifact | Planned | Actual | Exit met? | Note |
 |---|---|---|---|---|---|---|
@@ -34,4 +35,4 @@ plus rows that fell through from repos that have not adopted the practice
 | 2026-08-01 | agent-docs | round-3 remediation for #66 — corrected total | 15 | 7 | yes | self-proposed criterion; supersedes the 2026-08-01 15/4 row — same box end, Actual restated to cover the PR-surface edits (title/body/verifier evidence); remediation box — weigh separately from feature work in defaults reviews |
 | 2026-08-07 | agent-docs | round-4 remediation for #66 (blocker + 5 important + 3 post-#59 items across 9 files) | 15 | 7 | yes | self-proposed criterion; timestamps 10:47:16-10:52:39 measured, +~1.5 to cover commit and push through box end; three items left as maintainer flags rather than guessed (PR-body edit, companion issue, PRD homing) — see handoff |
 | 2026-08-07 | agent-docs | round-5 for #66 — PRD homing per Watson Sug 4 (PRD.template.md) | 15 | 4 | yes | self-proposed criterion; timestamps 11:15:32-11:17:32 measured, +~2 for commit/push/body; scope cut mid-box on requester correction — an in-flight rewrite of round-4 wording to Watson's phrasings was reverted when the instruction narrowed to item 3 only |
-| 2026-08-18 | agent-docs | LSCA dw bundle: wayfinder map graduation (13 tickets folded to log.md, map deleted) + Caravan SDLC ticket 10 | 30 | 8 | yes | self-proposed criterion; box atypical for docs (six steps, two repos) so planned 30 not the 15 default; two artifacts in two repos — a one-artifact-per-box deviation, left in the reference class; no scope hammer, no extension |
+| 2026-08-18 | agent-docs | LSCA dw bundle: wayfinder map graduation (13 tickets folded to log.md, map deleted) + Caravan SDLC ticket 10 | 30 | 8 | yes | self-proposed criterion; box atypical for docs (six steps, two repos) so planned 30 not the 15 default; two artifacts in two repos — a one-artifact-per-box deviation; multi-repo docs box — weigh separately from single-repo docs work in defaults reviews; no scope hammer, no extension |
