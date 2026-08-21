@@ -14,7 +14,7 @@ Every fact has one owning doc; others link to or visibly derive from it, naming 
 | ENG | Lab members | PRDs, specs, plans, TRD/ADD, runbooks | Skimmable; stable anchors; explicit contracts; code-free plans |
 | Public | Stakeholders | Roadmaps, overviews, outreach | Jargon-free; no codenames; overclaim-scrubbed; single-sourced |
 
-Budgets (bytes): per-repo `CLAUDE.md` 12 KB · `.claude/rules/*.md` 8 KB each · **always-loaded aggregate** (`CLAUDE.md` + every `.claude/rules/*.md` — lab `0x` and per-repo `10+` alike — excluding `project_log.md`) 48 KB · `project_log.md` 15 KB at project altitude, 40 KB at lab (altitudes: `03-logging.md`). Warn 1.0×, fail 1.5×; `docs-budget` warn-only per repo until first green. The aggregate binds: per-file budgets cap any one surface, the aggregate caps what the always-loaded tier costs every session and every subagent. Over aggregate → demote a surface to grep-only, not raise the cap; a raise is a logged lab-level decision.
+Budgets (bytes): per-repo `CLAUDE.md` 12 KB · `.claude/rules/*.md` 8 KB each · **always-loaded aggregate** (`CLAUDE.md` + every rules file, excluding `project_log.md`) 48 KB · `project_log.md` 15 KB at project altitude, 40 KB at lab (altitudes: `03-logging.md`). Warn 1.0×, fail 1.5×; `docs-budget` warn-only per repo until first green. The aggregate binds: per-file budgets cap any one surface, the aggregate caps what the always-loaded tier costs every session and every subagent. Over aggregate → demote a surface to grep-only, not raise the cap; a raise is a logged lab-level decision.
 
 ## ENG document standards
 

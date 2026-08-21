@@ -223,9 +223,8 @@ A **proportionality ladder** decides what documentation a unit of work gets:
 
 > **Superseded 2026-08-12** (the §13 "revisit after a month" gap, taken up): the per-file numbers
 > are now `CLAUDE.md` 12 KB and each `.claude/rules/*.md` 8 KB, plus a new 48 KB always-loaded
-> aggregate cap covering every `.claude/rules/*.md` (lab `0x` and per-repo `10+` alike).
-> `project_log.md` is unchanged at 15 KB. Current bytes live in
-> `.claude/rules/04-docs.md` §Tiers & budgets.
+> aggregate cap covering every rules file. `project_log.md` is unchanged at 15 KB. Current bytes
+> live in `.claude/rules/04-docs.md` §Tiers & budgets.
 >
 > **This supersession covers every budget figure in this document, not just this table** — including
 > §11's deliverable targets (the `03-logging-and-docs.md` "≤ 5 KB" row and the

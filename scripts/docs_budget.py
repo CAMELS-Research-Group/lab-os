@@ -114,9 +114,8 @@ def is_always_loaded(rel: str) -> bool:
     """True when a scanned surface loads into every session's context.
 
     CLAUDE.md (either location) and every .claude/rules/*.md file load
-    unconditionally — lab-owned `0x` rules and per-repo `10+` rules alike,
-    because a session loads the directory, not a numbering range
-    (04-docs.md, section Tiers & budgets, states the same scope).
+    unconditionally, because a session loads the directory (04-docs.md,
+    section Tiers & budgets, owns the scope).
     project_log.md does not — it is first-read tier (an agent reads its
     head, not the file) and carries its own overflow-to-archive path — so
     it is excluded from the aggregate.
