@@ -1,0 +1,112 @@
+# plugin-tests — runs the Node test suite for every vendored plugin under .claude/skills/.
+#
+# Why this exists: a plugin ships executable code that runs on every member's machine, and its
+# whole safety argument is its test suite. Without a gate, that suite is evidence about the commit
+# that last ran it locally and nothing more — the next edit can go red, or a future Node version
+# can break it, with the PR still showing all green. `.claude/skills/ATTRIBUTION.md` already names
+# review rigor on this tree as a security boundary; a vendored plugin widens that boundary from
+# assets that execute as *instructions* to assets that execute as *code*, so the suite is gated.
+#
+# DISCOVERY: a plugin is a directory under .claude/skills/ carrying .claude-plugin/plugin.json.
+# Keying on the manifest rather than the directory is deliberate — the plain markdown skills
+# alongside it have no manifest, so they are not swept up and not held to the has-tests rule below.
+#
+# PATH-FILTERED ON PURPOSE, AND THEREFORE NOT A REQUIRED STATUS CHECK. A required check that is
+# path-filtered never reports on PRs that do not touch its paths, and those PRs then block forever
+# waiting for a check that will never run. Keep this off the required list (same rule as
+# Caravan's rules-sync-selftest, which is path-filtered on scripts/rules_sync.py for the same
+# reason -- that job lives in Caravan, not in this repo).
+
+name: plugin-tests
+
+on:
+  pull_request:
+    paths:
+      - '.claude/skills/**'
+      # The wiring test executes this script to prove the plugin is still discovered and linked
+      # into the user scope, so a change to it can redden the suite without touching the plugin.
+      - '.claude/scripts/link-lab-assets.sh'
+      - '.github/workflows/plugin-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  plugin-tests:
+    # MATRIX, not redundancy: the suite's largest regression test guards a race that only exists
+    # on darwin — writes to a pipe are synchronous on Linux and Windows but ASYNCHRONOUS on macOS
+    # (see `src/recover.mjs` main()), so a linux-only run executes that test somewhere it can
+    # never fail. macos-latest is where it is actually a test.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          # The plugin has no npm dependencies and no package.json, so there is nothing to
+          # install and nothing to cache — only a runtime is needed.
+          node-version: '22'
+
+      - name: Discover and test every vendored plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          manifests=(.claude/skills/*/.claude-plugin/plugin.json)
+          if [ ${#manifests[@]} -eq 0 ]; then
+            # Zero plugins is a finding, not a pass — the same rule the untested-plugin branch
+            # below applies. This repo always carries at least one vendored plugin, so an empty
+            # glob means the layout moved and this gate is now testing nothing while reading
+            # green.
+            echo "::error title=No plugins discovered::.claude/skills/*/.claude-plugin/plugin.json matched nothing"
+            exit 1
+          fi
+
+          failed=0
+          for manifest in "${manifests[@]}"; do
+            plugin="$(dirname "$(dirname "$manifest")")/"
+            name="$(basename "$plugin")"
+            tests=("$plugin"test/*.test.mjs)
+
+            if [ ${#tests[@]} -eq 0 ]; then
+              # A plugin with no tests is a finding, not a pass. Surfaced loudly rather than
+              # skipped silently, so an untested plugin cannot ride in behind a green check.
+              echo "::error title=Untested plugin::$name ships no test/*.test.mjs files"
+              failed=1
+              continue
+            fi
+
+            echo "::group::$name ($((${#tests[@]})) test files)"
+            # Unpiped: piping would swallow the exit code and let a red suite read green.
+            if ! ( cd "$plugin" && node --test "test/*.test.mjs" ); then
+              echo "::error title=Plugin tests failed::$name"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          exit "$failed"
+
+      - name: Validate plugin manifests parse
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          # Counted for the same reason the discovery step fails on an empty glob: under nullglob
+          # this loop validates zero files and exits 0 if the layout ever moves.
+          validated=0
+          for manifest in .claude/skills/*/.claude-plugin/plugin.json .claude/skills/*/hooks/hooks.json; do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$manifest"
+            echo "ok: $manifest"
+            validated=$((validated + 1))
+          done
+
+          if [ "$validated" -eq 0 ]; then
+            echo "::error title=No plugin manifests validated::the manifest globs matched nothing"
+            exit 1
+          fi

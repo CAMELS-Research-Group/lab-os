@@ -1,0 +1,4 @@
+{"type":"user","message":{"role":"user","content":"start"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Let me check that."},{"type":"tool_use","name":"Read","input":{"file_path":"foo.txt"}},{"type":"text","text":"One sec."}]}}
+{"type":"user","message":{"role":"user","content":"continue"}}
+{"type":"summary","isCompactSummary":true}

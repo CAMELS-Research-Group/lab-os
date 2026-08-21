@@ -1,0 +1,6 @@
+{"type":"user","message":{"role":"user","content":"record 1"}}
+{"type":"assistant","message":{"role":"assistant","content":"record 2"}}
+{"type":"user","message":{"role":"user","content":"record 3"}}
+{"type":"assistant","message":{"role":"assistant","content":"record 4"}}
+{"type":"summary","isCompactSummary":true}
+{"type":"user","message":{"role":"user","content":"post-compaction record"}}
