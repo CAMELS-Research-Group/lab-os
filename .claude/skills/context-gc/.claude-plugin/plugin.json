@@ -1,0 +1,10 @@
+{
+  "name": "context-gc",
+  "version": "0.0.1",
+  "description": "Re-injects lost session state (files, tasks, objective, decisions) after the harness auto-compacts, via a SessionStart(compact) hook. Deterministic git/transcript floor plus fail-open local-Ollama enrichment, tagged model-inferred. Recovery, not control.",
+  "keywords": ["context", "compaction", "session-recovery", "hooks", "ollama"],
+  "author": {
+    "name": "Watson Blair",
+    "email": "watsonwblair@gmail.com"
+  }
+}

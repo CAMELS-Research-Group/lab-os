@@ -1,0 +1,5 @@
+{"type":"user","message":{"role":"user","content":"start task"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"TodoWrite","input":{"todos":[{"content":"task A","status":"completed","activeForm":"Doing A"},{"content":"task B","status":"in_progress","activeForm":"Doing B"}]}}]}}
+{"type":"user","message":{"role":"user","content":"clear the list"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"TodoWrite","input":{"todos":[]}}]}}
+{"type":"summary","isCompactSummary":true}

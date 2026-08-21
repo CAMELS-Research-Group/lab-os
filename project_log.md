@@ -8,6 +8,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 ## Standing Decisions
 
 - 2026-08-13 10:55 — Terminal bundles fold into the scope's main bundle, then delete · #81
+- 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/` · #78
 - 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
@@ -47,6 +48,21 @@ what forces the fold to happen; git history already archives the rest.
 two authoritative surfaces whose divergence nobody owns). Defer (rejected — lab-os holds one bundle
 and nothing terminal, so the change is free now and only gets costlier).
 **Refs:** #81, CAMELS-Research-Group/Caravan#9, CAMELS-Research-Group/Caravan#14
+## 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/`
+
+**Decision:** lab-os owns the lab's Claude Code **plugins** alongside its skills, and distributes them
+the same way: vendored under `.claude/skills/<name>/` carrying a `.claude-plugin/plugin.json`, which
+Claude Code loads as `<name>@skills-dir` — no marketplace, no install step. `context-gc` (recovers
+session state after auto-compaction, via a `SessionStart(compact)` hook) is the first.
+**Why:** one distribution mechanism, not two. 2026-07-24 16:20 already rejected marketplace
+distribution for skills, and `ATTRIBUTION.md` states a clone or fork is self-contained; a marketplace
+for plugins alone re-introduces the install step that decision removed. Vendoring widens the stated
+security boundary from assets executing as *instructions* to assets executing as *code*, so
+`plugin-tests` gates the suite in CI.
+**Alternatives:** an org marketplace at `.claude-plugin/marketplace.json` — built and reviewed on this
+PR, then dropped as the second mechanism; per-member-repo vendoring (N copies the sync rules exist to
+prevent — skills-dir needs one, `~/.claude/skills/` being machine-level).
+**Refs:** #78, `.claude/skills/context-gc/`, `.claude/scripts/link-lab-assets.sh`
 
 ---
 

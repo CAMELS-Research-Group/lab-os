@@ -1,0 +1,3 @@
+{"type":"user","message":{"role":"user","content":"before garbage"}}
+{this is not valid json}
+{"type":"summary","isCompactSummary":true}

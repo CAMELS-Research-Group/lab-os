@@ -21,6 +21,9 @@ Read the **Index** first — it is the "what's ready right now" surface. Full it
 | B3 | Lab-wide backlog (this file) | Kiara | S | in-progress |
 | B4 | Time-boxing PRDs / working sessions | Arya | S | ready |
 | B5 | Backlog-lint (CI hygiene check for BACKLOG.md) | Kiara | M | in-progress |
+| B6 | Decide the context-gc plugin's author identity | Watson | S | ready |
+| B7 | Pin the context-gc provenance reference to a URL and sha | Watson | S | ready |
+| B8 | Correct the flush-regression test's platform in its title | Watson | S | ready |
 | B9 | Sweep the remaining fork-era staging-surface residue | Watson | S | ready |
 
 ## Inbox
@@ -106,6 +109,57 @@ has a Problem and a Done-when and an owner. -->
   one passes — running on every PR alongside the sibling lints.
 - **Depends on:** B3
 - **Status:** in-progress
+
+## B6 — Decide the context-gc plugin's author identity
+
+- **Problem:** `.claude/skills/context-gc/.claude-plugin/plugin.json` names a personal author
+  with a personal email on an org asset that `link-lab-assets.sh` deploys onto every member's
+  machine and that `ATTRIBUTION.md` files under "Original lab work"; the replacement value is
+  not sourceable from this tree — no org contact address exists anywhere in it
+- **Who it helps:** every member who installs the plugin, and anyone reading its manifest to
+  find who owns it
+- **Value:** an org-deployed asset should carry the identity that actually maintains it;
+  deciding once sets the pattern for the plugins that follow
+- **Owner:** Watson
+- **Rough size:** S
+- **Done when:** the `author` field in `.claude/skills/context-gc/.claude-plugin/plugin.json`
+  carries a value the lab has ratified for an org-deployed asset
+- **Depends on:** —
+- **Status:** ready
+
+## B7 — Pin the context-gc provenance reference to a URL and sha
+
+- **Problem:** the `context-gc` entry under "Original lab work" in `.claude/skills/ATTRIBUTION.md`
+  names a bundle path in a personal fork with no URL and no commit sha, so a reader cannot resolve
+  it; under fold-and-delete the referenced bundle directory may no longer exist, so the pin likely
+  has to be a git-history reference rather than a live path
+- **Who it helps:** any reviewer or auditor tracing where a deployed plugin came from
+- **Value:** provenance that cannot be resolved is not provenance — the review-as-code boundary on
+  `.claude/skills/**` rests on it
+- **Owner:** Watson
+- **Rough size:** S
+- **Done when:** the `context-gc` provenance entry in `.claude/skills/ATTRIBUTION.md` resolves to a
+  reachable URL at a fixed commit sha
+- **Depends on:** —
+- **Status:** ready
+
+## B8 — Correct the flush-regression test's platform in its title
+
+- **Problem:** the large-manifest flush test in `.claude/skills/context-gc/test/recover.test.mjs`
+  is titled as a Windows race, while its own inline comment and `src/recover.mjs` both state the
+  race is a darwin condition (pipe writes are synchronous on Linux and Windows, asynchronous on
+  macOS) — on the exact test that justifies the `macos-latest` CI leg
+- **Who it helps:** anyone reading the test to learn which platform the guard protects, and
+  whoever next prunes CI legs
+- **Value:** a title naming the wrong platform argues for dropping the leg that actually catches
+  the bug
+- **Owner:** Watson
+- **Rough size:** S
+- **Done when:** the flush-regression test title in
+  `.claude/skills/context-gc/test/recover.test.mjs` names darwin/macOS, matching its own comment
+  and `src/recover.mjs`
+- **Depends on:** —
+- **Status:** ready
 
 ## B9 — Sweep the remaining fork-era staging-surface residue
 
