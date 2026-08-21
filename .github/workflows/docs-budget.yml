@@ -8,8 +8,10 @@
 # Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.
 # Default is warn-only until a repo first passes green, per
 # .claude/rules/04-docs.md (section Tiers & budgets) — the same file the
-# numbers above come from: the budget check never fails the job, it only
-# emits ::warning annotations. The self-test step below is NOT gated: a self-test failure
+# numbers above come from: the budget check never fails the job on a budget
+# finding, it only emits ::warning annotations. An unrecognized `enforce`
+# input fails the job in either mode — that is a config defect, not a budget
+# finding. The self-test step below is NOT gated either: a self-test failure
 # is a code defect and always fails the job.
 #
 # Caller example (any lab repo):
