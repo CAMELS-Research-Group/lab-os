@@ -139,13 +139,12 @@ merge stage**:
   heading is what distinguishes two findings in one long document.
 - **Taxonomy citation:** the `reference/code-quality-taxonomy.md` class, where one applies;
   omitted (not invented) where none does. Ownership of that file is upstream lab-os's — the
-  convention and the canonical bytes alike; the lab's workspace fork is the staging surface where
-  its bytes are edited and where the fork-side `scripts/rules_sync.py` (§ Manifest) vendors it into
-  member repos. **Wherever the file does not resolve** in the repo under review — including a
-  lab-os clone that does not yet carry it — no class applies, so the citation is simply absent:
-  this is the schema's
-  existing "omitted where none does" path, not a degraded mode, and the agent bodies already phrase
-  it conditionally.
+  convention and the canonical bytes alike; Caravan (github.com/CAMELS-Research-Group/Caravan) is
+  the staging surface where its bytes are edited and where Caravan's `scripts/rules_sync.py`
+  (§ Manifest) vendors it into member repos. **Wherever the file does not resolve** in the repo
+  under review — including a lab-os clone that does not yet carry it — no class applies, so the
+  citation is simply absent: this is the schema's existing "omitted where none does" path, not a
+  degraded mode, and the agent bodies already phrase it conditionally.
 - **Evidence pointer:** one line — file + line/heading and what was observed.
 
 ## Proportionality
