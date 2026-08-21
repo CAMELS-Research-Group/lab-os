@@ -470,6 +470,29 @@ def run_self_test() -> int:
                   f"got {skips_esc}")
             partial_closed(esc_repo, "escaped CLAUDE.md")
 
+            # The DIRECTORY-level escape guard in isolation. Section 6's
+            # fixture points .claude/rules at an outside dir that contains a
+            # .md, so consider()'s per-file escape check catches the contents
+            # even with collect_surfaces()' directory-level branch deleted —
+            # the two guards mask each other and the mutation survives. An
+            # escaped dir whose target is EMPTY has no contents to fall back
+            # on: without the directory branch there is no surface and no
+            # skip, and a repo whose junctioned rules dir is empty gets a
+            # green run over a wholly unmeasured always-loaded tier.
+            empty_outside = tmp / "outside_rules_empty"
+            empty_outside.mkdir(parents=True, exist_ok=True)
+            empty_esc_repo = _build_repo(tmp / "escaped_empty_rules_repo",
+                                         {"CLAUDE.md": 10_000})
+            (empty_esc_repo / ".claude").mkdir(parents=True, exist_ok=True)
+            (empty_esc_repo / ".claude" / "rules").symlink_to(
+                empty_outside, target_is_directory=True)
+            _, skips_empty = docs_budget.collect_surfaces(empty_esc_repo)
+            check("empty escaped rules dir is a recorded skip, not an absence",
+                  [(sk[0], sk[1]) for sk in skips_empty]
+                  == [(".claude/rules/*.md", "escaped")],
+                  f"got {skips_empty}")
+            partial_closed(empty_esc_repo, "empty escaped rules dir")
+
             # A symlink whose target does not resolve: present as a link,
             # unmeasurable through it, and indistinguishable from an absent
             # directory until lstat separates them.
