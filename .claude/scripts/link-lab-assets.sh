@@ -127,12 +127,22 @@ SUFFIX=""
 if (( DRY_RUN )); then SUFFIX="   (dry run — no changes made)"; fi
 printf 'Linking lab assets%s\n  from: %s\n  into: %s\n\n' "$SUFFIX" "$SRC" "$DEST"
 
-# Skills: directories containing a SKILL.md (skips ATTRIBUTION.md and stray files).
+# Skills: directories holding a SKILL.md, plus skills-dir PLUGINS — directories holding a
+# .claude-plugin/plugin.json, which Claude Code loads as <name>@skills-dir with no marketplace and
+# no install step. Both are linked; anything else (ATTRIBUTION.md, stray files) is skipped.
+#
+# The plugin arm is load-bearing, not tidiness. A plugin's hooks are registered by the harness
+# rather than invoked by the model, and at PROJECT scope a skills-dir plugin loads only from the
+# .claude/skills/ of the directory Claude Code started in — it does not walk up to the repo root,
+# so a session opened in a nested projects/<repo> clone would never see it. This symlink is what
+# puts it in ~/.claude/skills/ at personal scope, where it loads in every session on the machine.
+# A plugin whose whole job is to fire on an event nobody triggers by hand fails silently when it
+# is missed, so discovery is asserted by that plugin's own wiring test rather than left to review.
 if [[ -d "$SRC/skills" ]]; then
   echo "skills:"
   (( DRY_RUN )) || mkdir -p "$DEST/skills"
   for d in "$SRC"/skills/*/; do
-    [[ -f "${d}SKILL.md" ]] || continue
+    [[ -f "${d}SKILL.md" || -f "${d}.claude-plugin/plugin.json" ]] || continue
     link_one "${d%/}" "$DEST/skills/$(basename "$d")"
   done
 fi

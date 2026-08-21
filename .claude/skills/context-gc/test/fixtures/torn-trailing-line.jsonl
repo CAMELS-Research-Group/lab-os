@@ -1,0 +1,4 @@
+{"type":"user","message":{"role":"user","content":"start task"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"TodoWrite","input":{"todos":[{"content":"task A","status":"completed","activeForm":"Doing A"}]}}]}}
+{"type":"summary","isCompactSummary":true}
+{"type":"user","message":{"role":"user","content":"trunc

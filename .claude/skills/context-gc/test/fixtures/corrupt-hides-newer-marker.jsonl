@@ -1,0 +1,7 @@
+{"type":"user","message":{"role":"user","content":"cycle 1 work"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"TodoWrite","input":{"todos":[{"content":"OLD task from cycle 1","status":"completed"}]}}]}}
+{"type":"summary","isCompactSummary":true}
+{"type":"user","message":{"role":"user","content":"cycle 2 work"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"TodoWrite","input":{"todos":[{"content":"CURRENT task from cycle 2","status":"in_progress"}]}}]}}
+{"type":"summary","isCompact
+{"type":"user","message":{"role":"user","content":"a record written after the corrupt summary"}}

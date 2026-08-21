@@ -1,0 +1,6 @@
+{corrupt line in the far history}
+{"type":"user","message":{"role":"user","content":"old record 1"}}
+{"type":"assistant","message":{"role":"assistant","content":"old record 2"}}
+{"type":"user","message":{"role":"user","content":"recent record 1"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"TodoWrite","input":{"todos":[{"content":"task A","status":"completed"}]}}]}}
+{"type":"summary","isCompactSummary":true}

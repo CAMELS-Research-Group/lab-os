@@ -1,0 +1,3 @@
+{"type":"user","message":{"role":"user","content":"real user turn"}}
+{"type":"assistant","message":{"role":"assistant","content":"real assistant turn"}}
+{"type":"user","isCompactSummary":true,"message":{"role":"user","content":"COMPACTION SUMMARY BODY should never appear in the tail"}}

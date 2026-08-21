@@ -11,6 +11,9 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 | B1 | Convention-setting exercise | Jean |
 | B2 | Workshop process + feedback iteration | Watson |
 | B4 | Time-boxing PRDs / working sessions | Arya |
+| B6 | Decide the context-gc plugin's author identity | Watson |
+| B7 | Pin the context-gc provenance reference to a URL and sha | Watson |
+| B8 | Correct the flush-regression test's platform in its title | Watson |
 | B9 | Sweep the remaining fork-era staging-surface residue | Watson |
 
 ## By owner
@@ -27,6 +30,9 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 
 ### Watson
 - B2 — Workshop process + feedback iteration (M, ready)
+- B6 — Decide the context-gc plugin's author identity (S, ready)
+- B7 — Pin the context-gc provenance reference to a URL and sha (S, ready)
+- B8 — Correct the flush-regression test's platform in its title (S, ready)
 - B9 — Sweep the remaining fork-era staging-surface residue (S, ready)
 
 ## Dependency graph
