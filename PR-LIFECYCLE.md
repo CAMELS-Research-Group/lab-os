@@ -27,7 +27,7 @@ conventional-commit format in [`01-workflow.md`](.claude/rules/01-workflow.md). 
 slice with a design, its planning bundle (`_specs/<repo>/<DATE>-<handle>/`, holding
 `prd`/`spec`/`plan`/`log`) already exists or is created here — the bundle's shape and altitudes are
 owned by [`03-logging.md`](.claude/rules/03-logging.md), its lifecycle by
-[`04-docs.md` § Bundle lifecycle](.claude/rules/04-docs.md).
+[`04-docs.md` § Bundle lifecycle & the main bundle](.claude/rules/04-docs.md).
 
 ## 2. Open the PR from the template
 

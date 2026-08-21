@@ -11,6 +11,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 | B1 | Convention-setting exercise | Jean |
 | B2 | Workshop process + feedback iteration | Watson |
 | B4 | Time-boxing PRDs / working sessions | Arya |
+| B9 | Sweep the remaining fork-era staging-surface residue | Watson |
 | B10 | Give main-PRD success criterion 4 an applicable test | Watson |
 | B11 | Decide whether main `plan.md` §In flight restates or links | Watson |
 | B12 | Decide whether the main-bundle log template needs a non-fold entry grammar | Watson |
@@ -36,6 +37,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 
 ### Watson
 - B2 — Workshop process + feedback iteration (M, ready)
+- B9 — Sweep the remaining fork-era staging-surface residue (S, ready)
 - B10 — Give main-PRD success criterion 4 an applicable test (S, ready)
 - B11 — Decide whether main `plan.md` §In flight restates or links (S, ready)
 - B12 — Decide whether the main-bundle log template needs a non-fold entry grammar (S, ready)

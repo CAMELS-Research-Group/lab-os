@@ -119,8 +119,9 @@ guidance:
   — the project-log skeleton (log-lint parses this exact structure, so its load-bearing headings
   are never renamed — see [Setting Up a New Repo](/docs/repo-setup)).
 - [`docs/planning/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/templates/docs/planning)
-  — the four scaffolds of a planning bundle (`prd` · `spec` · `plan` · `log`), filed together under
-  `_specs/<repo>/<DATE>-<handle>/` and retained in place when the slice ships.
+  — the scaffolds of a planning bundle (`prd` · `spec` · `design` · `plan` · `log`), filed together
+  under `_specs/<repo>/<DATE>-<handle>/`; when the slice is declared done the bundle is folded into
+  the scope's main bundle and deleted, with git history as the archive.
 - [`PRD.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/PRD.template.md)
   — the older standalone PRD (product requirements document) shape: Problem, success criteria, scope, constraints, plan, open questions.
 

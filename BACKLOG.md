@@ -21,6 +21,7 @@ Read the **Index** first — it is the "what's ready right now" surface. Full it
 | B3 | Lab-wide backlog (this file) | Kiara | S | in-progress |
 | B4 | Time-boxing PRDs / working sessions | Arya | S | ready |
 | B5 | Backlog-lint (CI hygiene check for BACKLOG.md) | Kiara | M | in-progress |
+| B9 | Sweep the remaining fork-era staging-surface residue | Watson | S | ready |
 | B10 | Give main-PRD success criterion 4 an applicable test | Watson | S | ready |
 | B11 | Decide whether main `plan.md` §In flight restates or links | Watson | S | ready |
 | B12 | Decide whether the main-bundle log template needs a non-fold entry grammar | Watson | S | ready |
@@ -116,6 +117,30 @@ has a Problem and a Done-when and an owner. -->
   one passes — running on every PR alongside the sibling lints.
 - **Depends on:** B3
 - **Status:** in-progress
+
+## B9 — Sweep the remaining fork-era staging-surface residue
+
+- **Problem:** re-pointing the load-bearing taxonomy staging pointer at Caravan left adjacent
+  fork-era text standing on related facts — where derivers, bundles and skills live, and index
+  currency. Known locations: `reference/code-quality-taxonomy.md:5-6` and `:30-31`;
+  `reference/specialist-dispatch.md:6`, `:16`, `:117`; `.claude/agents/ATTRIBUTION.md:56`, which
+  has the workspace fork inheriting agent bodies through `git pull upstream main` where post-D17
+  the inheritor is Caravan. Review routed these out of the re-pointing PR to keep it
+  single-concern, and they were tracked nowhere until this item. One related surface needs a
+  decision rather than an edit and is out of scope here: the `project_log.md` Standing Decisions
+  line "2026-07-24 12:40 — … taxonomy staged in the fork, not yet carried · #61" is stale, but its
+  entry is merged and therefore immutable, so retiring it takes a superseding entry.
+- **Who it helps:** anyone — member or agent session — who reads these files to find where an
+  asset is staged, and lands in a repo the lab no longer edits
+- **Value:** the cutover is only half-landed while the pointers disagree; each stale mention is a
+  wrong-repo edit waiting to happen, and the set is small and known now
+- **Owner:** Watson
+- **Rough size:** S
+- **Done when:** no line in `reference/code-quality-taxonomy.md`, `reference/specialist-dispatch.md`,
+  or `.claude/agents/ATTRIBUTION.md` names the workspace fork as the staging surface or as the
+  inheritor of vendored copies
+- **Depends on:** —
+- **Status:** ready
 
 ## B10 — Give main-PRD success criterion 4 an applicable test
 

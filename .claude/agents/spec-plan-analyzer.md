@@ -47,7 +47,7 @@ moment the rules sync.
 Before reviewing anything, read whichever of these the repo under review actually carries:
 
 1. `.claude/rules/04-docs.md` — § ENG document standards (which planning documents exist, what each
-   must contain), § Tiers & budgets, § Single source, and § Bundle lifecycle where present.
+   must contain), § Tiers & budgets, § Single source, and § Bundle lifecycle & the main bundle where present.
 2. `.claude/rules/03-logging.md` — § Log altitudes (where a decision belongs: bundle, project, or
    lab), § Entry triggers, § Entry format, and the bundle path convention it defines.
 3. Any per-repo rule numbered `10+` that amends the above for this repo.
