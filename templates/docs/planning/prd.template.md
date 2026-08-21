@@ -1,12 +1,14 @@
 # <Project title> — PRD
 
-<!-- This is a living document at a stable path. Update by amendment; never archive.
+<!-- This is a living document while the bundle is open; its Status: advances, and a
+     terminal Status: ends the bundle rather than freezing it in place.
      Decisions are never embedded here: resolved ones live once in this bundle's spec.md
      (history in log.md); only decisions that outlive the slice route to project_log.md.
      See the blockquote below and .claude/rules/04-docs.md §ENG document standards.
-     Bundle lifecycle for individual slices: _specs/<repo>/YYYY-MM-DD-<slug>/, retained in
-     place and flipped to Status: complete — never moved or deleted
-     (.claude/rules/04-docs.md §Bundle lifecycle). -->
+     Bundle lifecycle for individual slices: _specs/<repo>/YYYY-MM-DD-<slug>/, flipped to a
+     terminal Status: then folded file-to-file into the scope's main bundle and deleted —
+     git history is the archive
+     (.claude/rules/04-docs.md §Bundle lifecycle & the main bundle). -->
 
 **Status:** draft <!-- draft | active | paused | complete | superseded | abandoned -->
 **Date:** YYYY-MM-DD · **Repo:** <repo>

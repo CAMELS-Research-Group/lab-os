@@ -93,7 +93,7 @@ that repo's root:
 
 | Repo | ENG-tier bundle paths (globs) | Convention source |
 |---|---|---|
-| `lab-os` | `_specs/**/*.md`, `templates/docs/planning/**/*.md`, `templates/PRD.template.md` | `03-logging.md` § Log altitudes (`_specs/<repo>/<DATE>-<handle>/`) · `04-docs.md` § Bundle lifecycle (retained in place, never moved) |
+| `lab-os` | `_specs/**/*.md`, `templates/docs/planning/**/*.md`, `templates/docs/main-bundle/**/*.md`, `templates/PRD.template.md` | `03-logging.md` § Log altitudes (`_specs/<repo>/<DATE>-<handle>/`) · `04-docs.md` § Bundle lifecycle & the main bundle (a terminal bundle folds into the scope's main bundle, then is deleted) |
 
 `_specs/` carries no committed bundles in lab-os today — the glob is registered against the
 convention, and simply matches nothing until one lands. A repo whose bundles live elsewhere (a

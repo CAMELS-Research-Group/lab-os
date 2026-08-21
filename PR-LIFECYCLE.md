@@ -27,7 +27,7 @@ conventional-commit format in [`01-workflow.md`](.claude/rules/01-workflow.md). 
 slice with a design, its planning bundle (`_specs/<repo>/<DATE>-<handle>/`, holding
 `prd`/`spec`/`plan`/`log`) already exists or is created here — the bundle's shape and altitudes are
 owned by [`03-logging.md`](.claude/rules/03-logging.md), its lifecycle by
-[`04-docs.md` § Bundle lifecycle](.claude/rules/04-docs.md).
+[`04-docs.md` § Bundle lifecycle & the main bundle](.claude/rules/04-docs.md).
 
 ## 2. Open the PR from the template
 
@@ -100,11 +100,11 @@ review is the durable evidence that the merge bar was held to.
 1. **Squash merge.** One commit per PR on the default branch; the PR number is the durable
    reference (which is why log entries record `#<PR>` and never a squash SHA — the SHA doesn't
    exist until after the entry is written).
-2. **Bundle archival rides** — if this PR is the one where the owner declares a slice done,
-   "archival" is an in-place flip of the bundle's PRD `Status:` to `complete`, in the same PR (or
-   its own `chore:` PR later; finality is hindsight). Bundles stay dated under `_specs/` and are
-   never moved or deleted — see
-   [`04-docs.md` § Bundle lifecycle](.claude/rules/04-docs.md).
+2. **The fold rides** — if this PR is the one where the owner declares a slice done, the
+   bundle's PRD `Status:` flips to `complete` and the bundle folds file-to-file into the scope's
+   main bundle, its directory deleted, in the same PR (or its own `chore:` PR later; finality is
+   hindsight). Git history is the archival record — see
+   [`04-docs.md` § Bundle lifecycle & the main bundle](.claude/rules/04-docs.md).
 3. **Delete the branch.**
 
 ## Log overflow: the archive chore PR

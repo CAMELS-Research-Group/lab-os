@@ -1,12 +1,12 @@
 # <Project title> — PRD
 
 <!-- SUPERSEDED SCAFFOLD, retained pending consolidation (see templates/ in README.md).
-     New work uses the four-file planning bundle in templates/docs/planning/
-     (prd/spec/plan/log) — the sole PRD home going forward. The docs/work/... paths below
+     New work uses the planning bundle in templates/docs/planning/
+     (prd/spec/design/plan/log) — the sole PRD home going forward. The docs/work/... paths below
      describe the retired work-bundle lifecycle and are HISTORICAL: do not update them to
-     the current layout. The current lifecycle is .claude/rules/04-docs.md §Bundle lifecycle. -->
+     the current layout. The current lifecycle is .claude/rules/04-docs.md §Bundle lifecycle & the main bundle. -->
 
-<!-- This is a living document at a stable path. Update by amendment; never archive.
+<!-- This is a living document at a stable path; its lifecycle is the one named above.
      Decisions made while executing this PRD live in project_log.md — never embedded here.
      Bundle lifecycle for individual slices: docs/work/YYYY-MM-DD-<slug>/ archived per
      lab-os docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md §5. -->
