@@ -183,3 +183,46 @@ Avoid the trigger: do not run two `npm run build` invocations against the same `
 and let a build finish (or kill it cleanly) rather than racing it. On Windows, kill a stuck build
 by **PID** (`taskkill /F /PID <pid>`) — never blanket-kill `node.exe`, which also takes down
 Claude Code's own MCP processes.
+
+---
+
+## `merge-bar-check` keeps failing after you fixed the PR body (headings reported missing that the body plainly has)
+
+**Symptom:** `merge-bar-check` reports `missing-section: required template heading "## Summary" not
+found in PR body` — for headings the live PR body demonstrably starts with. Editing the body again
+changes nothing. Re-running the job changes nothing.
+
+**Cause:** two independent failures that compound, so fixing either one alone leaves the check red.
+
+1. `.github/workflows/merge-bar-check.yml` sources the body from
+   `${{ github.event.pull_request.body }}` — the **event payload snapshot**, frozen when the event
+   fired. It is not fetched live.
+2. Caller workflows declare `on: pull_request:` with no `types:` filter, which means the default
+   set `opened, synchronize, reopened`. **`edited` is not in it**, so editing a body fires no event
+   at all.
+
+So the body the check reads is the body as it was *before* any fix could exist. And
+`gh run rerun` does not help: a re-run **replays the stored payload**, re-reading the same stale
+body. The check gates on the PR body while being structurally unable to observe a corrected one —
+the exact remedy it demands is the one remedy that cannot clear it.
+
+**Resolution:** emit a *fresh* `pull_request` event. Either works:
+
+- **Close and reopen the PR** (fires `reopened`) — preferred; adds no commit and pollutes no history.
+- **Push to the branch** (fires `synchronize`) — use when you have a real commit to push anyway;
+  otherwise it means an empty commit.
+
+Do **not** reach for `gh run rerun` — it cannot work here, for the reason above.
+
+Verify: after reopening, confirm the run id is new and its job started *after* your body edit —
+a matching old timestamp means you are still reading the replayed payload.
+
+```
+gh api repos/<owner>/<repo>/actions/runs/<run-id>/jobs -q '.jobs[] | .id, .name, .conclusion, .started_at'
+gh pr checks <N>
+```
+
+**Scope:** this binds every repo that calls the reusable workflow, not just the one you hit it in.
+The durable fix is for the workflow to fetch the body at runtime (`gh pr view --json body`) rather
+than read the payload — that closes **both** failure modes, where adding `types: [edited]` to every
+caller closes only the second.
