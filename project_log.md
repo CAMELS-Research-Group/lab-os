@@ -48,6 +48,9 @@ what forces the fold to happen; git history already archives the rest.
 two authoritative surfaces whose divergence nobody owns). Defer (rejected — lab-os holds one bundle
 and nothing terminal, so the change is free now and only gets costlier).
 **Refs:** #81, CAMELS-Research-Group/Caravan#9, CAMELS-Research-Group/Caravan#14
+
+---
+
 ## 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/`
 
 **Decision:** lab-os owns the lab's Claude Code **plugins** alongside its skills, and distributes them
