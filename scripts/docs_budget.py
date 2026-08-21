@@ -49,10 +49,17 @@ normalized (LF) checkouts and the 1.5x WARN band absorbs the drift.
 
 Junction/symlink awareness: any scanned path (the .claude dir, the rules
 dir, or an individual file) whose resolved location lies outside the
-resolved repo root is skipped. On Windows, junctions may not register as
-symlinks via Path.is_symlink(), so the check compares Path.resolve()
-results instead of testing link-ness (mission-control junctions its rules
-dir from lab-os; that surface belongs to lab-os' own budget run).
+resolved repo root is not measured here — it is recorded as an "escaped"
+skip. An escaping always-loaded surface therefore makes the aggregate
+PARTIAL and, under --enforce, fails the run: the bytes still load into
+this repo's sessions, so a total computed without them is short. A
+.claude/rules symlinked or junctioned to a shared location (the
+mission-control pattern) is a plausible vendoring shape that an
+`enforce: true` repo will now go red on; that is deliberate, not an
+oversight — a shared surface has to be counted where it loads, not
+delegated to whichever repo happens to own the bytes. On Windows,
+junctions may not register as symlinks via Path.is_symlink(), so the
+check compares Path.resolve() results instead of testing link-ness.
 
 Stdlib only; compatible with Python 3.11+.
 """
