@@ -69,7 +69,9 @@ unrecognized; those always fail, in either posture. Budget findings are gated on
 repo that has flipped `enforce: true`, a red check also means one file has grown past 1.5× its
 budget, the always-loaded aggregate has, or the aggregate could not be completely measured (a
 present-but-unreadable always-loaded surface makes the total a floor rather than a verdict, and it
-fails closed rather than reporting a short sum as authoritative). The default posture is warn-only:
+fails closed rather than reporting a short sum as authoritative). Finding *no* always-loaded
+surface at all fails closed for the same reason: a check that measured nothing must not report
+green. The default posture is warn-only:
 the job annotates overages but never fails on them, until a repo flips `enforce: true` after its
 first green run. lab-os itself enforces.
 

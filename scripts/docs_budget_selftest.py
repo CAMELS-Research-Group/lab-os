@@ -248,7 +248,25 @@ def run_self_test() -> int:
               f"got {[l for l in lines_n if l.startswith('docs-budget:')]}")
         check("log-only repo emits no aggregate report line",
               not any("always-loaded total (" in l for l in lines_n))
-        check("log-only repo exits 0 in enforce mode", code_n == 0)
+        # project_log.md is the one budgeted surface that is NOT always-
+        # loaded, so a repo holding only it has an aggregate computed over
+        # zero surfaces. That is the gate measuring nothing, which under
+        # --enforce is an error, not a pass.
+        check("log-only repo fails closed under --enforce", code_n == 1,
+              f"got exit {code_n}")
+        check("log-only repo names the empty aggregate in an ::error",
+              any(l.startswith("::error::")
+                  and "no always-loaded surface was found" in l
+                  for l in lines_n),
+              f"got {[l for l in lines_n if l.startswith('::error')]}")
+        code_nw, lines_nw = run(log_only_repo, enforce=False)
+        check("log-only repo still exits 0 in warn-only mode", code_nw == 0)
+        check("warn-only downgrades the empty-aggregate ::error to ::warning",
+              any(l.startswith("::warning::")
+                  and "no always-loaded surface was found" in l
+                  for l in lines_nw)
+              and not any(l.startswith("::error") for l in lines_nw),
+              f"got {lines_nw}")
 
         # Both CLAUDE.md locations may coexist; is_always_loaded's docstring
         # calls the nested one an alternate, so pin that the aggregate sums
@@ -267,10 +285,22 @@ def run_self_test() -> int:
         print("missing surfaces:")
         empty_repo = tmp / "empty_repo"
         empty_repo.mkdir()
-        code_w, _ = run(empty_repo, enforce=False)
-        code_e, _ = run(empty_repo, enforce=True)
-        check("empty repo finds nothing and exits 0 in both modes",
-              scan(empty_repo) == ([], [], []) and code_w == 0 and code_e == 0)
+        code_w, lines_w0 = run(empty_repo, enforce=False)
+        code_e, lines_e0 = run(empty_repo, enforce=True)
+        check("empty repo finds nothing at all",
+              scan(empty_repo) == ([], [], []))
+        check("empty repo exits 0 in warn-only mode and says nothing to check",
+              code_w == 0
+              and any("nothing to check" in l for l in lines_w0),
+              f"got exit {code_w}, {lines_w0}")
+        # An empty root is the gate pointed at the wrong place as often as
+        # it is a genuinely surface-free repo, and the two are
+        # indistinguishable from the exit code. Fail closed.
+        check("empty repo fails closed under --enforce", code_e == 1,
+              f"got exit {code_e}")
+        check("an enforced empty run drops the contradictory 'nothing to check'",
+              not any("nothing to check" in l for l in lines_e0),
+              f"got {lines_e0}")
 
         # --- 5b. unreadable surface (stat() raises) ------------------------
         # Cross-platform simulation: monkeypatch collect_surfaces to hand
@@ -282,7 +312,7 @@ def run_self_test() -> int:
         _write_sized(ghost_repo / "CLAUDE.md", 100)
         _orig_collect = docs_budget.collect_surfaces
         def _collect_with_ghost(root: Path) -> tuple[
-            list[tuple[Path, int]], list[tuple[str, str, str]]
+            list[tuple[Path, int]], list[tuple[str, str, str, bool]]
         ]:
             surfaces, skips = _orig_collect(root)
             return surfaces + [(root / "project_log.md", BUDGET_PROJECT_LOG)], skips
@@ -327,7 +357,7 @@ def run_self_test() -> int:
         _orig_collect_3 = docs_budget.collect_surfaces
 
         def _collect_with_always_loaded_ghost(root: Path) -> tuple[
-            list[tuple[Path, int]], list[tuple[str, str, str]]
+            list[tuple[Path, int]], list[tuple[str, str, str, bool]]
         ]:
             surfaces, skips = _orig_collect_3(root)
             return surfaces + [(root / ghost_rel, BUDGET_RULES_MD)], skips
@@ -412,12 +442,12 @@ def run_self_test() -> int:
         dropped_rel = ".claude/rules/01-r.md"
 
         def _collect_dropping_one(root: Path) -> tuple[
-            list[tuple[Path, int]], list[tuple[str, str, str]]
+            list[tuple[Path, int]], list[tuple[str, str, str, bool]]
         ]:
             surfaces, skips = _orig_collect_2(root)
             kept = [(pth, bud) for pth, bud in surfaces
                     if pth.relative_to(root).as_posix() != dropped_rel]
-            return kept, skips + [(dropped_rel, "error", "OSError: simulated")]
+            return kept, skips + [(dropped_rel, "error", "OSError: simulated", True)]
 
         try:
             docs_budget.collect_surfaces = _collect_dropping_one
@@ -616,8 +646,103 @@ def run_self_test() -> int:
         check("a directory named *.md is not budgeted on its inode size",
               [f[0] for f in findings_d] == ["CLAUDE.md"],
               f"got {[f[0] for f in findings_d]}")
-        check("a directory named *.md is not an unmeasurable skip either",
-              skips_d == [], f"got {skips_d}")
+        # It is an unmeasurable skip, not an absence. consider() used to
+        # return silently for every non-file shape, which granted an
+        # exemption by surface shape that the aggregate's doctrine denies:
+        # the bytes of that always-loaded slot are unaccounted for whether
+        # the inode is a directory or a broken symlink.
+        check("a directory in a rules file's slot is a recorded skip",
+              [(sk[0], sk[1], sk[3]) for sk in skips_d]
+              == [(".claude/rules/01-r.md", "error", True)],
+              f"got {skips_d}")
+        partial_closed(dir_md_repo, "directory in a rules file's slot")
+
+        # The same shape in a top-level file's slot, where the surface is
+        # always-loaded but reached by a different call site.
+        dir_claude_repo = tmp / "dir_claude_repo"
+        (dir_claude_repo / "CLAUDE.md").mkdir(parents=True)
+        _write_sized(dir_claude_repo / ".claude" / "rules" / "01-r.md", 1_000)
+        _, skips_dc = docs_budget.collect_surfaces(dir_claude_repo)
+        check("a directory in CLAUDE.md's slot is a recorded skip",
+              [(sk[0], sk[1], sk[3]) for sk in skips_dc]
+              == [("CLAUDE.md", "error", True)],
+              f"got {skips_dc}")
+        partial_closed(dir_claude_repo, "directory in CLAUDE.md's slot")
+
+        # A directory standing in project_log.md's slot is unmeasurable too,
+        # but project_log.md is not always-loaded — so the skip is recorded
+        # with always_loaded False and the aggregate stays authoritative.
+        dir_log_repo = _build_repo(tmp / "dir_log_repo", {"CLAUDE.md": 1_000})
+        (dir_log_repo / "project_log.md").mkdir()
+        _, skips_dl = docs_budget.collect_surfaces(dir_log_repo)
+        check("a directory in project_log.md's slot skips as non-always-loaded",
+              [(sk[0], sk[1], sk[3]) for sk in skips_dl]
+              == [("project_log.md", "error", False)],
+              f"got {skips_dl}")
+        code_dl, lines_dl = run(dir_log_repo, enforce=True)
+        check("that skip leaves the aggregate authoritative and the run green",
+              code_dl == 0 and not any("PARTIAL" in l for l in lines_dl),
+              f"got exit {code_dl}, {[l for l in lines_dl if 'always-loaded' in l]}")
+
+        # The mirror shape: a regular FILE where the rules DIRECTORY belongs.
+        # probe() reports "file" truthfully and the directory branch matched
+        # neither "error" nor "dir", so the whole always-loaded rules tier
+        # left the scan with no surface and no skip.
+        file_rules_repo = _build_repo(
+            tmp / "file_rules_dir_repo", {"CLAUDE.md": 1_000})
+        _write_sized(file_rules_repo / ".claude" / "rules", 10)
+        check("probe() reports a regular file in the rules dir slot as 'file'",
+              probe(file_rules_repo / ".claude" / "rules")[0] == "file",
+              f"got {probe(file_rules_repo / '.claude' / 'rules')}")
+        _, skips_fr = docs_budget.collect_surfaces(file_rules_repo)
+        check("a regular file in the rules directory's slot is a recorded skip",
+              [(sk[0], sk[1], sk[3]) for sk in skips_fr]
+              == [(".claude/rules/", "error", True)],
+              f"got {skips_fr}")
+        partial_closed(file_rules_repo, "regular file in the rules dir slot")
+
+        # A rules file that the directory listing reported as present and
+        # that is gone by the time probe() stats it. "missing" is the
+        # ordinary absence of an optional top-level surface, but for an
+        # enumerated entry it means the file vanished mid-scan — present
+        # enough to be listed, unmeasurable now.
+        vanish_repo = _build_repo(
+            tmp / "vanish_repo",
+            {"CLAUDE.md": 1_000, ".claude/rules/01-r.md": 1_000},
+        )
+        vanish_target = vanish_repo / ".claude" / "rules" / "02-r.md"
+
+        class _OsVanishing:
+            """`os` stand-in whose scandir lists a file that is already gone.
+
+            Swapped in for the module's `os` binding rather than mutating
+            the real `os` module, so nothing outside this block sees it.
+            The race itself is not reproducible on demand.
+            """
+
+            path = os.path
+
+            @staticmethod
+            def scandir(path):
+                _write_sized(vanish_target, 1_000)
+                entries = list(os.scandir(path))
+                vanish_target.unlink()
+                return entries
+
+        _orig_os = docs_budget.os
+        try:
+            docs_budget.os = _OsVanishing
+            _, skips_v = docs_budget.collect_surfaces(vanish_repo)
+        finally:
+            docs_budget.os = _orig_os
+        check("a rules file that vanishes after enumeration is a recorded skip",
+              [(sk[0], sk[1], sk[3]) for sk in skips_v]
+              == [(".claude/rules/02-r.md", "error", True)],
+              f"got {skips_v}")
+        check("an absent optional top-level surface is still a silent skip",
+              docs_budget.collect_surfaces(
+                  _build_repo(tmp / "no_log_repo", {"CLAUDE.md": 1_000}))[1] == [],
+              "an absent project_log.md must not become a skip")
 
         # A FIFO standing where a budgeted document belongs: stat() succeeds,
         # so none of the error branches above fire, and probe()'s fallthrough

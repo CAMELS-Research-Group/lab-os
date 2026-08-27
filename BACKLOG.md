@@ -36,6 +36,7 @@ Read the **Index** first — it is the "what's ready right now" surface. Full it
 | B18 | Retire the two superseded Standing Decisions index lines | Watson | S | ready |
 | B19 | Amend `04-docs.md` for the main bundle's `**Living**` header | Watson | M | ready |
 | B20 | Land the rules-tier budget-raise round-trip in lab-os | Watson | S | ready |
+| B21 | State `docs-budget`'s fail-closed enforcement semantics in `04-docs.md` | Watson | S | ready |
 
 ## Inbox
 
@@ -369,7 +370,7 @@ has a Problem and a Done-when and an owner. -->
   so `docs-budget` reports a WARN on every lab-os PR and the check's signal is permanently
   noisy. The raise (12 KB `CLAUDE.md` / 8 KB per rules file) plus the 48 KB always-loaded
   aggregate cap is staged in Caravan; lab-os holds the canonical bytes and receives it as a
-  round-trip, open as PR #79 and not yet landed
+  round-trip, and the WARN stands until that round-trip lands
 - **Who it helps:** every lab-os contributor reading a PR's checks, and every member repo that
   calls the reusable `docs-budget` workflow and inherits the thresholds
 - **Value:** a check that warns on every PR trains readers to ignore it; landing the round-trip
@@ -379,4 +380,25 @@ has a Problem and a Done-when and an owner. -->
 - **Done when:** `python3 scripts/docs_budget.py --root .` reports no warn-zone
   `.claude/rules/*.md` surface on lab-os `main`
 - **Depends on:** —
+- **Status:** ready
+
+## B21 — State `docs-budget`'s fail-closed enforcement semantics in `04-docs.md`
+
+- **Problem:** `.claude/rules/04-docs.md` §Tiers & budgets states the byte budgets and the
+  warn/fail multipliers, but not what `docs-budget --enforce` does when it cannot measure.
+  Two cases fail the run without any surface being over budget: an always-loaded surface
+  that is present but unmeasurable makes the aggregate incomplete, and a scan that finds no
+  always-loaded surface at all has measured nothing. A repo reading only the rule would not
+  expect either red. Rules are staged in Caravan and reach lab-os as a round-trip — this
+  edit is authored there, never here
+- **Who it helps:** every member repo deciding whether it is ready to flip `enforce: true`,
+  and anyone diagnosing a red `docs-budget` check that names no over-budget file
+- **Value:** enforcement that surprises the repo which opted into it gets switched back off;
+  the semantic has to be written down before the first flip, not after the first surprise
+- **Owner:** Watson
+- **Rough size:** S
+- **Done when:** `.claude/rules/04-docs.md` §Tiers & budgets names both fail-closed cases —
+  an unmeasurable always-loaded surface and an empty always-loaded set — and it does so
+  before any member repo sets `enforce: true`
+- **Depends on:** B20
 - **Status:** ready

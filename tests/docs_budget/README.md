@@ -33,7 +33,8 @@ adds no review value, so:
   - completeness repo — the 10 x 8,000 B fail-zone aggregate with one
     rules file made unmeasurable, so the naive sum (72,000 B) would fall
     back under the fail line
-  - empty repo — missing-surface silence
+  - empty repo — an entirely surface-free root: silent and green in
+    warn-only mode, an error under `--enforce`
   - symlink repo — `.claude/rules` linked outside the root, when the
     platform allows symlink creation
   - real-trigger repos — the unmeasurable cases built on a real filesystem
@@ -44,9 +45,21 @@ adds no review value, so:
     that resolves outside the root. Each is guarded — the checks print
     SKIP where the platform refuses symlinks, or where `chmod` does not
     restrict access
-  - rules-scope repos — a `.txt` beside a rules file (neither budgeted nor
-    counted) and a *directory* named `01-r.md` (not budgeted on its inode
-    size)
+  - rules-scope repo — a `.txt` beside a rules file, neither budgeted nor
+    counted (the `.md` suffix, not mere residence under `.claude/rules`,
+    is what makes a surface always-loaded)
+  - wrong-shape repos — a *directory* standing in a rules file's slot, in
+    `CLAUDE.md`'s slot, and in `project_log.md`'s slot; and a regular
+    **file** standing in the rules **directory**'s slot. None is budgeted
+    on its inode size, and each is recorded as an unmeasurable skip — the
+    always-loaded ones therefore fail closed, the `project_log.md` one
+    does not
+  - vanishing-file repo — a rules file that a directory listing reports as
+    present and that is gone by the time `probe()` stats it. `missing` is
+    the ordinary absence of an optional surface, but for an *enumerated*
+    entry it is a mid-scan disappearance; the race is simulated by swapping
+    the module's `os` binding for a stand-in whose `scandir` lists a file
+    it then removes
   - irregular-path repos — a FIFO standing in for a rules **file**, and a
     FIFO standing in for the rules **directory**. `stat()` succeeds on
     both, so neither reaches an error branch; they exercise `probe()`'s
@@ -61,7 +74,9 @@ adds no review value, so:
   on a fail-zone surface
 - Annotation output: `::warning` for warn zone (and for fail zone in
   warn-only mode), `::error` for fail zone under `--enforce`
-- Missing surfaces skipped silently
+- Absent surfaces skipped silently — but only where absence is the
+  ordinary state of an optional surface, not where a directory listing
+  just reported the file as present
 - Unreadable surfaces (permission denied / TOCTOU-vanished; simulated
   cross-platform by monkeypatching `collect_surfaces` to hand `scan()` a
   vanished path): excluded from findings, named in a `::warning` line.
@@ -71,14 +86,23 @@ adds no review value, so:
   loaded, the total would read low, so the run reports `PARTIAL` with the
   counted bytes as a floor instead of a zone, names every unmeasurable
   surface in a fileless annotation, and fails closed under `--enforce`
-  (warn-only still exits 0). Covers the four drop paths — a `stat()`
-  failure on a file, a path resolving outside the repo root, an
-  unmeasurable or unlistable `.claude/rules` **directory**, and a path
-  that is present but not a regular file (FIFO/socket/device node) —
-  every one of them classified by the same `probe()`. No exemption by
-  skip kind and none by surface shape: an escaped surface and a stat
-  failure are the same class, and losing the whole rules directory
-  counts exactly like losing one rules file
+  (warn-only still exits 0). Covers the drop paths — a `stat()` failure
+  on a file, a path resolving outside the repo root, an unmeasurable or
+  unlistable `.claude/rules` **directory**, a path that is present but
+  not a regular file (FIFO/socket/device node), a directory standing in
+  a file's slot, a regular file standing in the rules directory's slot,
+  and a file that vanishes between enumeration and `stat()` — every one
+  of them classified by the same `probe()`. No exemption by skip kind and
+  none by surface shape: an escaped surface and a stat failure are the
+  same class, losing the whole rules directory counts exactly like losing
+  one rules file, and a wrong-shaped inode counts exactly like an
+  unreadable one. Whether a skip is always-loaded is decided where the
+  surface's slot is known and carried on the skip record, not re-derived
+  downstream from the shape of its path string
+- The empty aggregate: a scan that enumerates **no** always-loaded surface
+  has measured nothing, so `--enforce` errors rather than passing — pinned
+  on a repo holding only `project_log.md` and on a wholly empty root, both
+  of which still exit 0 in warn-only mode
 - Exit codes through `main()`, not only `run()`: CI reads `main()`'s code,
   so the fail-closed assertions are pinned at the seam CI actually uses
 - Fail-closed guards that are invisible in a passing run: `escapes_root()`

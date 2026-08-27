@@ -25,11 +25,18 @@ semantics as a per-file budget.
 
 A zone verdict for the aggregate is only reported when it can be
 computed. A surface
-that is present but unmeasurable (stat failure, a non-regular file, or a
-path resolving outside the repo root) is excluded from the sum, so the
+that is present but unmeasurable (stat failure, a non-regular file, a
+directory standing where a document belongs, or a path resolving outside
+the repo root) is excluded from the sum, so the
 total would read low; the run then reports PARTIAL instead of a zone and, under
 --enforce, fails closed. A per-file skip loses one verdict, but a
 short aggregate is a wrong number presented as authoritative.
+
+The same fail-closed reading covers the degenerate case: a scan that
+enumerates NO always-loaded surface at all has measured nothing, and
+under --enforce that is an error rather than a pass. A green gate that
+checked zero surfaces is the one output a budget check must never
+produce.
 
 Zone semantics (size measured in bytes on disk):
 
@@ -96,8 +103,13 @@ SKIP_ERROR = "error"
 ZONE_OK = "OK"
 ZONE_WARN = "WARN"
 ZONE_FAIL = "FAIL"
-# Not a size zone: the aggregate could not be computed at all.
-ZONE_PARTIAL = "PARTIAL"
+
+# Deliberately NOT in the ZONE_* namespace: this is not a size zone but the
+# statement that the aggregate could not be computed at all. Naming it as a
+# zone invited reading it as a fourth verdict alongside OK/WARN/FAIL, which
+# it never is — classify() can never return it and no per-file surface can
+# carry it. The printed token stays "PARTIAL"; only the symbol moved.
+AGGREGATE_INCOMPLETE = "PARTIAL"
 
 
 def fail_threshold(budget: int) -> int:
@@ -191,20 +203,26 @@ def probe(path: Path) -> tuple[str, str]:
 
 
 def collect_surfaces(root: Path) -> tuple[
-    list[tuple[Path, int]], list[tuple[str, str, str]]
+    list[tuple[Path, int]], list[tuple[str, str, bool]]
 ]:
     """((path, budget) pairs, skips) for the scanned surfaces under root.
 
     Missing surfaces are skipped silently — not every repo has every file.
     A surface that *is* present but cannot be measured is recorded as a
-    skip (rel, kind, detail), kind being 'escaped' (resolves outside the
-    repo root — junction/symlink) or 'error' (stat failed, or the path
-    is present but not a regular file). Skips are what
-    let the aggregate declare itself partial instead of quietly reporting
-    a short total as authoritative.
+    skip (rel, kind, detail, always_loaded), kind being 'escaped'
+    (resolves outside the repo root — junction/symlink) or 'error' (stat
+    failed, or the path is present but not the shape its slot expects).
+    Skips are what let the aggregate declare itself incomplete instead of
+    quietly reporting a short total as authoritative.
+
+    `always_loaded` is decided here, where the slot is known, and carried
+    on the record. It used to be re-derived downstream from the rel string
+    alone, which forced a directory skip's rel to end in "/" purely so a
+    prefix test would match — a display detail load-bearing for a
+    correctness decision, and a booby trap for anyone who tidied it away.
     """
     surfaces: list[tuple[Path, int]] = []
-    skips: list[tuple[str, str, str]] = []
+    skips: list[tuple[str, str, str, bool]] = []
 
     def rel_of(path: Path) -> str:
         try:
@@ -212,17 +230,44 @@ def collect_surfaces(root: Path) -> tuple[
         except ValueError:
             return str(path)
 
-    def consider(path: Path, budget: int) -> None:
+    def consider(path: Path, budget: int, enumerated: bool = False) -> None:
+        """Record `path` as a measurable surface, or as a skip.
+
+        `enumerated` marks a path that a directory listing just reported as
+        present. For those, "missing" is not the ordinary absence of an
+        optional surface — it means the file vanished between the listing
+        and the stat, which is an unmeasurable present surface.
+        """
+        rel = rel_of(path)
+        always_loaded = is_always_loaded(rel)
         kind, detail = probe(path)
         if kind == "error":
-            skips.append((rel_of(path), SKIP_ERROR, detail))
+            skips.append((rel, SKIP_ERROR, detail, always_loaded))
             return
-        if kind != "file":
-            # Absent, or present but not a regular file (a directory in a
-            # file's place). Neither is a measurable budgeted surface.
+        if kind == "dir":
+            # A directory standing where a budgeted document belongs is
+            # present and unmeasurable, not absent. Returning silently here
+            # granted an exemption by surface shape that the aggregate's
+            # doctrine explicitly denies: the bytes of that always-loaded
+            # slot are unaccounted for either way.
+            skips.append((
+                rel, SKIP_ERROR, "directory standing in a file's place",
+                always_loaded,
+            ))
+            return
+        if kind == "missing":
+            if enumerated:
+                skips.append((
+                    rel, SKIP_ERROR,
+                    "vanished between the directory listing and stat",
+                    always_loaded,
+                ))
             return
         if escapes_root(path, root):
-            skips.append((rel_of(path), SKIP_ESCAPED, "resolves outside the repo root"))
+            skips.append((
+                rel, SKIP_ESCAPED, "resolves outside the repo root",
+                always_loaded,
+            ))
             return
         surfaces.append((path, budget))
 
@@ -238,19 +283,29 @@ def collect_surfaces(root: Path) -> tuple[
     # returns False on a self-referential symlink (ELOOP) and raises on an
     # unreadable parent (EACCES), so an inline is_dir() test dropped the
     # entire always-loaded rules tier with no skip recorded — the aggregate
-    # then reported a short sum as authoritative. Trailing slash on the rel:
-    # it names the directory, and it is what makes the run()-side
-    # ALWAYS_LOADED_RULES_PREFIX clause pick the skip up (it does not end
-    # in .md, so is_always_loaded() alone would not).
+    # then reported a short sum as authoritative. Trailing slash on the rel
+    # is display only: it names a directory rather than a file, which is
+    # also what keeps scan() from anchoring a GitHub annotation to it.
+    # Nothing decides always-loaded-ness from that slash any more.
     rules_rel = f"{rel_of(rules_dir)}/"
     kind, detail = probe(rules_dir)
     if kind == "error":
-        skips.append((rules_rel, SKIP_ERROR, detail))
+        skips.append((rules_rel, SKIP_ERROR, detail, True))
+    elif kind == "file":
+        # A regular file where the rules DIRECTORY belongs. probe() reports
+        # it truthfully and no branch below claims it, so the whole
+        # always-loaded rules tier used to leave the scan with no surface
+        # and no skip — the same silent-drop the directory rewrite exists
+        # to close, reached from the opposite shape.
+        skips.append((
+            rules_rel, SKIP_ERROR,
+            "regular file standing in the rules directory's place", True,
+        ))
     elif kind == "dir":
         if escapes_root(rules_dir, root):
             skips.append((
                 f"{rel_of(rules_dir)}/*.md", SKIP_ESCAPED,
-                "rules directory resolves outside the repo root",
+                "rules directory resolves outside the repo root", True,
             ))
         else:
             try:
@@ -264,30 +319,32 @@ def collect_surfaces(root: Path) -> tuple[
                 # present directory became indistinguishable from an empty
                 # one. os.scandir surfaces the errno so it becomes a skip.
                 skips.append((
-                    rules_rel, SKIP_ERROR, f"{exc.__class__.__name__}: {exc}",
+                    rules_rel, SKIP_ERROR,
+                    f"{exc.__class__.__name__}: {exc}", True,
                 ))
             else:
                 for path in entries:
-                    consider(path, BUDGET_RULES_MD)
+                    consider(path, BUDGET_RULES_MD, enumerated=True)
 
     return surfaces, skips
 
 
 def scan(root: Path) -> tuple[
-    list[tuple[str, int, int, str]], list[str], list[tuple[str, str, str]]
+    list[tuple[str, int, int, str]], list[str], list[tuple[str, str, str, bool]]
 ]:
     """Scan surfaces under root.
 
     Returns (findings, warnings, skips): findings are (relative posix
     path, size bytes, budget bytes, zone) per readable surface; warnings
-    are ready-to-print annotation lines; skips are (rel, kind, detail)
-    for present-but-unmeasurable surfaces, carried so the aggregate can
-    declare itself partial rather than report a short total as complete.
+    are ready-to-print annotation lines; skips are
+    (rel, kind, detail, always_loaded) for present-but-unmeasurable
+    surfaces, carried so the aggregate can declare itself incomplete
+    rather than report a short total as complete.
     """
     findings: list[tuple[str, int, int, str]] = []
     warnings: list[str] = []
     surfaces, skips = collect_surfaces(root)
-    for rel, kind, detail in skips:
+    for rel, kind, detail, _always_loaded in skips:
         suffix = f" ({detail})" if detail else ""
         # A skip whose rel names a directory (".claude/rules/") or a glob
         # (".claude/rules/*.md") is not a path GitHub can anchor an
@@ -314,7 +371,7 @@ def scan(root: Path) -> tuple[
                 f"::warning file={rel}::{rel} could not be read "
                 f"({detail}); skipping its budget check."
             )
-            skips.append((rel, SKIP_ERROR, detail))
+            skips.append((rel, SKIP_ERROR, detail, is_always_loaded(rel)))
             continue
         findings.append((rel, size, budget, classify(size, budget)))
     return findings, warnings, skips
@@ -370,17 +427,17 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     # whole tier is the worse of the two, not the excusable one. Any of
     # them makes the aggregate PARTIAL and, under --enforce, red.
     #
-    # The prefix clause is not redundant with is_always_loaded(): its one
-    # input is the rules-directory skip, whose rel is the bare directory
-    # (".claude/rules/") and so does not end in ".md". Every other skip
-    # under the prefix names a file and is caught by the first clause.
-    missed = [sk for sk in skips if is_always_loaded(sk[0])
-              or sk[0].startswith(ALWAYS_LOADED_RULES_PREFIX)]
+    # One field, decided at construction where the slot is known. Deriving
+    # it here from the rel string needed a second, prefix-based clause to
+    # catch the rules-directory skip (whose rel is the bare directory and
+    # so does not end in ".md") — which in turn made that rel's trailing
+    # slash load-bearing for correctness.
+    missed = [sk for sk in skips if sk[3]]
     aggregate_zone = None
     if missed:
         measured = sum(f[1] for f in always_loaded)
         cap = BUDGET_ALWAYS_LOADED_TOTAL
-        aggregate_zone = ZONE_PARTIAL
+        aggregate_zone = AGGREGATE_INCOMPLETE
         named = ", ".join(sk[0] for sk in missed)
         lines.append(
             f"[{aggregate_zone:<4}] always-loaded total "
@@ -436,11 +493,35 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
                     f"({ratio:.2f}x). Warn-only mode — this will fail once "
                     f"enforcement is on."
                 )
+    else:
+        # Neither an unmeasurable surface nor a measured one: the scan
+        # enumerated no always-loaded surface at all. A gate that measured
+        # nothing must not report green — the states that reach here are a
+        # repo with no CLAUDE.md and no .claude/rules/*.md, and a --root
+        # pointed somewhere that is not the repo. Both are the gate failing
+        # to find its subject, which is indistinguishable in the exit code
+        # from a clean pass unless it is failed closed.
+        detail = (
+            "no always-loaded surface was found to measure — expected "
+            "CLAUDE.md (or .claude/CLAUDE.md) and/or .claude/rules/*.md "
+            "under the scanned root; the aggregate check ran against "
+            "nothing"
+        )
+        if enforce:
+            failed = True
+            lines.append(f"::error::{detail}.")
+        else:
+            lines.append(
+                f"::warning::{detail} — warn-only mode; this will fail once "
+                f"enforcement is on."
+            )
 
     # Gated on skips too: a repo whose only always-loaded surface is
     # unmeasurable has no findings, and closing that run with "nothing to
-    # check" states the inverse of its own PARTIAL line and exit code.
-    if not findings and not skips:
+    # check" states the inverse of its own PARTIAL line and exit code. Same
+    # reason for `failed`: an enforced run that found no always-loaded
+    # surface exits 1, and "nothing to check" would read as its opposite.
+    if not findings and not skips and not failed:
         lines.append("docs-budget: no budgeted surfaces found — nothing to check.")
     else:
         n_warn = sum(1 for f in findings if f[3] == ZONE_WARN)
@@ -473,11 +554,13 @@ def main(argv: list[str] | None = None) -> int:
             "aggregate (CLAUDE.md + rules, excluding project_log.md) "
             "49,152 B. Zones: size <= budget -> OK; budget < size <= "
             "1.5x budget -> WARN (annotation, exit 0); size > 1.5x budget "
-            "-> FAIL (exit 1 only with --enforce). Missing surfaces are "
+            "-> FAIL (exit 1 only with --enforce). An absent surface is "
             "skipped silently; an always-loaded surface that is present but "
-            "unmeasurable, or that resolves outside the repo root "
-            "(junctions/symlinks), makes the aggregate PARTIAL and fails "
-            "under --enforce."
+            "unmeasurable — a stat failure, a non-regular file, a directory "
+            "standing in a file's place, or a path resolving outside the "
+            "repo root (junctions/symlinks) — makes the aggregate PARTIAL "
+            "and fails under --enforce, as does finding no always-loaded "
+            "surface at all."
         ),
     )
     parser.add_argument(
