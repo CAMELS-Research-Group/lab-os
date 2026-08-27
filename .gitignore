@@ -23,3 +23,8 @@ site/.docusaurus/
 
 # Python bytecode (scripts/ tools are run in place)
 __pycache__/
+
+# Claude Code session worktrees. EnterWorktree checks out a full nested working
+# copy here, which otherwise shows up as untracked noise in the `git status` a
+# member is asked to read at the merge bar.
+.claude/worktrees/
