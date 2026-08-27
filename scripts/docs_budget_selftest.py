@@ -52,12 +52,19 @@ def _build_repo(base: Path, spec: dict[str, int]) -> Path:
 
 def run_self_test() -> int:
     failures: list[str] = []
+    skipped: list[str] = []
 
     def check(name: str, ok: bool, detail: str = "") -> None:
         status = "PASS" if ok else "FAIL"
         print(f"  [{status}] {name}" + (f" — {detail}" if detail and not ok else ""))
         if not ok:
             failures.append(name)
+
+    def skip(name: str) -> None:
+        # Counted in the summary: a block that never executed must not read
+        # identically to one that passed.
+        print(f"  [SKIP] {name}")
+        skipped.append(name)
 
     print("docs_budget self-test")
 
@@ -301,6 +308,53 @@ def run_self_test() -> int:
         finally:
             docs_budget.collect_surfaces = _orig_collect
 
+        # --- 5c. scan()'s stat-failure skip, on an ALWAYS-LOADED surface ---
+        # Section 5b's ghost is project_log.md, which the aggregate excludes,
+        # and section 7 injects its skip tuple from a monkeypatched
+        # collect_surfaces — so neither consumes the appender in scan()'s own
+        # OSError handler. Deleting that one line left the whole self-test
+        # green while turning a fail-closed PARTIAL/exit-1 into a green
+        # WARN/exit-0 computed from a short sum. This fixture reaches it: nine
+        # real 8,000 B rules files (72,000 B, inside the WARN band) plus a
+        # tenth always-loaded surface that vanishes between collection and
+        # stat(), whose true total of 80,000 B is past the 73,728 B fail line.
+        print("stat-failure skip on an always-loaded surface:")
+        agg_ghost_repo = _build_repo(
+            tmp / "agg_ghost_repo",
+            {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 10)},
+        )
+        ghost_rel = ".claude/rules/10-r.md"
+        _orig_collect_3 = docs_budget.collect_surfaces
+
+        def _collect_with_always_loaded_ghost(root: Path) -> tuple[
+            list[tuple[Path, int]], list[tuple[str, str, str]]
+        ]:
+            surfaces, skips = _orig_collect_3(root)
+            return surfaces + [(root / ghost_rel, BUDGET_RULES_MD)], skips
+
+        try:
+            docs_budget.collect_surfaces = _collect_with_always_loaded_ghost
+            _, _, skips_g = scan(agg_ghost_repo)
+            check("scan() records a skip for the vanished always-loaded file",
+                  [sk[0] for sk in skips_g] == [ghost_rel],
+                  f"got {skips_g}")
+            code_g, lines_g = run(agg_ghost_repo, enforce=True)
+            check("that skip makes the aggregate PARTIAL, not a green WARN",
+                  any("[PARTIAL] always-loaded total" in l for l in lines_g)
+                  and not any("[WARN] always-loaded total" in l
+                              for l in lines_g),
+                  f"got {[l for l in lines_g if 'always-loaded' in l]}")
+            check("the PARTIAL line names the unmeasurable surface",
+                  any("[PARTIAL] always-loaded total" in l and "72,000 B counted" in l
+                      for l in lines_g)
+                  and any(l.startswith("::error::") and ghost_rel in l
+                          for l in lines_g),
+                  f"got {[l for l in lines_g if 'always-loaded' in l]}")
+            check("a short sum past the fail line fails closed under --enforce",
+                  code_g == 1, f"got exit {code_g}")
+        finally:
+            docs_budget.collect_surfaces = _orig_collect_3
+
         # --- 6. junction/symlink escape ------------------------------------
         # escapes_root() is a pure resolved-path containment comparison, so
         # the core logic is testable without creating a real link (Windows
@@ -340,8 +394,8 @@ def run_self_test() -> int:
                   f"got exit {code_esc}, "
                   f"{[l for l in lines_esc if 'always-loaded' in l]}")
         else:
-            print("  [SKIP] symlink creation unavailable on this platform; "
-                  "pure-comparison checks above cover the logic")
+            skip("symlink creation unavailable on this platform; "
+                 "pure-comparison checks above cover the logic")
 
         # --- 7. aggregate completeness -------------------------------------
         # The failure this guards: an always-loaded surface that is present
@@ -409,10 +463,11 @@ def run_self_test() -> int:
 
         # --- 8. real unmeasurable triggers (no monkeypatch) ----------------
         # Sections 5b and 7 inject skip tuples, so they never reach probe()
-        # itself. These use real filesystem triggers, and the directory ones
-        # are the Blocker: an inline is_dir()/glob() pair dropped the whole
-        # always-loaded rules tier with no skip, and a genuine over-cap total
-        # read as a comfortable OK.
+        # itself. These use real filesystem triggers. The directory cases
+        # pin the defect this rewrite exists to close: an inline
+        # is_dir()/glob() pair dropped the whole always-loaded rules tier
+        # with no skip, and a genuine over-cap total read as a comfortable
+        # OK.
         print("real unmeasurable triggers:")
 
         def partial_closed(repo_root: Path, label: str) -> None:
@@ -505,7 +560,7 @@ def run_self_test() -> int:
                   f"got {probe(dangle_repo / '.claude' / 'rules')}")
             partial_closed(dangle_repo, "dangling rules symlink")
         else:
-            print("  [SKIP] symlink creation unavailable on this platform")
+            skip("symlink creation unavailable on this platform")
 
         # chmod triggers: an unlistable rules dir (EACCES out of scandir,
         # which glob() discarded) and an unreadable .claude parent (EACCES out
@@ -538,7 +593,7 @@ def run_self_test() -> int:
             finally:
                 (perm_repo / ".claude").chmod(0o755)
         else:
-            print("  [SKIP] chmod does not restrict access here (running as root?)")
+            skip("chmod does not restrict access here (running as root?)")
 
         # --- 9. rules scope and non-regular surfaces -----------------------
         print("rules scope:")
@@ -603,7 +658,7 @@ def run_self_test() -> int:
                   f"got {skips_fd}")
             partial_closed(fifo_dir_repo, "FIFO rules dir")
         else:
-            print("  [SKIP] mkfifo unavailable on this platform")
+            skip("mkfifo unavailable on this platform")
 
         class _UnresolvablePath:
             """Stand-in: a resolve() that raises is not portably reproducible
@@ -637,7 +692,14 @@ def run_self_test() -> int:
         rc_m, out_m = run_main(["--root", str(under / "CLAUDE.md")])
         check("main: a non-directory root exits 2", rc_m == 2, out_m)
 
-    print(f"self-test: {'FAIL — ' + str(len(failures)) + ' failure(s)' if failures else 'all checks passed'}")
+    outcome = (
+        f"FAIL — {len(failures)} failure(s)" if failures else "all checks passed"
+    )
+    if skipped:
+        outcome += (
+            f" ({len(skipped)} platform-guarded block(s) skipped, not executed)"
+        )
+    print(f"self-test: {outcome}")
     return 1 if failures else 0
 
 

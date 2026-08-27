@@ -55,8 +55,12 @@ jobs:
         run: |
           # A self-test failure is a code defect, not a content warning: it
           # always fails the job, regardless of the enforce input. Without
-          # this step the aggregate-cap checks never execute in CI — lab-os'
-          # own run sits at 0.47x and exercises no annotation path.
+          # this step the aggregate-cap checks never execute in CI: lab-os'
+          # own content run is comfortably inside budget and exercises few of
+          # the annotation paths. Every caller checks out lab-os' default
+          # branch, so a self-test regression landing on main reds this job in
+          # every caller at once, warn-only posture included. That is
+          # deliberate — backlog-lint.yml sets the same precedent.
           SCRIPT=".lab-os/scripts/docs_budget.py"
           if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then
             SCRIPT="scripts/docs_budget.py"

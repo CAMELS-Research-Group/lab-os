@@ -19,11 +19,12 @@ Beyond the per-file budgets, the always-loaded surfaces — CLAUDE.md plus
 every .claude/rules/*.md, but NOT project_log.md (first-read tier, and it
 has its own archive-overflow path) — are checked in aggregate against
 49,152 B. The aggregate is the invariant that actually protects session
-context: per-file budgets alone permit unbounded growth by adding rules
-files, and every rules file sitting at its full budget would blow the
-total on its own. Same zone semantics as a per-file budget.
+context: per-file budgets alone permit unbounded growth, because nothing
+caps how many rules files the always-loaded tier may hold. Same zone
+semantics as a per-file budget.
 
-The aggregate is only reported when it can be computed. A surface
+A zone verdict for the aggregate is only reported when it can be
+computed. A surface
 that is present but unmeasurable (stat failure, a non-regular file, or a
 path resolving outside the repo root) is excluded from the sum, so the
 total would read low; the run then reports PARTIAL instead of a zone and, under
@@ -77,14 +78,20 @@ BUDGET_RULES_MD = 8_192
 BUDGET_PROJECT_LOG = 15_360
 
 # Aggregate cap on everything that loads into EVERY session's context.
-# Deliberately smaller than the sum of the per-file budgets: the per-file
-# numbers say how big any one surface may get, this says how much total
-# context the always-loaded tier may claim.
+# The per-file numbers say how big any one surface may get; this says how
+# much total context the always-loaded tier may claim. Whether it binds
+# below the sum of the per-file budgets depends on how many rules files a
+# repo carries, so the cap is stated as an absolute rather than as a
+# fraction of that sum.
 BUDGET_ALWAYS_LOADED_TOTAL = 49_152
 
 # Surfaces that load unconditionally into every session (04-docs.md, AI tier).
 ALWAYS_LOADED_FILES = ("CLAUDE.md", ".claude/CLAUDE.md")
 ALWAYS_LOADED_RULES_PREFIX = ".claude/rules/"
+
+# Skip kinds recorded for a present-but-unmeasurable surface.
+SKIP_ESCAPED = "escaped"
+SKIP_ERROR = "error"
 
 ZONE_OK = "OK"
 ZONE_WARN = "WARN"
@@ -131,6 +138,10 @@ def escapes_root(path: Path, root: Path) -> bool:
     Pure resolved-path containment comparison — deliberately NOT
     Path.is_symlink(), which reports False for Windows junctions even
     though Path.resolve() follows them out of the repo.
+
+    A path that cannot be resolved at all (resolve() raises OSError) is
+    reported as escaped: callers treat that as an unmeasurable surface,
+    which is the fail-closed reading.
     """
     try:
         resolved = path.resolve()
@@ -204,14 +215,14 @@ def collect_surfaces(root: Path) -> tuple[
     def consider(path: Path, budget: int) -> None:
         kind, detail = probe(path)
         if kind == "error":
-            skips.append((rel_of(path), "error", detail))
+            skips.append((rel_of(path), SKIP_ERROR, detail))
             return
         if kind != "file":
             # Absent, or present but not a regular file (a directory in a
             # file's place). Neither is a measurable budgeted surface.
             return
         if escapes_root(path, root):
-            skips.append((rel_of(path), "escaped", "resolves outside the repo root"))
+            skips.append((rel_of(path), SKIP_ESCAPED, "resolves outside the repo root"))
             return
         surfaces.append((path, budget))
 
@@ -234,11 +245,11 @@ def collect_surfaces(root: Path) -> tuple[
     rules_rel = f"{rel_of(rules_dir)}/"
     kind, detail = probe(rules_dir)
     if kind == "error":
-        skips.append((rules_rel, "error", detail))
+        skips.append((rules_rel, SKIP_ERROR, detail))
     elif kind == "dir":
         if escapes_root(rules_dir, root):
             skips.append((
-                f"{rel_of(rules_dir)}/*.md", "escaped",
+                f"{rel_of(rules_dir)}/*.md", SKIP_ESCAPED,
                 "rules directory resolves outside the repo root",
             ))
         else:
@@ -253,7 +264,7 @@ def collect_surfaces(root: Path) -> tuple[
                 # present directory became indistinguishable from an empty
                 # one. os.scandir surfaces the errno so it becomes a skip.
                 skips.append((
-                    rules_rel, "error", f"{exc.__class__.__name__}: {exc}",
+                    rules_rel, SKIP_ERROR, f"{exc.__class__.__name__}: {exc}",
                 ))
             else:
                 for path in entries:
@@ -278,8 +289,13 @@ def scan(root: Path) -> tuple[
     surfaces, skips = collect_surfaces(root)
     for rel, kind, detail in skips:
         suffix = f" ({detail})" if detail else ""
+        # A skip whose rel names a directory (".claude/rules/") or a glob
+        # (".claude/rules/*.md") is not a path GitHub can anchor an
+        # annotation to, so those are emitted fileless — the same shape the
+        # aggregate annotations already use.
+        anchor = "" if rel.endswith("/") or "*" in rel else f" file={rel}"
         warnings.append(
-            f"::warning file={rel}::{rel} is a scanned surface but could not "
+            f"::warning{anchor}::{rel} is a scanned surface but could not "
             f"be measured{suffix}; it is excluded from its per-file check and "
             f"from the always-loaded aggregate."
         )
@@ -298,7 +314,7 @@ def scan(root: Path) -> tuple[
                 f"::warning file={rel}::{rel} could not be read "
                 f"({detail}); skipping its budget check."
             )
-            skips.append((rel, "error", detail))
+            skips.append((rel, SKIP_ERROR, detail))
             continue
         findings.append((rel, size, budget, classify(size, budget)))
     return findings, warnings, skips
@@ -485,7 +501,15 @@ def main(argv: list[str] | None = None) -> int:
         # (reference/code-quality-taxonomy.md), the same split
         # backlog_lint.py already uses. `--self-test` stays the one entry
         # point and its CLI contract is unchanged.
-        from docs_budget_selftest import run_self_test
+        try:
+            from docs_budget_selftest import run_self_test
+        except ImportError:
+            print(
+                "docs-budget: --self-test needs scripts/docs_budget_selftest.py "
+                "alongside this script",
+                file=sys.stderr,
+            )
+            return 2
         return run_self_test()
 
     if not args.root.is_dir():
