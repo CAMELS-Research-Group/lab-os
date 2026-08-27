@@ -55,6 +55,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 - B18 — Retire the two superseded Standing Decisions index lines (S, ready)
 - B19 — Amend `04-docs.md` for the main bundle's `**Living**` header (M, ready)
 - B20 — Land the rules-tier budget-raise round-trip in lab-os (S, ready)
+- B21 — State `docs-budget`'s fail-closed enforcement semantics in `04-docs.md` (S, ready)
 
 ## Dependency graph
 
@@ -62,6 +63,7 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 graph TD
   B5["B5: Backlog-lint (CI hygiene check for BACKLOG.md)"] --> B3
   B18["B18: Retire the two superseded Standing Decisions index lines"] --> B17
+  B21["B21: State `docs-budget`'s fail-closed enforcement semantics in `04-docs.md`"] --> B20
 ```
 
 _Edge `A --> B` reads "A depends on B"._
