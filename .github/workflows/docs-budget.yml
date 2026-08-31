@@ -9,9 +9,10 @@
 # The aggregate is the one this job exists for. Per-file budgets cap any one
 # surface; the aggregate caps what the always-loaded tier costs every session
 # and every subagent, and a tier can sit entirely inside its per-file budgets
-# while being thousands of bytes over as a whole. Caravan spent four days in
-# exactly that state, undetected, because this job was not wired there and no
-# per-file check would have seen it anyway.
+# while being thousands of bytes over as a whole. Caravan is in exactly that
+# state now: over its 48 KB aggregate with every file inside its own budget.
+# Restoring the job there (Caravan#300) surfaced the per-file drift but could
+# not see the aggregate at all — Caravan#298 and #302 record both halves.
 #
 # Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.
 # Default is warn-only (the warn-only-until-first-green posture):
