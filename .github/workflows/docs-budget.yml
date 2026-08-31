@@ -1,11 +1,26 @@
-# Reusable docs-budget adherence action (spec §9).
+# Reusable docs-budget adherence action.
 #
-# Checks the caller repo's always-loaded AI doc surfaces against the §7.2
-# context budgets: CLAUDE.md / .claude/CLAUDE.md 8,192 B; each
-# .claude/rules/*.md 5,120 B; project_log.md 15,360 B.
+# Checks the caller repo's always-loaded AI doc surfaces against the budgets
+# owned by .claude/rules/04-docs.md §Tiers & budgets: CLAUDE.md /
+# .claude/CLAUDE.md 12,288 B; each .claude/rules/*.md 8,192 B;
+# project_log.md 15,360 B; and the always-loaded AGGREGATE — CLAUDE.md plus
+# every rules file, excluding project_log.md — 49,152 B.
+#
+# The aggregate is the one this job exists for. Per-file budgets cap any one
+# surface; the aggregate caps what the always-loaded tier costs every session
+# and every subagent, and a tier can sit entirely inside its per-file budgets
+# while being thousands of bytes over as a whole. Caravan spent four days in
+# exactly that state, undetected, because this job was not wired there and no
+# per-file check would have seen it anyway.
+#
 # Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.
-# Default is warn-only (the §7.2 warn-only-until-first-green posture):
+# Default is warn-only (the warn-only-until-first-green posture):
 # the job never fails, it only emits ::warning annotations.
+#
+# NOTE for callers pinning @main: the budgets above changed on 2026-08-31 to
+# track 04-docs.md (rules 5,120 -> 8,192 B; CLAUDE.md 8,192 -> 12,288 B) and
+# the aggregate check was added. A repo already green stays green; a repo that
+# was failing on the old, stricter per-file numbers may now pass.
 #
 # Caller example (any lab repo):
 #
