@@ -83,7 +83,8 @@ Apache-2.0 — see [`LICENSE`](LICENSE). This repo is the upstream owner of the 
 bytes member repos vendor verbatim, so it is licensed to be copied; the rest of the lab's active
 repos are not (posture: `reference/licensing.md` in the rules-staging repo).
 
-The grant covers lab-authored content. Vendored third-party assets keep their own upstream
-licenses — scope statement and component list in [`NOTICE`](NOTICE), full provenance in
+The grant is bounded in two ways, both stated in [`NOTICE`](NOTICE): vendored third-party
+assets keep their own upstream licenses, and contributions made by co-authors before
+2026-09-01 await their recorded consent (CAMELS-Research-Group/Caravan#311). Full provenance in
 [`.claude/agents/ATTRIBUTION.md`](.claude/agents/ATTRIBUTION.md) and
 [`.claude/skills/ATTRIBUTION.md`](.claude/skills/ATTRIBUTION.md).

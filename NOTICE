@@ -34,3 +34,33 @@ thermo-nuclear-code-quality-review (Cursor) -- MIT License, Copyright (c) 2026 C
   .claude/skills/pr-round/reference/rubric-universal.md adapts structural-class
   content from Cursor's skill (https://github.com/cursor/plugins).
   Details: .claude/skills/ATTRIBUTION.md
+
+--------------------------------------------------------------------------------
+Contributor copyright and effective date
+--------------------------------------------------------------------------------
+
+This repository was previously unlicensed. Contributors retain copyright in
+their own contributions, so the license applied here is bounded rather than
+asserted over work whose authors have not agreed to it:
+
+  * Contributions authored by Watson Blair, whether made before or after
+    2026-09-01, are licensed under Apache-2.0. These are the great majority of
+    the repository, including the canonical rule bytes in .claude/rules/ other
+    than as noted below.
+
+  * Contributions authored by Kiara Jamal (Kiara627), Arya Kurup (Aryaa-K) and
+    Jean Moncayo (jmoncayo-pursuit) BEFORE 2026-09-01 are not licensed under
+    Apache-2.0 by this notice. Those authors retain their rights pending
+    recorded consent, tracked at
+    https://github.com/CAMELS-Research-Group/Caravan/issues/311
+
+  * All contributions made on or after 2026-09-01, by anyone, are licensed
+    under Apache-2.0. Opening a pull request against this repository is an
+    offer of the contribution under those terms.
+
+Practical effect on vendoring: .claude/rules/06-timeboxing.md is authored
+entirely by Arya Kurup, and .claude/rules/03-logging.md carries one commit by
+Kiara Jamal. Downstream repos that vendor the 0x rule bytes hold an Apache-2.0
+grant over every rule file except those contributions, until Caravan#311
+records consent. Once it does, this section is removed and the grant covers the
+repository whole.
