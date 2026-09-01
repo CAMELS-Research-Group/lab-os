@@ -40,7 +40,11 @@ it covers the lab's protection rules
 Copy
 [`templates/repo-CLAUDE.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/repo-CLAUDE.template.md)
 to the repo root (or `.claude/CLAUDE.md`) and fill the placeholders. Follow the template's embedded
-author guidance — dense writing aimed at an AI reader, 8 KB size budget, no restating lab rules that already load.
+author guidance — dense writing aimed at an AI reader, 12 KB size budget, no restating lab rules that already load.
+This file and every `.claude/rules/*.md` also share a 48 KB always-loaded aggregate cap
+([`.claude/rules/04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md)
+section Tiers & budgets), which binds as soon as the repo gains rules files — usually before any one file
+reaches its own budget.
 
 ### 4. Seed `project_log.md`
 

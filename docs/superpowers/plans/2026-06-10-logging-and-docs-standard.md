@@ -12,6 +12,16 @@
 
 **Branch:** `docs/logging-and-docs-standard` (spec already committed there). All tasks land on this branch; one PR at the end.
 
+> **Superseded 2026-08-12** (budget numbers, and the junction/symlink behaviour below): the
+> per-file byte budgets quoted in the task acceptance and verification lines below —
+> `CLAUDE.md` 8,192 and each `.claude/rules/*.md` 5,120 — were raised to 12,288 and 8,192, and a
+> 48 KB always-loaded aggregate cap was added. `project_log.md` is unchanged at 15,360. The
+> acceptance line reading "a rules dir that resolves outside the repo is skipped" is likewise
+> historical: an escaping always-loaded surface now makes the aggregate `PARTIAL` and fails the
+> run under `--enforce`. Current bytes and behaviour live in `.claude/rules/04-docs.md`
+> §Tiers & budgets and `scripts/docs_budget.py` — the text below is historical, like the sibling
+> design doc's §7.2 table.
+
 ---
 
 ## Phase A — rules and core docs
