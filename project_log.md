@@ -7,6 +7,8 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-09-01 20:05 — Apache-2.0 bounded by author, not by a flat effective date · #115
+- 2026-09-01 19:48 — lab-os licensed Apache-2.0; vendored work carved out in NOTICE · #115
 - 2026-08-12 17:33 — Raise always-loaded doc budgets to 12/8 KB; add a 48 KB aggregate cap · #79
 - 2026-08-13 10:55 — Terminal bundles fold into the scope's main bundle, then delete · #81
 - 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/` · #78
@@ -30,6 +32,48 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6 → project_log_archive.md
 
 ## Entries
+
+---
+
+## 2026-09-01 20:05 — Apache-2.0 bounded by author, not by a flat effective date
+
+**Decision:** The `NOTICE` grant covers Watson Blair's contributions in full, before and after
+2026-09-01; contributions by Kiara Jamal, Arya Kurup and Jean Moncayo made before that date are
+excluded pending recorded consent (Caravan#311). Everything from 2026-09-01 onward is
+Apache-2.0 for all authors; opening a PR is an offer under those terms.
+**Why:** A repo owner cannot license away a contributor's copyright unilaterally, and this repo
+was previously unlicensed, so there is no prior grant to fall back on. Bounding by author rather
+than by date alone grants what is the owner's — the great majority of the repo, five of the six
+`0x` rule files — instead of holding the whole grant hostage to three acks.
+**Consequence:** `.claude/rules/06-timeboxing.md` is authored entirely by Arya Kurup and
+`03-logging.md` carries one Kiara Jamal commit, so repos vendoring the `0x` bytes hold no grant
+over those contributions until Caravan#311 closes. The `NOTICE` section is removed when it does.
+**Alternatives:** Block on all three acks (rejected — leaves the repo unlicensed meanwhile). A
+flat going-forward date as in Caravan#275 (rejected — that PR tightened a grant, where a date
+bound limits the assertion; here it would exclude the owner's own existing bytes for nothing).
+**Refs:** #115, CAMELS-Research-Group/Caravan#311
+
+---
+
+## 2026-09-01 19:48 — lab-os licensed Apache-2.0; vendored work carved out in NOTICE
+
+**Decision:** Add a root `LICENSE` (unmodified Apache-2.0) and a root `NOTICE` scoping the grant
+to lab-authored content, with vendored third-party assets (Anthropic `pr-review-toolkit`,
+Apache-2.0; Cursor rubric content, MIT) retaining their upstream licenses. `README.md` gains a
+License section pointing at both.
+**Why:** This repo was public and unlicensed while `04-docs.md` §Rules numbering designates it
+the upstream owner of the canonical `0x` bytes member repos copy verbatim — nobody held a right
+to copy them. Apache-2.0 over MIT for the express patent grant (§3) and the attribution
+condition (§4), which turns the vendored-file sync header into a license term. The `NOTICE` is
+the §4(d) slot: without it the root grant reads as covering bytes the two `ATTRIBUTION.md` files
+place under other licenses.
+**Alternatives:** Proprietary All-Rights-Reserved, as every other active lab repo takes under
+the same sweep — rejected here, it would forbid copying the one repo whose job is to be copied.
+Editing `LICENSE` itself to state the carve-out — rejected; the text stays verbatim and the
+carve-out belongs in `NOTICE`.
+**Irrevocable:** an Apache-2.0 grant, once published, cannot be withdrawn for anyone who
+obtained the work under it.
+**Refs:** #115, CAMELS-Research-Group/Caravan#274
 
 ---
 
