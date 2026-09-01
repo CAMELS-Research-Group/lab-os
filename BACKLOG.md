@@ -366,9 +366,9 @@ has a Problem and a Done-when and an owner. -->
 
 ## B20 — Land the rules-tier budget-raise round-trip in lab-os
 
-- **Problem:** `.claude/rules/04-docs.md` sits above 1.0x of the per-file budget in force here,
-  so `docs-budget` reports a WARN on every lab-os PR and the check's signal is permanently
-  noisy. The raise (12 KB `CLAUDE.md` / 8 KB per rules file) plus the 48 KB always-loaded
+- **Problem:** on `main`, `.claude/rules/04-docs.md` sits above 1.0x of the 5,120 B per-file
+  budget still in force there, so `docs-budget` reports a WARN on every lab-os PR and the
+  check's signal is permanently noisy. The raise (12 KB `CLAUDE.md` / 8 KB per rules file) plus the 48 KB always-loaded
   aggregate cap is staged in Caravan; lab-os holds the canonical bytes and receives it as a
   round-trip, and the WARN stands until that round-trip lands
 - **Who it helps:** every lab-os contributor reading a PR's checks, and every member repo that

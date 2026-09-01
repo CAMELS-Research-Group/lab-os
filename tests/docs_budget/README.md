@@ -33,8 +33,11 @@ adds no review value, so:
   - completeness repo — the 10 x 8,000 B fail-zone aggregate with one
     rules file made unmeasurable, so the naive sum (72,000 B) would fall
     back under the fail line
-  - empty repo — an entirely surface-free root: silent and green in
-    warn-only mode, an error under `--enforce`
+  - empty repo — an entirely surface-free root. Not silent in either
+    mode: it annotates that no always-loaded surface was found to
+    measure, and closes with the counted summary (`0 surface(s)
+    checked ... always-loaded total n/a`). Exit 0 warn-only, 1 under
+    `--enforce`
   - symlink repo — `.claude/rules` linked outside the root, when the
     platform allows symlink creation
   - real-trigger repos — the unmeasurable cases built on a real filesystem
@@ -69,9 +72,15 @@ adds no review value, so:
 ## What the self-test covers
 
 - Zone boundary classification: size == budget → OK; budget+1 → WARN;
-  size == 1.5x → WARN; 1.5x+1 → FAIL (all three budgets)
-- Both modes on every zone: warn-only always exits 0; enforce exits 1 only
-  on a fail-zone surface
+  size == 1.5x → WARN; 1.5x+1 → FAIL. `CLAUDE.md` and the always-loaded
+  aggregate carry both boundary pairs; the rules-file and `project_log.md`
+  budgets carry the WARN/FAIL pair, which is the one that fixes each
+  constant to the byte. The four constants are separately checked against
+  the KB figures `.claude/rules/04-docs.md` states, so the rule and the
+  gate cannot drift apart silently
+- Both modes on every zone: warn-only always exits 0; enforce exits 1 on a
+  fail-zone surface, on a `PARTIAL` always-loaded aggregate, and where no
+  always-loaded surface was found to measure at all
 - Annotation output: `::warning` for warn zone (and for fail zone in
   warn-only mode), `::error` for fail zone under `--enforce`
 - Absent surfaces skipped silently — but only where absence is the
@@ -81,7 +90,10 @@ adds no review value, so:
   cross-platform by monkeypatching `collect_surfaces` to hand `scan()` a
   vanished path): excluded from findings, named in a `::warning` line.
   A surface outside the always-loaded tier — `project_log.md` — still
-  exits 0 in both modes, because losing one per-file verdict is harmless
+  exits 0 in both modes, because losing one per-file verdict is harmless.
+  That scoping is covered through a real trigger (a directory in
+  `project_log.md`'s slot), not through the monkeypatched fixture, whose
+  patch is already unwound by the time the aggregate is re-read
 - Aggregate completeness: when the unmeasurable surface **is** always-
   loaded, the total would read low, so the run reports `PARTIAL` with the
   counted bytes as a floor instead of a zone, names every unmeasurable

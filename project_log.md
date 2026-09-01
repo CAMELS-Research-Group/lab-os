@@ -39,7 +39,10 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 **aggregate** cap over the always-loaded tier (`project_log.md` excluded, unchanged at 15 KB).
 Over aggregate the remedy is demoting a surface to grep-only, not raising the cap. A scan that
 cannot measure a present always-loaded surface reports PARTIAL and fails closed under
-`--enforce`. `.claude/rules/04-docs.md` owns the bytes; `scripts/docs_budget.py` enforces.
+`--enforce`. The always-loaded set is **flat**, case-insensitive:
+`.claude/rules/` direct children, per the rule's `*.md` glob; a subdirectory is
+unmeasurable, not walked. `.claude/rules/04-docs.md` owns the bytes;
+`scripts/docs_budget.py` enforces.
 **Why:** The 8/5 KB numbers were never calibrated — the design doc logged them as a first guess
 (§13) and recorded every flagship repo already over 8 KB at adoption (§7.2). A per-file raise
 alone removes the pressure that forces the always-loaded/grep-only tiering decision, so the
