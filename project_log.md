@@ -7,8 +7,8 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
-- 2026-09-01 20:05 — Apache-2.0 is bounded by author; pre-2026-09-01 co-author work awaits consent · #115
-- 2026-09-01 19:48 — lab-os is Apache-2.0; vendored third-party work keeps its own license (NOTICE) · #115
+- 2026-09-01 20:05 — Apache-2.0 bounded by author, not by a flat effective date · #115
+- 2026-09-01 19:48 — lab-os licensed Apache-2.0; vendored work carved out in NOTICE · #115
 - 2026-08-12 17:33 — Raise always-loaded doc budgets to 12/8 KB; add a 48 KB aggregate cap · #79
 - 2026-08-13 10:55 — Terminal bundles fold into the scope's main bundle, then delete · #81
 - 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/` · #78
@@ -74,6 +74,9 @@ carve-out belongs in `NOTICE`.
 **Irrevocable:** an Apache-2.0 grant, once published, cannot be withdrawn for anyone who
 obtained the work under it.
 **Refs:** #115, CAMELS-Research-Group/Caravan#274
+
+---
+
 ## 2026-08-12 17:33 — Raise always-loaded doc budgets to 12/8 KB; add a 48 KB aggregate cap
 
 **Decision:** `CLAUDE.md` 8→12 KB, each `.claude/rules/*.md` 5→8 KB, and a new 48 KB
