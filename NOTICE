@@ -1,0 +1,36 @@
+lab-os
+Copyright 2026 CAMELS Research Group
+
+This product includes software developed by the CAMELS Research Group
+(https://github.com/CAMELS-Research-Group/lab-os).
+
+--------------------------------------------------------------------------------
+Scope
+--------------------------------------------------------------------------------
+
+The Apache License 2.0 in LICENSE covers content authored by the CAMELS Research
+Group. It does not relicense third-party work vendored into this repository:
+each vendored component remains governed by its own upstream license and
+copyright holder, and this NOTICE does not alter, restrict, or extend those
+terms.
+
+Full provenance for every vendored asset is recorded in:
+
+  .claude/agents/ATTRIBUTION.md
+  .claude/skills/ATTRIBUTION.md
+
+--------------------------------------------------------------------------------
+Third-party components
+--------------------------------------------------------------------------------
+
+pr-review-toolkit (Anthropic) -- Apache License 2.0
+  Four agent bodies under .claude/agents/ are vendored from Anthropic's
+  pr-review-toolkit plugin: pr-test-analyzer, silent-failure-hunter,
+  type-design-analyzer, comment-analyzer. The upstream license text is carried
+  at .claude/agents/LICENSE-pr-review-toolkit per its terms.
+  Details: .claude/agents/ATTRIBUTION.md
+
+thermo-nuclear-code-quality-review (Cursor) -- MIT License, Copyright (c) 2026 Cursor
+  .claude/skills/pr-round/reference/rubric-universal.md adapts structural-class
+  content from Cursor's skill (https://github.com/cursor/plugins).
+  Details: .claude/skills/ATTRIBUTION.md

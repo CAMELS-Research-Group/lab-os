@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-09-01 19:48 — lab-os is Apache-2.0; vendored third-party work keeps its own license (NOTICE) · #115
 - 2026-08-13 10:55 — Terminal bundles fold into the scope's main bundle, then delete · #81
 - 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/` · #78
 - 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
@@ -29,6 +30,28 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6 → project_log_archive.md
 
 ## Entries
+
+---
+
+## 2026-09-01 19:48 — lab-os licensed Apache-2.0; vendored work carved out in NOTICE
+
+**Decision:** Add a root `LICENSE` (unmodified Apache-2.0) and a root `NOTICE` scoping the grant
+to lab-authored content, with vendored third-party assets (Anthropic `pr-review-toolkit`,
+Apache-2.0; Cursor rubric content, MIT) retaining their upstream licenses. `README.md` gains a
+License section pointing at both.
+**Why:** This repo was public and unlicensed while `04-docs.md` §Rules numbering designates it
+the upstream owner of the canonical `0x` bytes member repos copy verbatim — nobody held a right
+to copy them. Apache-2.0 over MIT for the express patent grant (§3) and the attribution
+condition (§4), which turns the vendored-file sync header into a license term. The `NOTICE` is
+the §4(d) slot: without it the root grant reads as covering bytes the two `ATTRIBUTION.md` files
+place under other licenses.
+**Alternatives:** Proprietary All-Rights-Reserved, as every other active lab repo takes under
+the same sweep — rejected here, it would forbid copying the one repo whose job is to be copied.
+Editing `LICENSE` itself to state the carve-out — rejected; the text stays verbatim and the
+carve-out belongs in `NOTICE`.
+**Irrevocable:** an Apache-2.0 grant, once published, cannot be withdrawn for anyone who
+obtained the work under it.
+**Refs:** #115, CAMELS-Research-Group/Caravan#274
 
 ---
 

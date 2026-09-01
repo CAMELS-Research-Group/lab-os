@@ -76,3 +76,14 @@ Per-repo rules extend or override lab rules. Specific wins over general. Per-rep
 ## Scope discipline
 
 This repo holds **hard rules** — commit format, PR template usage, data-protection invariants, security, approval gates. Soft conventions (code style, library preferences) stay per-repo. Audit periodically to keep this lean — every file here is loaded into every Cowork session and every PR review.
+
+## License
+
+Apache-2.0 — see [`LICENSE`](LICENSE). This repo is the upstream owner of the canonical `0x` rule
+bytes member repos vendor verbatim, so it is licensed to be copied; the rest of the lab's active
+repos are not (posture: `reference/licensing.md` in the rules-staging repo).
+
+The grant covers lab-authored content. Vendored third-party assets keep their own upstream
+licenses — scope statement and component list in [`NOTICE`](NOTICE), full provenance in
+[`.claude/agents/ATTRIBUTION.md`](.claude/agents/ATTRIBUTION.md) and
+[`.claude/skills/ATTRIBUTION.md`](.claude/skills/ATTRIBUTION.md).
