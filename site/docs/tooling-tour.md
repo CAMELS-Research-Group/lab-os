@@ -58,13 +58,22 @@ Source of truth:
 [`docs-budget.yml`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/workflows/docs-budget.yml).
 
 Checks byte budgets on the always-loaded files agents read every session — `CLAUDE.md`, each
-`.claude/rules/*.md` file, and `project_log.md` — so those files don't quietly grow past what an
-agent can usefully start with. Budgets and tiers:
+`.claude/rules/*.md` file, and `project_log.md` — plus the **aggregate** of everything that loads
+into every session (`CLAUDE.md` and the rules files together, excluding `project_log.md`), so those
+files don't quietly grow past what an agent can usefully start with and adding files doesn't grow
+the total unchecked. Budgets and tiers:
 [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md).
 
-**A red check means** one of those files has grown past 1.5× its budget — and only in repos that have
-opted into enforcement. The default posture is warn-only: the job annotates overages but never
-fails, until a repo flips `enforce: true` after its first green run. lab-os itself enforces.
+**A red check means** a tooling defect — the job's own self-test failed, or the `enforce` input was
+unrecognized; those always fail, in either posture. Budget findings are gated on enforcement: in a
+repo that has flipped `enforce: true`, a red check also means one file has grown past 1.5× its
+budget, the always-loaded aggregate has, or the aggregate could not be completely measured (a
+present-but-unreadable always-loaded surface makes the total a floor rather than a verdict, and it
+fails closed rather than reporting a short sum as authoritative). Finding *no* always-loaded
+surface at all fails closed for the same reason: a check that measured nothing must not report
+green. The default posture is warn-only:
+the job annotates overages but never fails on them, until a repo flips `enforce: true` after its
+first green run. lab-os itself enforces.
 
 ### merge-bar-check
 
