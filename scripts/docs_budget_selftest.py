@@ -150,6 +150,11 @@ def run_self_test() -> int:
         # 49,152 B aggregate cap, so the per-surface counts above are exact.
         check("aggregate stays OK while every file is warn-zone",
               any("[OK  ] always-loaded total" in l for l in lines_w))
+        check("summary counts the checked surfaces and the warn zone",
+              any("docs-budget: 4 surface(s) checked, 4 warn-zone, "
+                  "0 fail-zone; always-loaded total OK (mode: enforce)." in l
+                  for l in lines_e),
+              f"got {[l for l in lines_e if l.startswith('docs-budget:')]}")
 
         # --- 4. generated fail-zone repo (> 1.5x) -------------------------
         print("generated fail-zone repo:")
@@ -175,6 +180,11 @@ def run_self_test() -> int:
               sum(1 for l in lines_e if l.startswith("::error")) == 3)
         check("report lines name file, size, budget, zone",
               any("[FAIL] CLAUDE.md — 18,433 B / 12,288 B budget" in l for l in lines_e))
+        check("summary counts the fail zone distinctly from the warn zone",
+              any("docs-budget: 3 surface(s) checked, 0 warn-zone, "
+                  "3 fail-zone; always-loaded total OK (mode: enforce)." in l
+                  for l in lines_e),
+              f"got {[l for l in lines_e if l.startswith('docs-budget:')]}")
 
         # --- 4b. aggregate always-loaded cap ------------------------------
         # The behaviour per-file budgets cannot express: every file is
@@ -230,10 +240,16 @@ def run_self_test() -> int:
                   for l in lines_l),
               f"got {[l for l in lines_l if 'always-loaded' in l]}")
 
-        # The summary line's aggregate clause, and its "n/a" false branch,
+        # The summary line's aggregate clause and its "n/a" false branch
         # were both unasserted: a log-only repo has no always-loaded surface
-        # at all, so it must read "n/a" and stay exit 0 — distinct from a
-        # repo that was checked and passed.
+        # at all, so the clause must read "n/a" — distinct from a repo that
+        # was checked and passed. It does NOT stay exit 0 under --enforce:
+        # having measured no always-loaded surface is the empty-aggregate
+        # case, failed closed in run() and pinned fifteen lines below. (The
+        # "and stay exit 0" this comment used to carry described
+        # pre-40f3df9 behaviour and contradicted that assertion — a
+        # maintainer trusting it reads the exit-1 pin as the bug and
+        # "fixes" it, dismantling the invariant this change exists to add.)
         check("summary line names the aggregate zone",
               any("always-loaded total FAIL (mode: enforce)." in l
                   for l in lines_e),
@@ -289,10 +305,29 @@ def run_self_test() -> int:
         code_e, lines_e0 = run(empty_repo, enforce=True)
         check("empty repo finds nothing at all",
               scan(empty_repo) == ([], [], []))
-        check("empty repo exits 0 in warn-only mode and says nothing to check",
-              code_w == 0
-              and any("nothing to check" in l for l in lines_w0),
+        # Warn-only on an empty root exits 0, but it no longer closes with
+        # "nothing to check": that line stated the inverse of the
+        # "::warning::no always-loaded surface was found" line immediately
+        # above it, its guard tested three values none of which is set on
+        # that path, and warn-only is the documented default for every new
+        # repo. The counted summary is true of the empty case too.
+        check("empty repo exits 0 in warn-only mode", code_w == 0,
               f"got exit {code_w}, {lines_w0}")
+        # The enforce-mode half of this is pinned below; warn-only is the
+        # mode the contradiction actually shipped in.
+        check("warn-only empty run drops the contradictory 'nothing to check'",
+              not any("nothing to check" in l for l in lines_w0),
+              f"got {lines_w0}")
+        check("empty repo's summary counts nothing and names the aggregate n/a",
+              any("docs-budget: 0 surface(s) checked, 0 warn-zone, "
+                  "0 fail-zone; always-loaded total n/a (mode: warn-only)." in l
+                  for l in lines_w0),
+              f"got {[l for l in lines_w0 if l.startswith('docs-budget:')]}")
+        check("empty repo warns before it summarises, in warn-only mode",
+              any(l.startswith("::warning::")
+                  and "no always-loaded surface was found" in l
+                  for l in lines_w0),
+              f"got {lines_w0}")
         # An empty root is the gate pointed at the wrong place as often as
         # it is a genuinely surface-free repo, and the two are
         # indistinguishable from the exit code. Fail closed.
@@ -442,12 +477,13 @@ def run_self_test() -> int:
         dropped_rel = ".claude/rules/01-r.md"
 
         def _collect_dropping_one(root: Path) -> tuple[
-            list[tuple[Path, int]], list[tuple[str, str, str, bool]]
+            list[tuple[Path, int]], list[docs_budget.Skip]
         ]:
             surfaces, skips = _orig_collect_2(root)
             kept = [(pth, bud) for pth, bud in surfaces
                     if pth.relative_to(root).as_posix() != dropped_rel]
-            return kept, skips + [(dropped_rel, "error", "OSError: simulated", True)]
+            return kept, skips + [docs_budget.Skip(
+                dropped_rel, "error", "OSError: simulated", True)]
 
         try:
             docs_budget.collect_surfaces = _collect_dropping_one
@@ -483,13 +519,14 @@ def run_self_test() -> int:
         finally:
             docs_budget.collect_surfaces = _orig_collect_2
 
-        # project_log.md is not always-loaded, so losing it must NOT make the
-        # aggregate partial — the fail-closed rule is scoped to the tier the
-        # aggregate actually measures.
-        check("an unmeasurable non-always-loaded surface leaves the "
-              "aggregate authoritative",
-              not any("PARTIAL" in l for l in run(ghost_repo, enforce=True)[1]),
-              f"got {[l for l in run(ghost_repo, enforce=True)[1] if 'always-loaded' in l]}")
+        # The scoping rule — a skip outside the always-loaded tier must NOT
+        # make the aggregate partial — is covered by the `dir_log_repo` case
+        # in section 9, through a real filesystem trigger. An assertion
+        # stood here over `ghost_repo`, but section 5b's `finally` had
+        # already restored `collect_surfaces`, so the repo was a plain
+        # directory holding one 100 B CLAUDE.md and the check could not
+        # fail: mutating run()'s `missed` filter to `list(skips)` kills
+        # three checks and never touched this one.
 
         # --- 8. real unmeasurable triggers (no monkeypatch) ----------------
         # Sections 5b and 7 inject skip tuples, so they never reach probe()
@@ -701,6 +738,77 @@ def run_self_test() -> int:
               f"got {skips_fr}")
         partial_closed(file_rules_repo, "regular file in the rules dir slot")
 
+        # A nested tree under .claude/rules/. The scan is flat, matching
+        # the rule's own `*.md` glob — but is_always_loaded() used to accept
+        # `sub/02-b.md` while the enumerator listed only the directory's own
+        # children, so the bytes below counted as always-loaded to the
+        # predicate and were invisible to the sum. 90,000 B left the total
+        # with `skips == []` and an authoritative `[OK]` at 0.04x.
+        nested_repo = _build_repo(
+            tmp / "nested_rules_repo",
+            {"CLAUDE.md": 1_000,
+             ".claude/rules/01-a.md": 1_000,
+             ".claude/rules/nested/02-b.md": 90_000},
+        )
+        check("a nested rules path is not always-loaded under a flat scan",
+              not is_always_loaded(".claude/rules/nested/02-b.md"),
+              "the predicate must match the enumerator")
+        findings_n, _, skips_n = scan(nested_repo)
+        check("a nested rules file is not budgeted by the flat scan",
+              sorted(f[0] for f in findings_n)
+              == [".claude/rules/01-a.md", "CLAUDE.md"],
+              f"got {[f[0] for f in findings_n]}")
+        check("a subdirectory under .claude/rules is a recorded skip",
+              [(sk.rel, sk.kind, sk.always_loaded) for sk in skips_n]
+              == [(".claude/rules/nested/", "error", True)],
+              f"got {skips_n}")
+        partial_closed(nested_repo, "nested rules subdirectory")
+
+        # `.claude` itself standing as a regular file. probe() on a path
+        # under a non-directory answers ENOTDIR on POSIX (which fails
+        # closed) but ENOENT on Windows, where probe()'s FileNotFoundError
+        # branch reads it as ordinary absence — so BOTH always-loaded slots
+        # beneath it vanished with no skip. Classifying the parent makes the
+        # answer platform-independent.
+        file_claude_repo = _build_repo(
+            tmp / "file_claude_repo", {"CLAUDE.md": 1_000})
+        _write_sized(file_claude_repo / ".claude", 10)
+        _, skips_fc = docs_budget.collect_surfaces(file_claude_repo)
+        check("a regular file in the .claude directory's slot is a skip",
+              [(sk.rel, sk.kind, sk.always_loaded) for sk in skips_fc]
+              == [(".claude/", "error", True)],
+              f"got {skips_fc}")
+        partial_closed(file_claude_repo, "regular file in .claude's slot")
+
+        # An absent .claude is the ordinary state of a repo that keeps only
+        # a root CLAUDE.md: it must stay a silent absence, not become a skip.
+        check("an absent .claude directory is still a silent absence",
+              docs_budget.collect_surfaces(
+                  _build_repo(tmp / "no_claude_dir_repo",
+                              {"CLAUDE.md": 1_000}))[1] == [],
+              "an absent .claude must not become a skip")
+
+        # Suffix matching is case-insensitive, as main's glob("*.md") was on
+        # a case-insensitive filesystem. A case-sensitive endswith() dropped
+        # `01-R.MD` with no surface and no skip.
+        case_repo = _build_repo(
+            tmp / "case_rules_repo",
+            {"CLAUDE.md": 1_000, ".claude/rules/01-R.MD": 2_000},
+        )
+        findings_c, _, skips_c = scan(case_repo)
+        check("an uppercase .MD rules file is budgeted, not dropped",
+              sorted(f[0] for f in findings_c)
+              == [".claude/rules/01-R.MD", "CLAUDE.md"],
+              f"got {[f[0] for f in findings_c]}")
+        check("is_always_loaded matches the enumerator on case",
+              is_always_loaded(".claude/rules/01-R.MD") and not skips_c,
+              f"got skips {skips_c}")
+        _, lines_c = run(case_repo, enforce=True)
+        check("an uppercase .MD rules file counts toward the aggregate",
+              any("always-loaded total (2 surface(s)) — 3,000 B" in l
+                  for l in lines_c),
+              f"got {[l for l in lines_c if 'always-loaded' in l]}")
+
         # A rules file that the directory listing reported as present and
         # that is gone by the time probe() stats it. "missing" is the
         # ordinary absence of an optional top-level surface, but for an
@@ -785,6 +893,51 @@ def run_self_test() -> int:
         else:
             skip("mkfifo unavailable on this platform")
 
+        # --- 9b. the constants against the rule they enforce --------------
+        # Nothing tied the four budget figures to `04-docs.md` section Tiers
+        # & budgets, the doc that owns them: the boundary checks pin each
+        # constant to itself, so a future raise touches five places and no
+        # check notices if only some move. The failure caught is the rule
+        # stating one number while the gate enforces another. Prose gives KB;
+        # the constants are bytes.
+        print("constants against the owning rule:")
+        rule_path = (
+            Path(docs_budget.__file__).resolve().parent.parent
+            / ".claude" / "rules" / "04-docs.md"
+        )
+        if rule_path.is_file():
+            rule_text = rule_path.read_text(encoding="utf-8")
+            budget_line = next(
+                (l for l in rule_text.splitlines()
+                 if l.startswith("Budgets (bytes):")), "",
+            )
+            check("the owning rule still states its budgets in one line",
+                  bool(budget_line),
+                  "no line starting 'Budgets (bytes):' in 04-docs.md")
+            for label, quoted, const in (
+                ("CLAUDE.md", "`CLAUDE.md` 12 KB", BUDGET_CLAUDE_MD),
+                ("rules file", "`.claude/rules/*.md` 8 KB each",
+                 BUDGET_RULES_MD),
+                ("aggregate", "48 KB", BUDGET_ALWAYS_LOADED_TOTAL),
+                ("project_log.md", "`project_log.md` 15 KB",
+                 BUDGET_PROJECT_LOG),
+            ):
+                check(f"04-docs.md states the {label} budget as "
+                      f"{const // 1024} KB",
+                      quoted in budget_line
+                      and f"{const // 1024} KB" in quoted,
+                      f"constant is {const} B ({const // 1024} KB); "
+                      f"rule line reads: {budget_line[:160]}")
+            check("04-docs.md states the same warn/fail multipliers",
+                  "Warn 1.0×, fail 1.5×" in budget_line
+                  and docs_budget.fail_threshold(1_000) == 1_500,
+                  f"got {budget_line[:160]}")
+        else:
+            # The script ships to member repos that vendor the rule under a
+            # different path, or not at all.
+            skip("04-docs.md not present beside this script; the "
+                 "constants-vs-prose check needs the owning rule")
+
         class _UnresolvablePath:
             """Stand-in: a resolve() that raises is not portably reproducible
             with a real path on every platform."""
@@ -817,6 +970,14 @@ def run_self_test() -> int:
         rc_m, out_m = run_main(["--root", str(under / "CLAUDE.md")])
         check("main: a non-directory root exits 2", rc_m == 2, out_m)
 
+    # A platform guard is legitimate on Windows, where symlinks, mkfifo and
+    # chmod-based EACCES are unavailable — but on the POSIX runner CI uses,
+    # every guarded block is expected to execute, and a green run that
+    # skipped some of them verified strictly less than CI's while printing
+    # the same "all checks passed". Root is exempted: chmod does not
+    # restrict it, so that block's skip is correct there.
+    is_root = hasattr(os, "geteuid") and os.geteuid() == 0
+    skipped_on_posix = bool(skipped) and os.name == "posix" and not is_root
     outcome = (
         f"FAIL — {len(failures)} failure(s)" if failures else "all checks passed"
     )
@@ -824,7 +985,12 @@ def run_self_test() -> int:
         outcome += (
             f" ({len(skipped)} platform-guarded block(s) skipped, not executed)"
         )
+    if skipped_on_posix:
+        outcome += (
+            " — a POSIX non-root run is expected to execute every guarded "
+            "block; treating the skips as a failure"
+        )
     print(f"self-test: {outcome}")
-    return 1 if failures else 0
+    return 1 if failures or skipped_on_posix else 0
 
 

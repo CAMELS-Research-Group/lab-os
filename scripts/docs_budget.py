@@ -11,26 +11,34 @@ upward on 2026-08-12; the rule file, not the dated design doc, is current.
 Scanned paths (relative to --root; each skipped silently when absent):
 
     CLAUDE.md             budget 12,288 B
-    .claude/CLAUDE.md     budget 12,288 B   (some repos keep it here instead)
+    .claude/CLAUDE.md     budget 12,288 B   (counted in ADDITION to a root
+                                            CLAUDE.md, not instead of it)
     .claude/rules/*.md    budget  8,192 B each
     project_log.md        budget 15,360 B
 
-Beyond the per-file budgets, the always-loaded surfaces — CLAUDE.md plus
-every .claude/rules/*.md, but NOT project_log.md (first-read tier, and it
-has its own archive-overflow path) — are checked in aggregate against
-49,152 B. The aggregate is the invariant that actually protects session
+Beyond the per-file budgets, the always-loaded surfaces — every
+CLAUDE.md the scan finds (both locations sum when both exist) plus every
+.claude/rules/*.md, but NOT project_log.md (first-read tier, and it has
+its own archive-overflow path) — are checked in aggregate against
+49,152 B. The rules scan is FLAT, matching the rule's own `*.md` glob:
+`.claude/rules/` is not searched recursively, and a subdirectory under it
+is recorded as an unmeasurable always-loaded surface rather than walked
+or ignored. The aggregate is the invariant that actually protects session
 context: per-file budgets alone permit unbounded growth, because nothing
 caps how many rules files the always-loaded tier may hold. Same zone
 semantics as a per-file budget.
 
 A zone verdict for the aggregate is only reported when it can be
-computed. A surface
-that is present but unmeasurable (stat failure, a non-regular file, a
-directory standing where a document belongs, or a path resolving outside
-the repo root) is excluded from the sum, so the
-total would read low; the run then reports PARTIAL instead of a zone and, under
---enforce, fails closed. A per-file skip loses one verdict, but a
-short aggregate is a wrong number presented as authoritative.
+computed. Any surface that is present but unmeasurable (stat failure, a
+non-regular file, a directory standing where a document belongs, or a
+path resolving outside the repo root) is excluded from the sum. When that
+surface is ALWAYS-LOADED the total would read low, so the run reports
+PARTIAL instead of a zone and, under --enforce, fails closed. A per-file
+skip loses one verdict, but a short aggregate is a wrong number presented
+as authoritative. An unmeasurable surface OUTSIDE the always-loaded tier
+(today only project_log.md) contributes nothing to the aggregate either
+way, so it loses only its own per-file verdict and leaves the aggregate
+authoritative.
 
 The same fail-closed reading covers the degenerate case: a scan that
 enumerates NO always-loaded surface at all has measured nothing, and
@@ -48,8 +56,9 @@ Zone semantics (size measured in bytes on disk):
 Default mode is warn-only until a repo first passes green, per
 `.claude/rules/04-docs.md` (section Tiers & budgets, the same file the
 budgets come from): the script always exits 0 no matter what it finds in
-that mode. Pass --enforce
-to exit 1 when any surface is in the FAIL zone.
+that mode. Pass --enforce to exit 1 when any surface is in the FAIL
+zone, when the always-loaded aggregate is PARTIAL, or when no
+always-loaded surface was found to measure at all.
 
 EOL drift: CRLF working copies (e.g. Windows checkouts with autocrlf)
 measure larger than the LF checkouts CI sees; budgets are calibrated for
@@ -79,9 +88,15 @@ import os
 import stat
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 BUDGET_CLAUDE_MD = 12_288
 BUDGET_RULES_MD = 8_192
+# 04-docs.md gives project_log.md 15 KB at project altitude and 40 KB at
+# lab altitude. Only the project figure is encoded: the lab log lives at
+# <DEV_ROOT>/project_log.md, which is not a repo root and so is never a
+# --root this scanner is pointed at. A lab-altitude check is a separate
+# caller, not a second constant here.
 BUDGET_PROJECT_LOG = 15_360
 
 # Aggregate cap on everything that loads into EVERY session's context.
@@ -99,6 +114,26 @@ ALWAYS_LOADED_RULES_PREFIX = ".claude/rules/"
 # Skip kinds recorded for a present-but-unmeasurable surface.
 SKIP_ESCAPED = "escaped"
 SKIP_ERROR = "error"
+
+
+class Skip(NamedTuple):
+    """A surface that is present but could not be measured.
+
+    A NamedTuple rather than a bare tuple because `always_loaded` is what
+    the aggregate's fail-closed decision turns on, and it sits at index 3
+    of a record whose annotation used to declare three fields. A reader
+    trusting that annotation reaches for `sk[2]` — `detail`, non-empty at
+    every construction site and so unconditionally truthy, which would
+    fail every skip closed. Nothing type-checks this repo in CI, so the
+    fix has to be one that indexing itself enforces: the arity is now
+    declared, and `sk.always_loaded` names the field where correctness
+    depends on it.
+    """
+
+    rel: str
+    kind: str
+    detail: str
+    always_loaded: bool
 
 ZONE_OK = "OK"
 ZONE_WARN = "WARN"
@@ -132,16 +167,30 @@ def classify(size: int, budget: int) -> str:
 def is_always_loaded(rel: str) -> bool:
     """True when a scanned surface loads into every session's context.
 
-    CLAUDE.md (either location) and every .claude/rules/*.md file load
-    unconditionally, because a session loads the directory (04-docs.md,
-    section Tiers & budgets, owns the scope).
-    project_log.md does not — it is first-read tier (an agent reads its
-    head, not the file) and carries its own overflow-to-archive path — so
-    it is excluded from the aggregate.
+    CLAUDE.md — BOTH locations, cumulatively, when a repo carries both —
+    and every .claude/rules/*.md file load unconditionally, because a
+    session loads the directory (04-docs.md, section Tiers & budgets, owns
+    the scope). project_log.md does not — it is first-read tier (an agent
+    reads its head, not the file) and carries its own overflow-to-archive
+    path — so it is excluded from the aggregate.
+
+    Membership is FLAT and case-insensitive, matching the enumerator in
+    collect_surfaces() byte for byte. Both halves of that sentence were
+    once false and each was a silent short sum: a predicate that accepted
+    a nested `.claude/rules/sub/02-b.md` while the enumerator listed only
+    the directory's own `*.md` children let 90,000 B of always-loaded
+    bytes leave the total with no skip and no annotation, and a
+    case-sensitive suffix test dropped `01-R.MD` on the case-insensitive
+    filesystems where `main`'s glob() had matched it. The predicate and
+    the enumerator have to agree, or the aggregate reports a number for a
+    set it did not measure.
     """
     if rel in ALWAYS_LOADED_FILES:
         return True
-    return rel.startswith(ALWAYS_LOADED_RULES_PREFIX) and rel.endswith(".md")
+    if not rel.startswith(ALWAYS_LOADED_RULES_PREFIX):
+        return False
+    tail = rel[len(ALWAYS_LOADED_RULES_PREFIX):]
+    return "/" not in tail and tail.lower().endswith(".md")
 
 
 def escapes_root(path: Path, root: Path) -> bool:
@@ -203,13 +252,13 @@ def probe(path: Path) -> tuple[str, str]:
 
 
 def collect_surfaces(root: Path) -> tuple[
-    list[tuple[Path, int]], list[tuple[str, str, bool]]
+    list[tuple[Path, int]], list[Skip]
 ]:
     """((path, budget) pairs, skips) for the scanned surfaces under root.
 
     Missing surfaces are skipped silently — not every repo has every file.
     A surface that *is* present but cannot be measured is recorded as a
-    skip (rel, kind, detail, always_loaded), kind being 'escaped'
+    `Skip` (rel, kind, detail, always_loaded), kind being 'escaped'
     (resolves outside the repo root — junction/symlink) or 'error' (stat
     failed, or the path is present but not the shape its slot expects).
     Skips are what let the aggregate declare itself incomplete instead of
@@ -222,7 +271,7 @@ def collect_surfaces(root: Path) -> tuple[
     correctness decision, and a booby trap for anyone who tidied it away.
     """
     surfaces: list[tuple[Path, int]] = []
-    skips: list[tuple[str, str, str, bool]] = []
+    skips: list[Skip] = []
 
     def rel_of(path: Path) -> str:
         try:
@@ -242,7 +291,7 @@ def collect_surfaces(root: Path) -> tuple[
         always_loaded = is_always_loaded(rel)
         kind, detail = probe(path)
         if kind == "error":
-            skips.append((rel, SKIP_ERROR, detail, always_loaded))
+            skips.append(Skip(rel, SKIP_ERROR, detail, always_loaded))
             return
         if kind == "dir":
             # A directory standing where a budgeted document belongs is
@@ -250,21 +299,21 @@ def collect_surfaces(root: Path) -> tuple[
             # granted an exemption by surface shape that the aggregate's
             # doctrine explicitly denies: the bytes of that always-loaded
             # slot are unaccounted for either way.
-            skips.append((
+            skips.append(Skip(
                 rel, SKIP_ERROR, "directory standing in a file's place",
                 always_loaded,
             ))
             return
         if kind == "missing":
             if enumerated:
-                skips.append((
+                skips.append(Skip(
                     rel, SKIP_ERROR,
                     "vanished between the directory listing and stat",
                     always_loaded,
                 ))
             return
         if escapes_root(path, root):
-            skips.append((
+            skips.append(Skip(
                 rel, SKIP_ESCAPED, "resolves outside the repo root",
                 always_loaded,
             ))
@@ -273,12 +322,38 @@ def collect_surfaces(root: Path) -> tuple[
 
     for path, budget in (
         (root / "CLAUDE.md", BUDGET_CLAUDE_MD),
-        (root / ".claude" / "CLAUDE.md", BUDGET_CLAUDE_MD),
         (root / "project_log.md", BUDGET_PROJECT_LOG),
     ):
         consider(path, budget)
 
-    rules_dir = root / ".claude" / "rules"
+    # The .claude directory is the parent of two always-loaded slots and was
+    # the one link in the chain nothing classified. probe() on a path *under*
+    # a non-directory is platform-dependent: POSIX reports ENOTDIR, which
+    # reaches probe()'s OSError branch and fails closed, but Windows reports
+    # ENOENT, and probe()'s FileNotFoundError branch only separates absence
+    # from a dangling symlink — so a `.claude` that is a regular file made
+    # BOTH children read as ordinary absence and the entire always-loaded
+    # rules tier left the scan with no surface and no skip. Classifying the
+    # parent once, here, makes that answer the same on every platform.
+    claude_dir = root / ".claude"
+    claude_rel = f"{rel_of(claude_dir)}/"
+    claude_kind, claude_detail = probe(claude_dir)
+    if claude_kind == "error":
+        skips.append(Skip(claude_rel, SKIP_ERROR, claude_detail, True))
+    elif claude_kind == "file":
+        skips.append(Skip(
+            claude_rel, SKIP_ERROR,
+            "regular file standing in the .claude directory's place", True,
+        ))
+    if claude_kind != "dir":
+        # Absent is the ordinary case for a repo with no .claude directory;
+        # the two shapes above already recorded their skip. Either way there
+        # is nothing beneath it to enumerate.
+        return surfaces, skips
+
+    consider(claude_dir / "CLAUDE.md", BUDGET_CLAUDE_MD)
+
+    rules_dir = claude_dir / "rules"
     # The directory goes through the same classifier as the files. is_dir()
     # returns False on a self-referential symlink (ELOOP) and raises on an
     # unreadable parent (EACCES), so an inline is_dir() test dropped the
@@ -290,39 +365,67 @@ def collect_surfaces(root: Path) -> tuple[
     rules_rel = f"{rel_of(rules_dir)}/"
     kind, detail = probe(rules_dir)
     if kind == "error":
-        skips.append((rules_rel, SKIP_ERROR, detail, True))
+        skips.append(Skip(rules_rel, SKIP_ERROR, detail, True))
     elif kind == "file":
         # A regular file where the rules DIRECTORY belongs. probe() reports
         # it truthfully and no branch below claims it, so the whole
         # always-loaded rules tier used to leave the scan with no surface
         # and no skip — the same silent-drop the directory rewrite exists
         # to close, reached from the opposite shape.
-        skips.append((
+        skips.append(Skip(
             rules_rel, SKIP_ERROR,
             "regular file standing in the rules directory's place", True,
         ))
     elif kind == "dir":
         if escapes_root(rules_dir, root):
-            skips.append((
+            skips.append(Skip(
                 f"{rel_of(rules_dir)}/*.md", SKIP_ESCAPED,
                 "rules directory resolves outside the repo root", True,
             ))
         else:
             try:
-                entries = sorted(
-                    Path(e.path) for e in os.scandir(rules_dir)
-                    if e.name.endswith(".md")
-                )
+                # Case-insensitive to match is_always_loaded(), and to keep
+                # main's glob("*.md") behaviour on case-insensitive
+                # filesystems, where a case-sensitive endswith() silently
+                # dropped `01-R.MD`.
+                listed = sorted(os.scandir(rules_dir), key=lambda e: e.name)
+                entries = [
+                    Path(e.path) for e in listed
+                    if e.name.lower().endswith(".md")
+                ]
+                # A subdirectory under .claude/rules/ is the shape the
+                # enumerator and the membership predicate disagreed about:
+                # the scan is flat (04-docs.md states the tier as a `*.md`
+                # glob), but is_always_loaded() used to accept a nested
+                # `sub/02-b.md`, so a nested tree contributed neither a
+                # surface nor a skip and 90,000 B of always-loaded bytes
+                # left the total with the aggregate still reading as
+                # authoritative. The predicate is flat now; this records the
+                # directory so the shape is never merely ignored. A `*.md`
+                # DIRECTORY is not double-counted here — it is enumerated
+                # above and consider() skips it by shape.
+                nested = [
+                    Path(e.path) for e in listed
+                    if not e.name.lower().endswith(".md")
+                    and e.is_dir(follow_symlinks=False)
+                ]
             except OSError as exc:
                 # glob() discards the scandir error, so an unlistable
                 # directory contributed zero surfaces AND zero skips — a
                 # present directory became indistinguishable from an empty
                 # one. os.scandir surfaces the errno so it becomes a skip.
-                skips.append((
+                skips.append(Skip(
                     rules_rel, SKIP_ERROR,
                     f"{exc.__class__.__name__}: {exc}", True,
                 ))
             else:
+                for path in nested:
+                    skips.append(Skip(
+                        f"{rel_of(path)}/", SKIP_ERROR,
+                        "subdirectory under .claude/rules/; the rules scan "
+                        "is flat, so any .md beneath it is unmeasured",
+                        True,
+                    ))
                 for path in entries:
                     consider(path, BUDGET_RULES_MD, enumerated=True)
 
@@ -330,15 +433,15 @@ def collect_surfaces(root: Path) -> tuple[
 
 
 def scan(root: Path) -> tuple[
-    list[tuple[str, int, int, str]], list[str], list[tuple[str, str, str, bool]]
+    list[tuple[str, int, int, str]], list[str], list[Skip]
 ]:
     """Scan surfaces under root.
 
     Returns (findings, warnings, skips): findings are (relative posix
     path, size bytes, budget bytes, zone) per readable surface; warnings
-    are ready-to-print annotation lines; skips are
-    (rel, kind, detail, always_loaded) for present-but-unmeasurable
-    surfaces, carried so the aggregate can declare itself incomplete
+    are ready-to-print annotation lines; skips are `Skip`
+    (rel, kind, detail, always_loaded) records for
+    present-but-unmeasurable surfaces, carried so the aggregate can declare itself incomplete
     rather than report a short total as complete.
     """
     findings: list[tuple[str, int, int, str]] = []
@@ -371,7 +474,7 @@ def scan(root: Path) -> tuple[
                 f"::warning file={rel}::{rel} could not be read "
                 f"({detail}); skipping its budget check."
             )
-            skips.append((rel, SKIP_ERROR, detail, is_always_loaded(rel)))
+            skips.append(Skip(rel, SKIP_ERROR, detail, is_always_loaded(rel)))
             continue
         findings.append((rel, size, budget, classify(size, budget)))
     return findings, warnings, skips
@@ -432,13 +535,13 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     # catch the rules-directory skip (whose rel is the bare directory and
     # so does not end in ".md") — which in turn made that rel's trailing
     # slash load-bearing for correctness.
-    missed = [sk for sk in skips if sk[3]]
+    missed = [sk for sk in skips if sk.always_loaded]
     aggregate_zone = None
     if missed:
         measured = sum(f[1] for f in always_loaded)
         cap = BUDGET_ALWAYS_LOADED_TOTAL
         aggregate_zone = AGGREGATE_INCOMPLETE
-        named = ", ".join(sk[0] for sk in missed)
+        named = ", ".join(sk.rel for sk in missed)
         lines.append(
             f"[{aggregate_zone:<4}] always-loaded total "
             f"({len(always_loaded)} surface(s) measured, {len(missed)} "
@@ -516,25 +619,27 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
                 f"enforcement is on."
             )
 
-    # Gated on skips too: a repo whose only always-loaded surface is
-    # unmeasurable has no findings, and closing that run with "nothing to
-    # check" states the inverse of its own PARTIAL line and exit code. Same
-    # reason for `failed`: an enforced run that found no always-loaded
-    # surface exits 1, and "nothing to check" would read as its opposite.
-    if not findings and not skips and not failed:
-        lines.append("docs-budget: no budgeted surfaces found — nothing to check.")
-    else:
-        n_warn = sum(1 for f in findings if f[3] == ZONE_WARN)
-        n_fail = sum(1 for f in findings if f[3] == ZONE_FAIL)
-        mode = "enforce" if enforce else "warn-only"
-        # Only stated when there is something to state, so a clean run's
-        # output is unchanged.
-        unmeasurable = f", {len(skips)} unmeasurable" if skips else ""
-        lines.append(
-            f"docs-budget: {len(findings)} surface(s) checked, "
-            f"{n_warn} warn-zone, {n_fail} fail-zone{unmeasurable}; "
-            f"always-loaded total {aggregate_zone or 'n/a'} (mode: {mode})."
-        )
+    # One summary, always. The "no budgeted surfaces found — nothing to
+    # check" special case was removed rather than re-gated: every state that
+    # could still reach it is a state the run has just annotated. An empty
+    # root in warn-only mode emits "::warning::no always-loaded surface was
+    # found to measure" and then closed with "nothing to check" — the last
+    # line a caller reads stating the inverse of the line above it, and
+    # warn-only is the documented default for every new repo. Its guard
+    # tested `findings`, `skips` and `failed`, none of which is set on that
+    # path. The counted summary is true of the empty case too: it reads
+    # "0 surface(s) checked ... always-loaded total n/a".
+    n_warn = sum(1 for f in findings if f[3] == ZONE_WARN)
+    n_fail = sum(1 for f in findings if f[3] == ZONE_FAIL)
+    mode = "enforce" if enforce else "warn-only"
+    # Only stated when there is something to state, so a clean run's
+    # output is unchanged.
+    unmeasurable = f", {len(skips)} unmeasurable" if skips else ""
+    lines.append(
+        f"docs-budget: {len(findings)} surface(s) checked, "
+        f"{n_warn} warn-zone, {n_fail} fail-zone{unmeasurable}; "
+        f"always-loaded total {aggregate_zone or 'n/a'} (mode: {mode})."
+    )
 
     return (1 if failed else 0, lines)
 
@@ -569,7 +674,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--enforce", action="store_true",
-        help="exit 1 when any surface is above 1.5x its budget "
+        help="exit 1 when any surface is above 1.5x its budget, when the "
+             "always-loaded aggregate cannot be computed (PARTIAL), or when "
+             "no always-loaded surface was found to measure "
              "(default: warn-only — always exit 0)",
     )
     parser.add_argument(
@@ -586,10 +693,16 @@ def main(argv: list[str] | None = None) -> int:
         # point and its CLI contract is unchanged.
         try:
             from docs_budget_selftest import run_self_test
-        except ImportError:
+        except ImportError as exc:
+            # The cause is reported rather than asserted: the self-test
+            # module imports production symbols from this one, so a rename
+            # raises ImportError from a file that is present, and a bare
+            # "missing file" message sends the reader to the wrong place.
             print(
-                "docs-budget: --self-test needs scripts/docs_budget_selftest.py "
-                "alongside this script",
+                "docs-budget: --self-test could not import "
+                f"scripts/docs_budget_selftest.py ({exc}); it must sit "
+                "alongside this script and import symbols this module still "
+                "defines",
                 file=sys.stderr,
             )
             return 2
