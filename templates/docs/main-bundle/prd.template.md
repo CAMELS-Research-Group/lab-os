@@ -8,7 +8,7 @@
 
 **Scope:** <scope> · **Living** — exempt from byte budgets.
 **Spec:** [spec.md](./spec.md) · **Design:** [design.md](./design.md) ·
-**Plan:** [plan.md](./plan.md) · **Log:** [log.md](./log.md)
+**Plan:** [plan.md](./plan.md)
 
 ---
 

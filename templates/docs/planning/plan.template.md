@@ -1,7 +1,6 @@
 # <Slice title> — implementation plan
 
-<!-- Bundle lifecycle: bundles live at _specs/<repo>/YYYY-MM-DD-<slug>/; overflow and archival
-     are co-located in the bundle (spec-log altitude per .claude/rules/03-logging.md).
+<!-- Bundle lifecycle: bundles live at _specs/<repo>/YYYY-MM-DD-<slug>/.
      Spec: .claude/rules/04-docs.md. -->
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
@@ -84,4 +83,4 @@ No literal code. The only code blocks allowed are short shell commands in **Veri
 ---
 
 <!-- Execution detail (plan deviations, implementation-altitude calls, gate evidence) lives in
-     this bundle's log.md, not here — log.md owns the Execution Log. See log.template.md. -->
+     the PR body's Verification section, not here. -->

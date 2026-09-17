@@ -11,7 +11,7 @@ lab-os ships the lab-wide rule files under
 directory is the count, so this page never claims one. Every Claude session
 loads them through the link you wired in [Getting Started](/docs/getting-started), the pull-request
 (PR) review tooling reads the same files at review time, and parts are enforced in CI — continuous
-integration, the checks run automatically on every PR (`log-lint`, `docs-budget`,
+integration, the checks run automatically on every PR (`docs-budget`,
 `merge-bar-check` — toured in [Tooling Tour](/docs/tooling-tour)).
 
 This page is orientation, not reference — each section links the rule file as the **source of truth**;
@@ -53,23 +53,6 @@ Internalize two things:
 - **Derived artifacts aren't automatically safe.** Plots, embeddings, and summaries go through the
   rule file's review checklist for personally identifying information (PII) before commit. When uncertain, aggregate further or leave the
   artifact out.
-
-## 03 — Logging
-
-Source of truth:
-[`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md)
-
-Governs project logs: which of the three levels (lab-wide, per-repo, per-plan) an event belongs to,
-what earns an entry, the format, and immutability. It exists so a future session — human or agent —
-can pick up a project cold and re-derive *why*, without logs bloating into diaries.
-
-Internalize two things:
-
-- **Log decisions, not activity.** An entry is warranted for a weighty decision, an irreversible or
-  external event, or a change of course. Routine status, findings, and follow-ups have other homes —
-  the rule file maps each kind of information to its home.
-- **Entries are immutable once merged.** Reversing a decision means a new superseding entry — never
-  editing history.
 
 ## 04 — Docs
 
@@ -133,7 +116,7 @@ Internalize two things:
 |---|---|
 | Where do commit conventions live? | [`01-workflow.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/01-workflow.md) |
 | What can I never commit? | [`02-data-protection.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/02-data-protection.md) |
-| When do I write a log entry? | [`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md) |
 | Which doc owns a fact? | [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md) |
+| Where does a durable decision go? | [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md) |
 | I'm building something that runs a coding agent — what must it guarantee? | [`05-agent-runtime.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/05-agent-runtime.md) |
 | How long should this session run? | [`06-timeboxing.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/06-timeboxing.md) |

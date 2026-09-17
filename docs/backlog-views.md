@@ -17,12 +17,11 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 | B9 | Sweep the remaining fork-era staging-surface residue | Watson |
 | B10 | Give main-PRD success criterion 4 an applicable test | Watson |
 | B11 | Decide whether main `plan.md` §In flight restates or links | Watson |
-| B12 | Decide whether the main-bundle log template needs a non-fold entry grammar | Watson |
 | B13 | Dispose of the superseded `templates/PRD.template.md` | Watson |
 | B14 | Record the never-required constraint on path-filtered CI jobs | Watson |
 | B15 | Check `_specs/lab-os/` bundle statuses mechanically | Watson |
 | B16 | Dispose of the legacy `docs/` planning surfaces | Watson |
-| B17 | Archive the `project_log.md` overflow (time-critical) | Watson |
+| B18 | Confirm whether §W1/§W2 in the main-bundle spec are superseded | Watson |
 | B19 | Amend `04-docs.md` for the main bundle's `**Living**` header | Watson |
 | B20 | Land the rules-tier budget-raise round-trip in lab-os | Watson |
 
@@ -46,13 +45,11 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 - B9 — Sweep the remaining fork-era staging-surface residue (S, ready)
 - B10 — Give main-PRD success criterion 4 an applicable test (S, ready)
 - B11 — Decide whether main `plan.md` §In flight restates or links (S, ready)
-- B12 — Decide whether the main-bundle log template needs a non-fold entry grammar (S, ready)
 - B13 — Dispose of the superseded `templates/PRD.template.md` (S, ready)
 - B14 — Record the never-required constraint on path-filtered CI jobs (S, ready)
 - B15 — Check `_specs/lab-os/` bundle statuses mechanically (M, ready)
 - B16 — Dispose of the legacy `docs/` planning surfaces (M, ready)
-- B17 — Archive the `project_log.md` overflow (time-critical) (S, ready)
-- B18 — Retire the two superseded Standing Decisions index lines (S, ready)
+- B18 — Confirm whether §W1/§W2 in the main-bundle spec are superseded (S, ready)
 - B19 — Amend `04-docs.md` for the main bundle's `**Living**` header (M, ready)
 - B20 — Land the rules-tier budget-raise round-trip in lab-os (S, ready)
 - B21 — State `docs-budget`'s fail-closed enforcement semantics in `04-docs.md` (S, ready)
@@ -62,7 +59,6 @@ _A read-only projection of `BACKLOG.md`. Regenerate: `python3 scripts/backlog_vi
 ```mermaid
 graph TD
   B5["B5: Backlog-lint (CI hygiene check for BACKLOG.md)"] --> B3
-  B18["B18: Retire the two superseded Standing Decisions index lines"] --> B17
   B21["B21: State `docs-budget`'s fail-closed enforcement semantics in `04-docs.md`"] --> B20
 ```
 

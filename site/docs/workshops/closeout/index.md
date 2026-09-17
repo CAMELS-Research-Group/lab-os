@@ -128,7 +128,8 @@ The four movements close the project for each participant individually. Live coh
 close to change how the **team** works — not just each person's next project — can add a
 [cohort retrospective](./cohort-retrospective.md): a single ~90-minute session that turns the group's
 shared learnings into written conventions (a rule in `.claude/rules/`, a note in a `CLAUDE.md`, a
-`project_log.md` entry). It complements the individual carry-forward; it does not replace it.
+new section in the repo's `spec.md`). It complements the individual carry-forward; it does not
+replace it.
 
 ---
 

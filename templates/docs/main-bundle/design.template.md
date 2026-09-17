@@ -3,13 +3,13 @@
 <!-- The single source of truth for WHAT IS IMPLEMENTED. Living — amended at each bundle's
      fold so it always describes the shape on main right now. Never dated, never deleted,
      exempt from byte budgets. Present tense only: no history, no "previously…" prose — that
-     is git's job. Facts owned by another doc (a rule, the project log) are linked, not
+     is git's job. Facts owned by another doc (a rule, the main-bundle spec) are linked, not
      restated. A completing slice's design.md merges in here.
      Contract: .claude/rules/04-docs.md §Bundle lifecycle & the main bundle. -->
 
 **Scope:** <scope> · **Living** — the implemented-state authority.
 **PRD:** [prd.md](./prd.md) · **Spec:** [spec.md](./spec.md) ·
-**Plan:** [plan.md](./plan.md) · **Log:** [log.md](./log.md)
+**Plan:** [plan.md](./plan.md)
 
 ---
 

@@ -27,7 +27,7 @@ covered by the `[simplification]` rubric class).
 
 | Agent | Origin | Derives from |
 |---|---|---|
-| `spec-plan-analyzer` | Lab-original — written for lab-os, not lifted from any plugin | The repo's own `.claude/rules/04-docs.md` § ENG document standards and `.claude/rules/03-logging.md`, read at review time |
+| `spec-plan-analyzer` | Lab-original — written for lab-os, not lifted from any plugin | The repo's own `.claude/rules/04-docs.md` § ENG document standards, read at review time |
 
 No upstream license applies to this body; `LICENSE-pr-review-toolkit` covers the four vendored
 agents only.

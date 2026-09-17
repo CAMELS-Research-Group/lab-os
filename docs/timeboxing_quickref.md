@@ -67,8 +67,8 @@ Append one line to the table in [`timebox_calibration.md`](timebox_calibration.m
 - **Note** — optional: "scope hammered", "extended +N", "interrupted", …
 
 That's it. No prose, no justification — it's telemetry, not a diary. (This is
-also why it lives here and not in `project_log.md`: the log standard bans bare
-status rows.)
+also why it lives here and not in any repo's decisions document: bare status
+rows aren't decisions.)
 
 ## Every few weeks
 

@@ -10,7 +10,7 @@
      When a section balloons, push the detail out:
        design rationale → design doc (ENG tier)
        how-to steps → runbook (ENG tier)
-       decision history → project_log.md
+       decision history → this repo's scope main-bundle `spec.md`
        conventions & rules → .claude/rules/ or lab-os (already loaded)
      Delete these guidance comments when the file is committed. -->
 
@@ -70,7 +70,7 @@
 <!-- Pointer only — do not restate what the rules files already say. -->
 
 Shared conventions: `.claude/rules/01-workflow.md` (commits, PRs, merge bar),
-`02-data-protection.md`, `03-logging.md` (log format), `04-docs.md` (tiers, budgets),
+`02-data-protection.md`, `04-docs.md` (tiers, budgets),
 `06-timeboxing.md` (session boxes, calibration loop).
 
 Repo-local rules (this repo, `10+` numbering): `.claude/rules/10-<name>.md`

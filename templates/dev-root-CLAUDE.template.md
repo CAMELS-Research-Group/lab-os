@@ -64,14 +64,14 @@ The shared tooling your workspace relies on — wired in during setup:
 As your project grows, list your own repos and any further tooling here so a session at `<DEV_ROOT>`
 sees the whole workspace.
 
-## Logs and tracking
+## Tracking
 
-- **Plans / backlog:** `<DEV_ROOT>/_plans/` — tracked by the fork, alongside the rules and log
-- **Per-repo logs:** `<repo>/project_log.md`
-- **Workspace-level decisions** (cross-repo tooling, infra, workspace-wide conventions): `<DEV_ROOT>/project_log.md`
+- **Plans / backlog:** `<DEV_ROOT>/_plans/` — tracked by the fork, alongside the rules
+- **Per-repo decisions:** that repo's scope main-bundle `spec.md`
+- **Workspace-level decisions** (cross-repo tooling, infra, workspace-wide conventions): lab-os's own `_specs/lab-os/main/spec.md`
 - **Cost tracking** (inference spend, infra): `<DEV_ROOT>/cost-tracking.md`
 
-Entry format defined in your global `~/.claude/CLAUDE.md`.
+Routing defined in your global `~/.claude/CLAUDE.md`.
 
 ## Approval gates
 

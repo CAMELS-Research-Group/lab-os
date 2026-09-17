@@ -4,7 +4,7 @@
 One section per gotcha, titled as the symptom you would search for.
 Setup *steps* live in [`site/docs/getting-started.mdx`](site/docs/getting-started.mdx); entries here are failure modes, not walkthroughs.
 
-**Adding entries:** an expensive finding or gotcha routes here (not to the project log) per the
+**Adding entries:** an expensive finding or gotcha routes here, per the
 §4.2 routing rule in
 [`docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md`](docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md).
 When you hit something costly enough that the next person should not have to rediscover it, add a
@@ -55,33 +55,6 @@ rm -f ~/Development/.claude/rules          # remove stale symlink
 ```
 Then re-run the link step using the symlink command in
 [README — How repos consume it](README.md#how-repos-consume-it).
-
----
-
-## Log archive diff fails or log-lint reports non-identical entries across platforms
-
-**Cause:** `autocrlf` or editor defaults write CRLF line endings on Windows and LF on macOS/Linux.
-When an archived entry from a Windows clone is compared byte-for-byte against the original from a
-Unix clone, the bytes differ even though the content is identical.
-
-**Implication for log archival:** the `log-lint` immutability check requires archived entries to
-be **byte-identical modulo EOL normalization** — meaning CRLF and LF are treated as equivalent
-when comparing a pre-existing entry against its copy in `project_log_archive.md`. If your tooling
-performs a raw byte comparison without EOL normalization, it will false-positive on cross-platform
-moves. The `log-lint` script normalizes before comparing; external scripts must do the same.
-
-**Resolution:**
-- Ensure your repo has `.gitattributes` with `* text=auto` (or explicit `*.md text eol=lf`) so
-  Git normalizes to LF on commit regardless of `core.autocrlf` setting.
-- If a manual archive move was done on a Windows machine and the diff is noisy: re-open the
-  affected file in an editor configured to write LF, or run:
-  ```powershell
-  (Get-Content "project_log_archive.md") | Set-Content -Encoding utf8 "project_log_archive.md"
-  ```
-  Note: PowerShell's `Set-Content` defaults to CRLF in Windows PowerShell 5.1; pipe through
-  `[System.IO.File]::WriteAllText` for guaranteed LF, or use Git's `git add --renormalize`.
-- The canonical fix: `git add --renormalize .` after confirming `.gitattributes` is set, then
-  commit. This re-encodes all tracked text files to their declared endings.
 
 ---
 

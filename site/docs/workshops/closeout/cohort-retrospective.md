@@ -8,7 +8,7 @@ description: An optional collective close for live cohorts — turn the group's 
 The [closing ceremony](./index.md) and the [brief presentations](./presentation-worksheet.md) make
 the cohort's learnings *visible* to each other. The cohort retrospective goes one step further: it
 turns the group's shared experience into **written conventions your team actually adopts** — a habit
-added to a `CLAUDE.md`, a rule added to `.claude/rules/`, a decision recorded in `project_log.md`.
+added to a `CLAUDE.md`, a rule added to `.claude/rules/`, a decision recorded in the repo's `spec.md`.
 
 It is **optional** and meant for a **live cohort or team**. Solo, self-paced readers produce the
 [individual carry-forward artifact](./learnings-carry-forward-worksheet.md) instead — that artifact
@@ -43,7 +43,7 @@ The homes are the same three places this handbook teaches you to keep convention
 |---|---|---|
 | A rule everyone should follow | a project rule | `.claude/rules/` (see [Rules, explained](../../rules-explained.md)) |
 | A fact about how your team works | a working note | a `CLAUDE.md` |
-| A one-time decision worth remembering | a log entry | `project_log.md` |
+| A one-time decision worth remembering | a decision section | the repo's `spec.md` |
 
 ## The shape of the session
 
@@ -60,7 +60,7 @@ The retrospective moves from *everyone's raw experience* to *a few shared conven
    **home** and **owner**. This is the step that turns a good discussion into a change your team keeps.
 
 The retrospective is done when each top item has a name, a home, and an owner — and someone opens the
-change (a pull request adding the rule, the `CLAUDE.md` line, or the `project_log.md` entry).
+change (a pull request adding the rule, the `CLAUDE.md` line, or the `spec.md` section).
 
 ## Why a separate collective session
 

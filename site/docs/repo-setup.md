@@ -46,15 +46,7 @@ This file and every `.claude/rules/*.md` also share a 48 KB always-loaded aggreg
 section Tiers & budgets), which binds as soon as the repo gains rules files — usually before any one file
 reaches its own budget.
 
-### 4. Seed `project_log.md`
-
-Copy
-[`templates/docs/project_log.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/docs/project_log.template.md)
-to the repo root. Its structure is load-bearing (the `log-lint` automated check parses it) — keep the `## Standing Decisions`
-and `## Entries` headings exactly as shipped. Entry format and triggers:
-[`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md).
-
-### 5. Add the PR template
+### 4. Add the PR template
 
 Copy lab-os's
 [`.github/pull_request_template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/pull_request_template.md)
@@ -62,10 +54,10 @@ into your repo's `.github/` as a starting point, adjusting checklist items to th
 fills it — see
 [`01-workflow.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/01-workflow.md).
 
-### 6. Caller YAML pointer — *phase 2, not yet required*
+### 5. Caller YAML pointer — *phase 2, not yet required*
 
 Eventually each repo will carry a small workflow file that runs lab-os's shared CI checks
-(automated pull-request checks: log-lint, docs-budget, merge-bar-check). That rollout hasn't happened —
+(automated pull-request checks: docs-budget, merge-bar-check). That rollout hasn't happened —
 skip this step for now; it's listed so the checklist doesn't silently grow later.
 
 ## Done when
@@ -73,7 +65,6 @@ skip this step for now; it's listed so the checklist doesn't silently grow later
 - Repo exists and is cloned under `<DEV_ROOT>`
 - `.gitignore` covers secrets and binary/model artifacts
 - `CLAUDE.md` seeded, no `<...>` placeholders left
-- `project_log.md` seeded with the required skeleton intact
 - `.github/pull_request_template.md` in place
 
 Then make your first commit following the conventions in

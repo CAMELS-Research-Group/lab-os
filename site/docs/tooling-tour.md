@@ -27,41 +27,15 @@ not-yet-required in [Setting Up a New Repo](/docs/repo-setup) (the
 [README](https://github.com/CAMELS-Research-Group/lab-os/blob/main/README.md) documents adoption under
 "How repos consume it").
 
-### log-lint
-
-Source of truth:
-[`log-lint.yml`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/workflows/log-lint.yml)
-(behavior is spelled out in its header comment).
-
-Checks PR changes to `project_log.md` (and its archive) against the
-[logging standard](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md):
-entry format, ordering, immutability of merged entries, archive integrity, per-entry size.
-
-**A red check means** a new or changed log entry breaks the standard — or the PR carries the
-`log-lint:override` label without stating a reason in the body. Fix the entry (or state the
-override reason) and push; it isn't a flaky check.
-
-<details>
-<summary>When it stays green without doing anything</summary>
-
-- A PR that doesn't touch the log at all passes without linting.
-- The `log-lint:override` label (with a stated reason) skips enforcement — meant for migrations
-  and merged-entry corrections.
-- The whole-file 15 KB log cap is **docs-budget's** job, not log-lint's; log-lint only budgets
-  individual new entries.
-
-</details>
-
 ### docs-budget
 
 Source of truth:
 [`docs-budget.yml`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/workflows/docs-budget.yml).
 
-Checks byte budgets on the always-loaded files agents read every session — `CLAUDE.md`, each
-`.claude/rules/*.md` file, and `project_log.md` — plus the **aggregate** of everything that loads
-into every session (`CLAUDE.md` and the rules files together, excluding `project_log.md`), so those
-files don't quietly grow past what an agent can usefully start with and adding files doesn't grow
-the total unchecked. Budgets and tiers:
+Checks byte budgets on the always-loaded files agents read every session — `CLAUDE.md` and each
+`.claude/rules/*.md` file — plus the **aggregate** of everything that loads into every session
+(`CLAUDE.md` and the rules files together), so those files don't quietly grow past what an agent
+can usefully start with and adding files doesn't grow the total unchecked. Budgets and tiers:
 [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md).
 
 **A red check means** a tooling defect — the job's own self-test failed, or the `enforce` input was
@@ -124,11 +98,8 @@ guidance:
 - [`repo-CLAUDE.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/repo-CLAUDE.template.md)
   — per-repo `CLAUDE.md` seed, kept short to a byte budget (see
   [Rules, Explained](/docs/rules-explained) — 04, Docs).
-- [`docs/project_log.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/docs/project_log.template.md)
-  — the project-log skeleton (log-lint parses this exact structure, so its load-bearing headings
-  are never renamed — see [Setting Up a New Repo](/docs/repo-setup)).
 - [`docs/planning/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/templates/docs/planning)
-  — the scaffolds of a planning bundle (`prd` · `spec` · `design` · `plan` · `log`), filed together
+  — the scaffolds of a planning bundle (`prd` · `spec` · `design` · `plan`), filed together
   under `_specs/<repo>/<DATE>-<handle>/`; when the slice is declared done the bundle is folded into
   the scope's main bundle and deleted, with git history as the archive.
 - [`PRD.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/PRD.template.md)

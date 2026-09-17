@@ -313,7 +313,7 @@ load and the agent applies them.
 
 **On-slide:**
 - *The lab runs these rules on its own repo — including the review step you just saw.*
-- Three CI checks lint every PR: log-lint, docs-budget, merge-bar-check
+- CI checks lint every PR: docs-budget, merge-bar-check (plus backlog-lint and backlog-views, lab-os-only)
 - An automated reviewer posts an outside-perspective read on open PRs — but never merges
 - Lab tooling ships through a public plugin marketplace
 - **The way we teach you to work is the way the lab actually works**

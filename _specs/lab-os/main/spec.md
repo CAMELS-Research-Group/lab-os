@@ -2,7 +2,7 @@
 
 **Scope:** lab-os · **Living** — the fold target for completing bundles' decisions.
 **PRD:** [prd.md](./prd.md) · **Design:** [design.md](./design.md) ·
-**Plan:** [plan.md](./plan.md) · **Log:** [log.md](./log.md)
+**Plan:** [plan.md](./plan.md)
 
 Recover any folded bundle: `git log --all -- '_specs/lab-os/<bundle>/'`.
 
