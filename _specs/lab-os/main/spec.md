@@ -48,7 +48,7 @@ pre-Caravan dev home's terminal bundles enter this document at all.
 | S3 | Does lab-os own the lab's shared Claude Code skills, and how do they deploy? | Yes — in-repo under `.claude/skills/`, deployed user-scope via symlinks | **DECIDED** (§S3) |
 | S4 | Where does `spec-plan-analyzer` originate, and how does it resolve the standards it checks? | lab-os — the first agent body lab-os authors rather than vendors; it derives its checks by resolving the repo under review's own rules at read time, never restating a checklist | **DECIDED** (§S4) |
 | W1 | Is fork-of-lab-os the default Claude-powered dev home? | Yes — replacing the clone-as-rules-subdir-plus-junction model; the junction stays as the documented multi-repo power-user path | **DECIDED** (§W1) |
-| W2 | Where do plans track, versus project code? | Plans and the dev-home project log track at the fork level; only project code re-homes as a separate gitignored nested repo | **DECIDED** (§W2) |
+| W2 | Where do plans track, versus project code? | Plans track at the fork level; only project code re-homes as a separate gitignored nested repo | **DECIDED** (§W2) |
 | W3 | Does a sample plan ship for the Building workshop part? | Yes — a facilitator-only fallback for a participant who arrives without a plan of their own; not published to the site | **DECIDED** (§W3) |
 | W4 | Does the Workshop Program supersede onboarding-project and one-day Building? | Yes | **DECIDED** (§W4) |
 | W5 | Does handbook content rework gate tester launch? | Yes — tester launch waits on a full seven-page content and IA rework | **DECIDED** (§W5) |
@@ -359,9 +359,8 @@ project history.
 
 ### §W2: Where do plans track, versus project code
 
-Plans track at the fork level, not a nested repo — the plan and backlog at `_plans/`, the dev-home
-project log at the fork root. Only the project *code* is re-homed as a separate gitignored nested
-repo. Refines §W1, which had homed "the plan/project" together in the nested repo, conflating two
+Plans track at the fork level, not a nested repo — the plan and backlog at `_plans/`. Only the
+project *code* is re-homed as a separate gitignored nested repo. Refines §W1, which had homed "the plan/project" together in the nested repo, conflating two
 artifacts with different needs.
 
 **Why.** The fork is the methodology/coordination home, and plans are methodology — matching how
