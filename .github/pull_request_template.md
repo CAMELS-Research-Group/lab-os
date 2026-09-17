@@ -47,9 +47,6 @@ Keep the PR scoped to a single concern — split if it spans multiple phases.
 - [ ] Docs updated where required (CLAUDE.md / STANDARDS.md / `.claude/rules/` / READMEs — see `.claude/rules/01-workflow.md`)
 - [ ] No raw gated-dataset content, secrets, or binaries committed (see `.claude/rules/02-data-protection.md`)
 - [ ] Derived artifacts (if any) passed the PII review checklist in `.claude/rules/02-data-protection.md`
-<!-- Log: tick exactly one of the next two. merge-bar-check enforces this on code-path PRs. -->
-- [ ] Log entries finalized (verified against final diff, index updated)
-- [ ] No loggable events in this PR
 <!-- Bundle lifecycle: tick only when the owner declares a slice done (see PR-LIFECYCLE.md, Merge mechanics). -->
 - [ ] Bundle PRD `Status:` flipped to `complete`, bundle folded into the scope's main bundle and its directory deleted (slice declared done)
 

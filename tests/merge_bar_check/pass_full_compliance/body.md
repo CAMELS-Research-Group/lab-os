@@ -29,8 +29,6 @@ python scripts/merge_bar_check.py --self-test
 - [ ] Docs updated where required (CLAUDE.md / STANDARDS.md / `.claude/rules/` / READMEs — see `.claude/rules/01-workflow.md`)
 - [x] No raw gated-dataset content, secrets, or binaries committed (see `.claude/rules/02-data-protection.md`)
 - [ ] Derived artifacts (if any) passed the PII review checklist in `.claude/rules/02-data-protection.md`
-- [x] Log entries finalized (verified against final diff, index updated)
-- [ ] No loggable events in this PR
 - [ ] Work-bundle archival included (slice declared done)
 
 ## Related

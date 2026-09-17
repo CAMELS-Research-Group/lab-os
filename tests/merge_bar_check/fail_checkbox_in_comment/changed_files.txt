@@ -1,2 +1,0 @@
-src/loader.py
-tests/test_loader.py
