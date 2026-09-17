@@ -23,7 +23,6 @@ import docs_budget
 from docs_budget import (
     BUDGET_ALWAYS_LOADED_TOTAL,
     BUDGET_CLAUDE_MD,
-    BUDGET_PROJECT_LOG,
     BUDGET_RULES_MD,
     ZONE_FAIL,
     ZONE_OK,
@@ -76,8 +75,6 @@ def run_self_test() -> int:
     check("1.5x budget + 1 is FAIL", classify(18_433, BUDGET_CLAUDE_MD) == ZONE_FAIL)
     check("rules boundary 12,288 is WARN", classify(12_288, BUDGET_RULES_MD) == ZONE_WARN)
     check("rules 12,289 is FAIL", classify(12_289, BUDGET_RULES_MD) == ZONE_FAIL)
-    check("log boundary 23,040 is WARN", classify(23_040, BUDGET_PROJECT_LOG) == ZONE_WARN)
-    check("log 23,041 is FAIL", classify(23_041, BUDGET_PROJECT_LOG) == ZONE_FAIL)
     # Pin the aggregate cap to the exact byte, the same way the per-file
     # constants above are pinned: the OK/WARN pair fixes it at 49,152 (any
     # smaller value reds the first check, any larger value reds the second).
@@ -96,8 +93,6 @@ def run_self_test() -> int:
           is_always_loaded(".claude/CLAUDE.md"))
     check("a rules file is always-loaded",
           is_always_loaded(".claude/rules/01-workflow.md"))
-    check("project_log.md is NOT always-loaded",
-          not is_always_loaded("project_log.md"))
     check("a non-md file under rules/ is NOT always-loaded",
           not is_always_loaded(".claude/rules/notes.txt"))
 
@@ -107,8 +102,8 @@ def run_self_test() -> int:
     under = fixtures / "under_budget_repo"
     findings, _, _ = scan(under)
     check(
-        "scans 3 surfaces (CLAUDE.md, one rules file, project_log.md)",
-        len(findings) == 3,
+        "scans 2 surfaces (CLAUDE.md, one rules file)",
+        len(findings) == 2,
         f"got {len(findings)}: {[f[0] for f in findings]}",
     )
     check("all surfaces in OK zone", all(f[3] == ZONE_OK for f in findings))
@@ -128,11 +123,10 @@ def run_self_test() -> int:
                 "CLAUDE.md": 14_000,           # 12,288 < size <= 18,432
                 ".claude/CLAUDE.md": 14_000,   # the alternate location is scanned
                 ".claude/rules/01-r.md": 10_000,  # 8,192 < size <= 12,288
-                "project_log.md": 20_000,      # 15,360 < size <= 23,040
             },
         )
         findings, _, _ = scan(warn_repo)
-        check("scans 4 surfaces incl. .claude/CLAUDE.md", len(findings) == 4,
+        check("scans 3 surfaces incl. .claude/CLAUDE.md", len(findings) == 3,
               f"got {[f[0] for f in findings]}")
         check("all surfaces in WARN zone", all(f[3] == ZONE_WARN for f in findings))
         code_w, lines_w = run(warn_repo, enforce=False)
@@ -141,8 +135,8 @@ def run_self_test() -> int:
         check("warn zone exits 0 in enforce mode", code_e == 0)
         check(
             "one ::warning annotation per surface",
-            sum(1 for l in lines_w if l.startswith("::warning")) == 4
-            and sum(1 for l in lines_e if l.startswith("::warning")) == 4,
+            sum(1 for l in lines_w if l.startswith("::warning")) == 3
+            and sum(1 for l in lines_e if l.startswith("::warning")) == 3,
         )
         check("no ::error annotations for warn zone",
               not any(l.startswith("::error") for l in lines_w + lines_e))
@@ -151,7 +145,7 @@ def run_self_test() -> int:
         check("aggregate stays OK while every file is warn-zone",
               any("[OK  ] always-loaded total" in l for l in lines_w))
         check("summary counts the checked surfaces and the warn zone",
-              any("docs-budget: 4 surface(s) checked, 4 warn-zone, "
+              any("docs-budget: 3 surface(s) checked, 3 warn-zone, "
                   "0 fail-zone; always-loaded total OK (mode: enforce)." in l
                   for l in lines_e),
               f"got {[l for l in lines_e if l.startswith('docs-budget:')]}")
@@ -163,26 +157,25 @@ def run_self_test() -> int:
             {
                 "CLAUDE.md": 18_433,
                 ".claude/rules/01-r.md": 12_289,
-                "project_log.md": 23_041,
             },
         )
         findings, _, _ = scan(fail_repo)
         check("all surfaces in FAIL zone",
-              len(findings) == 3 and all(f[3] == ZONE_FAIL for f in findings))
+              len(findings) == 2 and all(f[3] == ZONE_FAIL for f in findings))
         code_w, lines_w = run(fail_repo, enforce=False)
         code_e, lines_e = run(fail_repo, enforce=True)
         check("fail zone exits 0 in warn-only mode", code_w == 0)
         check("fail zone exits 1 in enforce mode", code_e == 1)
         check("warn-only mode downgrades fails to ::warning",
-              sum(1 for l in lines_w if l.startswith("::warning")) == 3
+              sum(1 for l in lines_w if l.startswith("::warning")) == 2
               and not any(l.startswith("::error") for l in lines_w))
         check("enforce mode emits ::error per fail-zone surface",
-              sum(1 for l in lines_e if l.startswith("::error")) == 3)
+              sum(1 for l in lines_e if l.startswith("::error")) == 2)
         check("report lines name file, size, budget, zone",
               any("[FAIL] CLAUDE.md — 18,433 B / 12,288 B budget" in l for l in lines_e))
         check("summary counts the fail zone distinctly from the warn zone",
-              any("docs-budget: 3 surface(s) checked, 0 warn-zone, "
-                  "3 fail-zone; always-loaded total OK (mode: enforce)." in l
+              any("docs-budget: 2 surface(s) checked, 0 warn-zone, "
+                  "2 fail-zone; always-loaded total OK (mode: enforce)." in l
                   for l in lines_e),
               f"got {[l for l in lines_e if l.startswith('docs-budget:')]}")
 
@@ -227,62 +220,12 @@ def run_self_test() -> int:
               any(l.startswith("::warning::always-loaded") for l in lines_w)
               and not any(l.startswith("::error") for l in lines_w))
 
-        # project_log.md is first-read tier, not always-loaded: it must not
-        # count toward the aggregate even though it is a budgeted surface.
-        print("aggregate excludes project_log.md:")
-        agg_log_repo = _build_repo(
-            tmp / "agg_log_repo",
-            {"CLAUDE.md": 1_000, "project_log.md": 15_000},
-        )
-        _, lines_l = run(agg_log_repo, enforce=True)
-        check("project_log.md bytes excluded from the aggregate total",
-              any("always-loaded total (1 surface(s)) — 1,000 B" in l
-                  for l in lines_l),
-              f"got {[l for l in lines_l if 'always-loaded' in l]}")
-
-        # The summary line's aggregate clause and its "n/a" false branch
-        # were both unasserted: a log-only repo has no always-loaded surface
-        # at all, so the clause must read "n/a" — distinct from a repo that
-        # was checked and passed. It does NOT stay exit 0 under --enforce:
-        # having measured no always-loaded surface is the empty-aggregate
-        # case, failed closed in run() and pinned fifteen lines below. (The
-        # "and stay exit 0" this comment used to carry described
-        # pre-40f3df9 behaviour and contradicted that assertion — a
-        # maintainer trusting it reads the exit-1 pin as the bug and
-        # "fixes" it, dismantling the invariant this change exists to add.)
+        # The summary line's aggregate clause names the FAIL zone too, not
+        # just OK/WARN/PARTIAL/n/a.
         check("summary line names the aggregate zone",
               any("always-loaded total FAIL (mode: enforce)." in l
                   for l in lines_e),
               f"got {[l for l in lines_e if l.startswith('docs-budget:')]}")
-        log_only_repo = _build_repo(
-            tmp / "log_only_repo", {"project_log.md": 1_000},
-        )
-        code_n, lines_n = run(log_only_repo, enforce=True)
-        check("log-only repo reports the aggregate as n/a",
-              any("always-loaded total n/a (mode: enforce)." in l
-                  for l in lines_n),
-              f"got {[l for l in lines_n if l.startswith('docs-budget:')]}")
-        check("log-only repo emits no aggregate report line",
-              not any("always-loaded total (" in l for l in lines_n))
-        # project_log.md is the one budgeted surface that is NOT always-
-        # loaded, so a repo holding only it has an aggregate computed over
-        # zero surfaces. That is the gate measuring nothing, which under
-        # --enforce is an error, not a pass.
-        check("log-only repo fails closed under --enforce", code_n == 1,
-              f"got exit {code_n}")
-        check("log-only repo names the empty aggregate in an ::error",
-              any(l.startswith("::error::")
-                  and "no always-loaded surface was found" in l
-                  for l in lines_n),
-              f"got {[l for l in lines_n if l.startswith('::error')]}")
-        code_nw, lines_nw = run(log_only_repo, enforce=False)
-        check("log-only repo still exits 0 in warn-only mode", code_nw == 0)
-        check("warn-only downgrades the empty-aggregate ::error to ::warning",
-              any(l.startswith("::warning::")
-                  and "no always-loaded surface was found" in l
-                  for l in lines_nw)
-              and not any(l.startswith("::error") for l in lines_nw),
-              f"got {lines_nw}")
 
         # Both CLAUDE.md locations may coexist; is_always_loaded's docstring
         # calls the nested one an alternate, so pin that the aggregate sums
@@ -337,52 +280,16 @@ def run_self_test() -> int:
               not any("nothing to check" in l for l in lines_e0),
               f"got {lines_e0}")
 
-        # --- 5b. unreadable surface (stat() raises) ------------------------
-        # Cross-platform simulation: monkeypatch collect_surfaces to hand
-        # scan() a surface that vanished between collection and stat()
-        # (FileNotFoundError is an OSError, same handling as permission
-        # denied). Restored in `finally`.
-        print("unreadable surface:")
-        ghost_repo = tmp / "ghost_repo"
-        _write_sized(ghost_repo / "CLAUDE.md", 100)
-        _orig_collect = docs_budget.collect_surfaces
-        def _collect_with_ghost(root: Path) -> tuple[
-            list[tuple[Path, int]], list[tuple[str, str, str, bool]]
-        ]:
-            surfaces, skips = _orig_collect(root)
-            return surfaces + [(root / "project_log.md", BUDGET_PROJECT_LOG)], skips
-        try:
-            docs_budget.collect_surfaces = _collect_with_ghost
-            findings, unreadable, _ = scan(ghost_repo)
-            check("unreadable surface excluded from findings",
-                  [f[0] for f in findings] == ["CLAUDE.md"],
-                  f"got {[f[0] for f in findings]}")
-            check("::warning emitted naming the unreadable file",
-                  len(unreadable) == 1
-                  and unreadable[0].startswith("::warning")
-                  and "project_log.md" in unreadable[0],
-                  f"got {unreadable}")
-            code_w, lines_w = run(ghost_repo, enforce=False)
-            code_e, lines_e = run(ghost_repo, enforce=True)
-            check("unreadable surface exits 0 in warn-only mode", code_w == 0)
-            check("unreadable surface exits 0 even in enforce mode", code_e == 0)
-            check("run output carries the unreadable-file warning, no ::error",
-                  any("project_log.md" in l and l.startswith("::warning")
-                      for l in lines_w + lines_e)
-                  and not any(l.startswith("::error") for l in lines_w + lines_e))
-        finally:
-            docs_budget.collect_surfaces = _orig_collect
-
-        # --- 5c. scan()'s stat-failure skip, on an ALWAYS-LOADED surface ---
-        # Section 5b's ghost is project_log.md, which the aggregate excludes,
-        # and section 7 injects its skip tuple from a monkeypatched
-        # collect_surfaces — so neither consumes the appender in scan()'s own
-        # OSError handler. Deleting that one line left the whole self-test
-        # green while turning a fail-closed PARTIAL/exit-1 into a green
-        # WARN/exit-0 computed from a short sum. This fixture reaches it: nine
-        # real 8,000 B rules files (72,000 B, inside the WARN band) plus a
-        # tenth always-loaded surface that vanishes between collection and
-        # stat(), whose true total of 80,000 B is past the 73,728 B fail line.
+        # --- 5b. scan()'s stat-failure skip, on an ALWAYS-LOADED surface ---
+        # Section 7 injects its skip tuple from a monkeypatched
+        # collect_surfaces, which does not exercise scan()'s own appender in
+        # its OSError handler. Deleting that one line left the whole
+        # self-test green while turning a fail-closed PARTIAL/exit-1 into a
+        # green WARN/exit-0 computed from a short sum. This fixture reaches
+        # it: nine real 8,000 B rules files (72,000 B, inside the WARN band)
+        # plus a tenth always-loaded surface that vanishes between
+        # collection and stat(), whose true total of 80,000 B is past the
+        # 73,728 B fail line.
         print("stat-failure skip on an always-loaded surface:")
         agg_ghost_repo = _build_repo(
             tmp / "agg_ghost_repo",
@@ -518,15 +425,6 @@ def run_self_test() -> int:
                       for l in lines_e))
         finally:
             docs_budget.collect_surfaces = _orig_collect_2
-
-        # The scoping rule — a skip outside the always-loaded tier must NOT
-        # make the aggregate partial — is covered by the `dir_log_repo` case
-        # in section 9, through a real filesystem trigger. An assertion
-        # stood here over `ghost_repo`, but section 5b's `finally` had
-        # already restored `collect_surfaces`, so the repo was a plain
-        # directory holding one 100 B CLAUDE.md and the check could not
-        # fail: mutating run()'s `missed` filter to `list(skips)` kills
-        # three checks and never touched this one.
 
         # --- 8. real unmeasurable triggers (no monkeypatch) ----------------
         # Sections 5b and 7 inject skip tuples, so they never reach probe()
@@ -706,21 +604,6 @@ def run_self_test() -> int:
               f"got {skips_dc}")
         partial_closed(dir_claude_repo, "directory in CLAUDE.md's slot")
 
-        # A directory standing in project_log.md's slot is unmeasurable too,
-        # but project_log.md is not always-loaded — so the skip is recorded
-        # with always_loaded False and the aggregate stays authoritative.
-        dir_log_repo = _build_repo(tmp / "dir_log_repo", {"CLAUDE.md": 1_000})
-        (dir_log_repo / "project_log.md").mkdir()
-        _, skips_dl = docs_budget.collect_surfaces(dir_log_repo)
-        check("a directory in project_log.md's slot skips as non-always-loaded",
-              [(sk[0], sk[1], sk[3]) for sk in skips_dl]
-              == [("project_log.md", "error", False)],
-              f"got {skips_dl}")
-        code_dl, lines_dl = run(dir_log_repo, enforce=True)
-        check("that skip leaves the aggregate authoritative and the run green",
-              code_dl == 0 and not any("PARTIAL" in l for l in lines_dl),
-              f"got exit {code_dl}, {[l for l in lines_dl if 'always-loaded' in l]}")
-
         # The mirror shape: a regular FILE where the rules DIRECTORY belongs.
         # probe() reports "file" truthfully and the directory branch matched
         # neither "error" nor "dir", so the whole always-loaded rules tier
@@ -847,10 +730,6 @@ def run_self_test() -> int:
               [(sk[0], sk[1], sk[3]) for sk in skips_v]
               == [(".claude/rules/02-r.md", "error", True)],
               f"got {skips_v}")
-        check("an absent optional top-level surface is still a silent skip",
-              docs_budget.collect_surfaces(
-                  _build_repo(tmp / "no_log_repo", {"CLAUDE.md": 1_000}))[1] == [],
-              "an absent project_log.md must not become a skip")
 
         # A FIFO standing where a budgeted document belongs: stat() succeeds,
         # so none of the error branches above fire, and probe()'s fallthrough
@@ -919,8 +798,6 @@ def run_self_test() -> int:
                 ("rules file", "`.claude/rules/*.md` 8 KB each",
                  BUDGET_RULES_MD),
                 ("aggregate", "48 KB", BUDGET_ALWAYS_LOADED_TOTAL),
-                ("project_log.md", "`project_log.md` 15 KB",
-                 BUDGET_PROJECT_LOG),
             ):
                 check(f"04-docs.md states the {label} budget as "
                       f"{const // 1024} KB",

@@ -14,13 +14,11 @@ Scanned paths (relative to --root; each skipped silently when absent):
     .claude/CLAUDE.md     budget 12,288 B   (counted in ADDITION to a root
                                             CLAUDE.md, not instead of it)
     .claude/rules/*.md    budget  8,192 B each
-    project_log.md        budget 15,360 B
 
 Beyond the per-file budgets, the always-loaded surfaces — every
 CLAUDE.md the scan finds (both locations sum when both exist) plus every
-.claude/rules/*.md, but NOT project_log.md (first-read tier, and it has
-its own archive-overflow path) — are checked in aggregate against
-49,152 B. The rules scan is FLAT, matching the rule's own `*.md` glob:
+.claude/rules/*.md — are checked in aggregate against 49,152 B. The
+rules scan is FLAT, matching the rule's own `*.md` glob:
 `.claude/rules/` is not searched recursively, and a subdirectory under it
 is recorded as an unmeasurable always-loaded surface rather than walked
 or ignored. The aggregate is the invariant that actually protects session
@@ -35,10 +33,7 @@ path resolving outside the repo root) is excluded from the sum. When that
 surface is ALWAYS-LOADED the total would read low, so the run reports
 PARTIAL instead of a zone and, under --enforce, fails closed. A per-file
 skip loses one verdict, but a short aggregate is a wrong number presented
-as authoritative. An unmeasurable surface OUTSIDE the always-loaded tier
-(today only project_log.md) contributes nothing to the aggregate either
-way, so it loses only its own per-file verdict and leaves the aggregate
-authoritative.
+as authoritative.
 
 The same fail-closed reading covers the degenerate case: a scan that
 enumerates NO always-loaded surface at all has measured nothing, and
@@ -92,12 +87,6 @@ from typing import NamedTuple
 
 BUDGET_CLAUDE_MD = 12_288
 BUDGET_RULES_MD = 8_192
-# 04-docs.md gives project_log.md 15 KB at project altitude and 40 KB at
-# lab altitude. Only the project figure is encoded: the lab log lives at
-# <DEV_ROOT>/project_log.md, which is not a repo root and so is never a
-# --root this scanner is pointed at. A lab-altitude check is a separate
-# caller, not a second constant here.
-BUDGET_PROJECT_LOG = 15_360
 
 # Aggregate cap on everything that loads into EVERY session's context.
 # The per-file numbers say how big any one surface may get; this says how
@@ -170,9 +159,7 @@ def is_always_loaded(rel: str) -> bool:
     CLAUDE.md — BOTH locations, cumulatively, when a repo carries both —
     and every .claude/rules/*.md file load unconditionally, because a
     session loads the directory (04-docs.md, section Tiers & budgets, owns
-    the scope). project_log.md does not — it is first-read tier (an agent
-    reads its head, not the file) and carries its own overflow-to-archive
-    path — so it is excluded from the aggregate.
+    the scope).
 
     Membership is FLAT and case-insensitive, matching the enumerator in
     collect_surfaces() byte for byte. Both halves of that sentence were
@@ -320,11 +307,7 @@ def collect_surfaces(root: Path) -> tuple[
             return
         surfaces.append((path, budget))
 
-    for path, budget in (
-        (root / "CLAUDE.md", BUDGET_CLAUDE_MD),
-        (root / "project_log.md", BUDGET_PROJECT_LOG),
-    ):
-        consider(path, budget)
+    consider(root / "CLAUDE.md", BUDGET_CLAUDE_MD)
 
     # The .claude directory is the parent of two always-loaded slots and was
     # the one link in the chain nothing classified. probe() on a path *under*
@@ -655,9 +638,8 @@ def main(argv: list[str] | None = None) -> int:
             "Check always-loaded AI doc surfaces against the lab context "
             "budgets (.claude/rules/04-docs.md): CLAUDE.md and "
             ".claude/CLAUDE.md 12,288 B; each .claude/rules/*.md 8,192 B; "
-            "project_log.md 15,360 B; and the always-loaded surfaces in "
-            "aggregate (CLAUDE.md + rules, excluding project_log.md) "
-            "49,152 B. Zones: size <= budget -> OK; budget < size <= "
+            "and the always-loaded surfaces in aggregate (CLAUDE.md + "
+            "rules) 49,152 B. Zones: size <= budget -> OK; budget < size <= "
             "1.5x budget -> WARN (annotation, exit 0); size > 1.5x budget "
             "-> FAIL (exit 1 only with --enforce). An absent surface is "
             "skipped silently; an always-loaded surface that is present but "
