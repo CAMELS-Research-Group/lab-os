@@ -16,11 +16,6 @@ permissions:
   contents: read
 
 jobs:
-  log-lint:
-    uses: ./.github/workflows/log-lint.yml
-    # No `with:` needed — defaults (project_log.md / project_log_archive.md)
-    # are correct for lab-os.
-
   docs-budget:
     uses: ./.github/workflows/docs-budget.yml
     with:
@@ -30,8 +25,6 @@ jobs:
 
   merge-bar-check:
     uses: ./.github/workflows/merge-bar-check.yml
-    # No `with:` needed — default exclude-globs ("*.md,docs/**,.github/**")
-    # are correct for lab-os.
 
   backlog-lint:
     # lab-os-only: BACKLOG.md is the lab-wide backlog (downstream repos use their
@@ -73,12 +66,6 @@ jobs:
 #   contents: read
 #
 # jobs:
-#   log-lint:
-#     uses: CAMELS-Research-Group/lab-os/.github/workflows/log-lint.yml@main
-#     # with:
-#     #   log-path: project_log.md        # default; override if your repo differs
-#     #   archive-path: project_log_archive.md
-#
 #   docs-budget:
 #     uses: CAMELS-Research-Group/lab-os/.github/workflows/docs-budget.yml@main
 #     with:
@@ -87,6 +74,4 @@ jobs:
 #
 #   merge-bar-check:
 #     uses: CAMELS-Research-Group/lab-os/.github/workflows/merge-bar-check.yml@main
-#     # with:
-#     #   exclude-globs: "*.md,docs/**,.github/**"  # default; override if needed
 # ---------------------------------------------------------------------------

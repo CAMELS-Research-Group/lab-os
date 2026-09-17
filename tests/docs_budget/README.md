@@ -5,29 +5,23 @@ Fixtures for `scripts/docs_budget.py --self-test`.
 ## Strategy: one static repo, the rest generated
 
 Budgets are fixed (CLAUDE.md 12,288 B; each `.claude/rules/*.md` 8,192 B;
-`project_log.md` 15,360 B; always-loaded aggregate 49,152 B — see
-`.claude/rules/04-docs.md`), so exercising the warn (>1.0x) and fail
-(>1.5x) zones requires files of 10–24 KB. Committing that much filler
-adds no review value, so:
+always-loaded aggregate 49,152 B — see `.claude/rules/04-docs.md`), so
+exercising the warn (>1.0x) and fail (>1.5x) zones requires files of
+10–24 KB. Committing that much filler adds no review value, so:
 
 - **Committed here:** `under_budget_repo/` — a tiny static fixture repo
-  whose three surfaces all sit in the OK zone.
+  whose two surfaces both sit in the OK zone.
 - **Generated at self-test runtime** (in a `tempfile.TemporaryDirectory`,
   exact byte sizes, deleted afterward):
   - warn-zone repo — `CLAUDE.md` 14,000 B, `.claude/CLAUDE.md` 14,000 B
     (proves the alternate location is scanned), `.claude/rules/01-r.md`
-    10,000 B, `project_log.md` 20,000 B — 38,000 B of always-loaded
-    surfaces, deliberately under the aggregate cap so the per-surface
-    annotation counts stay exact
-  - fail-zone repo — `CLAUDE.md` 18,433 B, `.claude/rules/01-r.md` 12,289 B,
-    `project_log.md` 23,041 B (each exactly one byte past its 1.5x line)
+    10,000 B — 38,000 B of always-loaded surfaces, deliberately under the
+    aggregate cap so the per-surface annotation counts stay exact
+  - fail-zone repo — `CLAUDE.md` 18,433 B, `.claude/rules/01-r.md` 12,289 B
+    (each exactly one byte past its 1.5x line)
   - aggregate repos — 7 x 8,000 B rules files (56,000 B, warn) and 10 x
     8,000 B (80,000 B, fail): every file individually inside its budget,
     the always-loaded tier as a whole over the cap
-  - aggregate-exclusion repo — `CLAUDE.md` 1,000 B + `project_log.md`
-    15,000 B, proving the log is not counted in the aggregate
-  - log-only repo — `project_log.md` 1,000 B alone, so the aggregate has
-    nothing to measure and must report `n/a` rather than a passing zone
   - both-CLAUDE.md repo — `CLAUDE.md` 1,000 B + `.claude/CLAUDE.md`
     2,000 B, pinning that the aggregate sums both locations (3,000 B)
   - completeness repo — the 10 x 8,000 B fail-zone aggregate with one
@@ -51,12 +45,10 @@ adds no review value, so:
   - rules-scope repo — a `.txt` beside a rules file, neither budgeted nor
     counted (the `.md` suffix, not mere residence under `.claude/rules`,
     is what makes a surface always-loaded)
-  - wrong-shape repos — a *directory* standing in a rules file's slot, in
-    `CLAUDE.md`'s slot, and in `project_log.md`'s slot; and a regular
-    **file** standing in the rules **directory**'s slot. None is budgeted
-    on its inode size, and each is recorded as an unmeasurable skip — the
-    always-loaded ones therefore fail closed, the `project_log.md` one
-    does not
+  - wrong-shape repos — a *directory* standing in a rules file's slot and
+    in `CLAUDE.md`'s slot; and a regular **file** standing in the rules
+    **directory**'s slot. None is budgeted on its inode size, and each is
+    recorded as an unmeasurable skip that fails closed
   - vanishing-file repo — a rules file that a directory listing reports as
     present and that is gone by the time `probe()` stats it. `missing` is
     the ordinary absence of an optional surface, but for an *enumerated*
@@ -73,11 +65,11 @@ adds no review value, so:
 
 - Zone boundary classification: size == budget → OK; budget+1 → WARN;
   size == 1.5x → WARN; 1.5x+1 → FAIL. `CLAUDE.md` and the always-loaded
-  aggregate carry both boundary pairs; the rules-file and `project_log.md`
-  budgets carry the WARN/FAIL pair, which is the one that fixes each
-  constant to the byte. The four constants are separately checked against
-  the KB figures `.claude/rules/04-docs.md` states, so the rule and the
-  gate cannot drift apart silently
+  aggregate carry both boundary pairs; the rules-file budget carries the
+  WARN/FAIL pair, which is the one that fixes each constant to the byte.
+  The three constants are separately checked against the KB figures
+  `.claude/rules/04-docs.md` states, so the rule and the gate cannot
+  drift apart silently
 - Both modes on every zone: warn-only always exits 0; enforce exits 1 on a
   fail-zone surface, on a `PARTIAL` always-loaded aggregate, and where no
   always-loaded surface was found to measure at all
@@ -88,12 +80,10 @@ adds no review value, so:
   just reported the file as present
 - Unreadable surfaces (permission denied / TOCTOU-vanished; simulated
   cross-platform by monkeypatching `collect_surfaces` to hand `scan()` a
-  vanished path): excluded from findings, named in a `::warning` line.
-  A surface outside the always-loaded tier — `project_log.md` — still
-  exits 0 in both modes, because losing one per-file verdict is harmless.
-  That scoping is covered through a real trigger (a directory in
-  `project_log.md`'s slot), not through the monkeypatched fixture, whose
-  patch is already unwound by the time the aggregate is re-read
+  vanished path): excluded from findings, named in a `::warning` line,
+  and — when the vanished surface is always-loaded — the aggregate reads
+  `PARTIAL` and fails closed under `--enforce` instead of a green total
+  computed from a short sum
 - Aggregate completeness: when the unmeasurable surface **is** always-
   loaded, the total would read low, so the run reports `PARTIAL` with the
   counted bytes as a floor instead of a zone, names every unmeasurable
@@ -113,8 +103,7 @@ adds no review value, so:
   downstream from the shape of its path string
 - The empty aggregate: a scan that enumerates **no** always-loaded surface
   has measured nothing, so `--enforce` errors rather than passing — pinned
-  on a repo holding only `project_log.md` and on a wholly empty root, both
-  of which still exit 0 in warn-only mode
+  on a wholly empty root, which still exits 0 in warn-only mode
 - Exit codes through `main()`, not only `run()`: CI reads `main()`'s code,
   so the fail-closed assertions are pinned at the seam CI actually uses
 - Fail-closed guards that are invisible in a passing run: `escapes_root()`

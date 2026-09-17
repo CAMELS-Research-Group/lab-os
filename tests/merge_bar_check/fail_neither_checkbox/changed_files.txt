@@ -1,2 +1,0 @@
-src/budget.py
-tests/test_budget.py

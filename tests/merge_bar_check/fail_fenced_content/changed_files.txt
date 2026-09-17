@@ -1,2 +1,0 @@
-src/upload.py
-tests/test_upload.py
