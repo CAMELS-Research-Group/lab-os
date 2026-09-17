@@ -3,8 +3,7 @@
 The end-to-end story of a lab PR: branch → review → remediation → merge bar → merge. This is the
 onboarding narrative — it explains *how the pieces fit and why*. The enforceable rules live in
 [`.claude/rules/01-workflow.md`](.claude/rules/01-workflow.md) (commits, PR workflow, **Merge
-Bar**) and [`.claude/rules/03-logging.md`](.claude/rules/03-logging.md) (log
-entries, budgets); this doc links them rather than restating them.
+Bar**); this doc links them rather than restating them.
 
 It consolidates what previously lived in four places: the cron reviewer's design
 (`pr-review-agent/SPEC.md`), the `pr-review-loop` plugin docs, the
@@ -25,16 +24,15 @@ branch → PR from template → automated review ⇄ remediation → merge bar �
 Branch from the default branch, one branch per concern. Commit messages follow the
 conventional-commit format in [`01-workflow.md`](.claude/rules/01-workflow.md). If the work is a
 slice with a design, its planning bundle (`_specs/<repo>/<DATE>-<handle>/`, holding
-`prd`/`spec`/`plan`/`log`) already exists or is created here — the bundle's shape and altitudes are
-owned by [`03-logging.md`](.claude/rules/03-logging.md), its lifecycle by
+`prd`/`spec`/`plan`) already exists or is created here — its shape and lifecycle are owned by
 [`04-docs.md` § Bundle lifecycle & the main bundle](.claude/rules/04-docs.md).
 
 ## 2. Open the PR from the template
 
 Every PR uses the repo's `.github/pull_request_template.md` — fill all sections, tick checklist
 items only where true, pass the filled body via HEREDOC to `gh pr create`. The template is
-load-bearing: it encodes the commit-type, doc-update, log-cleanup, and data-protection gates so
-they surface at review time instead of after merge. Rules:
+load-bearing: it encodes the commit-type, doc-update, and data-protection gates so they surface
+at review time instead of after merge. Rules:
 [`01-workflow.md`](.claude/rules/01-workflow.md).
 
 ## 3. Automated review
@@ -64,21 +62,19 @@ outsider's eye, self-report-is-not-evidence — is the
 ## 4. Remediation
 
 Findings are resolved on the branch or explicitly routed to GitHub issues — never silently
-dropped. A finding that itself meets a log-entry trigger (load-bearing decision, irreversible
-event, direction change — [`03-logging.md`](.claude/rules/03-logging.md))
-*additionally* gets a project-log entry. Treat review feedback with rigor, not performative
-agreement: verify a finding is real before fixing it, and push back with evidence when it isn't.
+dropped. Treat review feedback with rigor, not performative agreement: verify a finding is real
+before fixing it, and push back with evidence when it isn't.
 Each remediation push gets a fresh review pass (the cron agent re-reviews new SHAs automatically;
 the loop re-reviews by design).
 
 ## 5. The merge bar
 
-The merge bar is the hard rule — seven conditions verified at merge time, defined in
+The merge bar is the hard rule — six conditions verified at merge time, defined in
 [`01-workflow.md` → Merge Bar](.claude/rules/01-workflow.md). In short: gate green (run unpiped),
-template complete, findings resolved or routed, **log cleanup done** (entries finalized against
-the final diff, Standing Decisions index updated), **spec-log current** on bundle-backed changes,
-doc-sync triggers checked, single concern — plus, on a bundle-backed slice declared done, the
-PRD `Status:` flip. Read the rule file for the authoritative list; nothing merges below it.
+template complete, findings resolved or routed, **a durable decision with no bundle behind it
+added directly to the scope's main-bundle `spec.md`**, doc-sync triggers checked, single concern —
+plus, on a bundle-backed slice declared done, the PRD `Status:` flip. Read the rule file for the
+authoritative list; nothing merges below it.
 
 ## 6. Solo-maintainer bypass
 
@@ -98,8 +94,8 @@ review is the durable evidence that the merge bar was held to.
 ## 7. Merge mechanics
 
 1. **Squash merge.** One commit per PR on the default branch; the PR number is the durable
-   reference (which is why log entries record `#<PR>` and never a squash SHA — the SHA doesn't
-   exist until after the entry is written).
+   reference (which is why a decision section records `#<PR>` and never a squash SHA — the SHA
+   doesn't exist until after the section is written).
 2. **The fold rides** — if this PR is the one where the owner declares a slice done, the
    bundle's PRD `Status:` flips to `complete` and the bundle folds file-to-file into the scope's
    main bundle, its directory deleted, in the same PR (or its own `chore:` PR later; finality is
@@ -107,41 +103,10 @@ review is the durable evidence that the merge bar was held to.
    [`04-docs.md` § Bundle lifecycle & the main bundle](.claude/rules/04-docs.md).
 3. **Delete the branch.**
 
-## Log overflow: the archive chore PR
-
-When a PR lands an entry while `project_log.md` exceeds its 15 KB cap, CI **warns** but does not
-block. The overflow is then handled as its own dedicated PR — `chore: archive log overflow` —
-which does exactly one thing:
-
-- Move the **oldest** entries to `project_log_archive.md`, prepended as a block, internal order
-  preserved, byte-identical modulo end-of-line normalization (CI verifies this; see
-  [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) for the line-endings gotcha behind the EOL carve-out).
-- **Distill, don't drop:** Standing Decisions index lines for archived decisions that are *still
-  binding* stay in the index, re-pointed at the archive. The index remains the complete
-  "what is still true" surface — hot window and archive alike — while entry bodies move to the
-  grep-only archive. Archiving compresses *where the detail lives*, never *what is currently
-  decided*.
-
-The archive is a grep target, never read whole, and is exempt from the size cap. Full mechanics:
-[spec §4.6](docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md) and
-[`03-logging.md`](.claude/rules/03-logging.md).
-
 ## Why it works this way
 
-Full rationale and the decision table:
-[design spec](docs/superpowers/specs/2026-06-10-logging-and-docs-standard-design.md). The
-load-bearing choices, briefly:
-
-- **Immutability + supersession** (entries frozen at merge; reversals get a new `Supersedes:`
-  entry). The old practice required follow-up edits to merged entries (stale `Status:` markers).
-  The fix is structural: a merged entry contains nothing that claims to be *current* — currency
-  lives only in the Standing Decisions index — so nothing in it can go stale, and history keeps
-  both sides of every reversal.
 - **Byte budgets, not line counts.** Line budgets are gamed by simply not wrapping; bytes are
-  what actually fill an agent's context window, so bytes are what's measured (per entry and per
-  file).
-- **Warn-not-block overflow.** Blocking the merge would force an unrelated PR to do log
-  maintenance, violating single-concern scoping. The warning routes the work to the dedicated
-  chore PR instead — same outcome, right vehicle.
+  what actually fill an agent's context window, so bytes are what's measured (per rule file, and
+  in aggregate across the always-loaded tier).
 - **PR# as the durable ref.** Squash merging rewrites SHAs; PR numbers survive. Recording a SHA
-  in a log entry would be wrong the moment the merge button is pressed.
+  in a decision section would be wrong the moment the merge button is pressed.

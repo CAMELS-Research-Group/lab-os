@@ -27,13 +27,11 @@ Read the **Index** first — it is the "what's ready right now" surface. Full it
 | B9 | Sweep the remaining fork-era staging-surface residue | Watson | S | ready |
 | B10 | Give main-PRD success criterion 4 an applicable test | Watson | S | ready |
 | B11 | Decide whether main `plan.md` §In flight restates or links | Watson | S | ready |
-| B12 | Decide whether the main-bundle log template needs a non-fold entry grammar | Watson | S | ready |
 | B13 | Dispose of the superseded `templates/PRD.template.md` | Watson | S | ready |
 | B14 | Record the never-required constraint on path-filtered CI jobs | Watson | S | ready |
 | B15 | Check `_specs/lab-os/` bundle statuses mechanically | Watson | M | ready |
 | B16 | Dispose of the legacy `docs/` planning surfaces | Watson | M | ready |
-| B17 | Archive the `project_log.md` overflow (time-critical) | Watson | S | ready |
-| B18 | Retire the two superseded Standing Decisions index lines | Watson | S | ready |
+| B18 | Confirm whether §W1/§W2 in the main-bundle spec are superseded | Watson | S | ready |
 | B19 | Amend `04-docs.md` for the main bundle's `**Living**` header | Watson | M | ready |
 | B20 | Land the rules-tier budget-raise round-trip in lab-os | Watson | S | ready |
 | B21 | State `docs-budget`'s fail-closed enforcement semantics in `04-docs.md` | Watson | S | ready |
@@ -182,9 +180,11 @@ has a Problem and a Done-when and an owner. -->
   has the workspace fork inheriting agent bodies through `git pull upstream main` where post-D17
   the inheritor is Caravan. Review routed these out of the re-pointing PR to keep it
   single-concern, and they were tracked nowhere until this item. One related surface needs a
-  decision rather than an edit and is out of scope here: the `project_log.md` Standing Decisions
-  line "2026-07-24 12:40 — … taxonomy staged in the fork, not yet carried · #61" is stale, but its
-  entry is merged and therefore immutable, so retiring it takes a superseding entry.
+  decision rather than an edit and is out of scope here: `_specs/lab-os/main/spec.md` §S2
+  ("Specialist panel ports to lab-os... taxonomy staged in the fork, not yet carried") is stale
+  post-D17, but the `2026-09-09-logging-removal` bundle's T0.3 carried it forward unreversed —
+  retiring it takes rewriting §S2 to the current answer, naming what it replaced, per that
+  document's own supersession convention (see also B18, the same class of gap).
 - **Who it helps:** anyone — member or agent session — who reads these files to find where an
   asset is staged, and lands in a repo the lab no longer edits
 - **Value:** the cutover is only half-landed while the pointers disagree; each stale mention is a
@@ -230,23 +230,6 @@ has a Problem and a Done-when and an owner. -->
 - **Depends on:** —
 - **Status:** ready
 
-## B12 — Decide whether the main-bundle log template needs a non-fold entry grammar
-
-- **Problem:** `templates/docs/main-bundle/log.template.md` offers one entry shape and it is
-  fold-only (`Bundle:` / `Folded:` / `Deleted in:` / `Recover:`), while `03-logging.md`
-  §Entry format binds bundle logs generally — a main-bundle entry that is not a fold (a
-  restructure, a correction) has no stated shape to follow
-- **Who it helps:** every scope that stands up a main bundle from the template and hits a
-  non-fold entry
-- **Value:** the template is the normative scaffold; an unstated case gets improvised
-  differently in each repo
-- **Owner:** Watson
-- **Rough size:** S
-- **Done when:** `templates/docs/main-bundle/log.template.md` carries a second entry shape
-  for non-fold entries, or states that `03-logging.md` §Entry format governs them
-- **Depends on:** —
-- **Status:** ready
-
 ## B13 — Dispose of the superseded `templates/PRD.template.md`
 
 - **Problem:** `templates/PRD.template.md` is a superseded scaffold retained pending
@@ -284,8 +267,8 @@ has a Problem and a Done-when and an owner. -->
   terminal bundle can sit unfolded and a merged slice can keep reading `active`
 - **Who it helps:** every reader who trusts a PRD `Status:` as the answer to "is this the
   active plan?"
-- **Value:** makes the bundle lifecycle true by construction, the same way the sibling lints
-  do for logs and budgets
+- **Value:** makes the bundle lifecycle true by construction, the same way `docs-budget` does
+  for byte budgets
 - **Owner:** Watson
 - **Rough size:** M
 - **Done when:** a PR that leaves a `_specs/lab-os/**` PRD `Status:` off-enum, or terminal
@@ -310,40 +293,24 @@ has a Problem and a Done-when and an owner. -->
 - **Depends on:** —
 - **Status:** ready
 
-## B17 — Archive the `project_log.md` overflow (time-critical)
+## B18 — Confirm whether §W1/§W2 in the main-bundle spec are superseded
 
-- **Problem:** `project_log.md` measures 22,979 B against a 15,360 B budget while
-  `standards.yml` runs `docs-budget` at `enforce: true`; the FAIL threshold is 23,040 B, so
-  roughly 61 B of headroom remain and the next entry of any size turns the gate red for
-  every PR in the repo. `03-logging.md` §File structure & overflow prescribes the fix: a
-  dedicated `chore: archive log overflow` PR moving oldest entries to
-  `project_log_archive.md`, prepended as a block, order preserved, byte-identical modulo EOL
-- **Who it helps:** every open and future PR — a red `docs-budget` blocks all of them
-- **Value:** time-critical: this is the one item here that goes from warning to repo-wide CI
-  failure on the next log entry anyone writes
+- **Problem:** the former Standing Decisions index carried "Fork-of-lab-os is the default
+  Claude-powered dev home" (#43) and "Plans track at the fork level" (#44) as standing, yet
+  D16/D17 moved the dev home to Caravan. The `2026-09-09-logging-removal` bundle's T0.3
+  converted the index into `_specs/lab-os/main/spec.md` as a decisions document without
+  resolving this: both landed unreversed as §W1 and §W2, since the conversion's own
+  checkpoint scoped drops to "obsolete", not "possibly superseded", and this question was
+  never put to it
+- **Who it helps:** anyone who reads §W1/§W2 as current guidance
+- **Value:** the decisions document is the "what is still true" surface; two unresolved,
+  possibly-reversed sections make the whole surface untrustworthy
 - **Owner:** Watson
 - **Rough size:** S
-- **Done when:** `python3 scripts/docs_budget.py --root . --enforce` reports `project_log.md`
-  below its FAIL threshold
+- **Done when:** §W1/§W2 in `_specs/lab-os/main/spec.md` are either confirmed current, or
+  rewritten to the current answer naming what they replaced, per that document's own
+  supersession convention
 - **Depends on:** —
-- **Status:** ready
-
-## B18 — Retire the two superseded Standing Decisions index lines
-
-- **Problem:** `project_log.md`'s Standing Decisions index still lists "2026-06-23 06:30 —
-  Fork-of-lab-os is the default Claude-powered dev home · #43" and "2026-06-23 07:51 — Plans
-  track at the fork level · #44" as standing, yet D16/D17 moved the dev home to Caravan.
-  Both entries are merged and therefore immutable, so the fix is a NEW entry carrying
-  `Supersedes:` plus removal of the two index lines in the same PR — never an edit
-- **Who it helps:** anyone who reads the index first, as the rules instruct, and gets two
-  reversed decisions presented as current
-- **Value:** the index is the "what is still true" surface; two false lines make the whole
-  surface untrustworthy
-- **Owner:** Watson
-- **Rough size:** S
-- **Done when:** neither line remains in `project_log.md`'s Standing Decisions index and a
-  superseding entry records why
-- **Depends on:** B17
 - **Status:** ready
 
 ## B19 — Amend `04-docs.md` for the main bundle's `**Living**` header

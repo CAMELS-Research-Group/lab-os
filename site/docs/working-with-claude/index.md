@@ -80,9 +80,9 @@ credential-path assumptions. Pre-merge review is **load-bearing, not optional**.
 
 ## Close
 
-- **Continuous capture.** Log decisions and open threads as they happen; load-bearing decisions get
-  the *why*. Which log an entry belongs in, what earns one, the format — source of truth:
-  [`03-logging.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/03-logging.md).
+- **Continuous capture.** Record decisions and open threads as they happen; load-bearing decisions
+  get the *why*. A durable decision lands once, in the repo's `spec.md` — source of truth:
+  [`04-docs.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.claude/rules/04-docs.md).
 - **Checkpoint** before switching domains, before a long chat is summarized to free up room
   (Claude Code calls this *compacting*), before a context-heavy subagent handoff.
 - **Long-lived facts go to auto-memory** — Claude Code's persistent memory directory. When you

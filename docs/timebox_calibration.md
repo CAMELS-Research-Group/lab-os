@@ -1,9 +1,9 @@
 # Timebox calibration record
 
 Append-only reference class for [`timeboxing.md`](timeboxing.md)'s calibration
-loop. One row per box end, newest last. This is telemetry, not a decision log —
-it deliberately lives outside `project_log.md` (see the calibration-loop section
-of the timeboxing doc for why).
+loop. One row per box end, newest last. This is telemetry, not a decision —
+it deliberately lives outside any repo's decisions document (see the
+calibration-loop section of the timeboxing doc for why).
 
 Columns: **Planned** and **Actual** in minutes; **Exit met?** is yes/no against
 the box's stated exit criterion, judged at the timer, not after any extension;

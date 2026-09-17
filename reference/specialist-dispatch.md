@@ -87,13 +87,12 @@ registry is the only way to widen the surface.
 
 ### Per-repo ENG-tier path registry
 
-Bundle roots differ per repo (`04-docs.md` § ENG and `03-logging.md` own the convention in each
-one), so the paths are registered here rather than inferred. One row per repo, globs relative to
-that repo's root:
+Bundle roots differ per repo (`04-docs.md` § ENG owns the convention in each one), so the paths
+are registered here rather than inferred. One row per repo, globs relative to that repo's root:
 
 | Repo | ENG-tier bundle paths (globs) | Convention source |
 |---|---|---|
-| `lab-os` | `_specs/**/*.md`, `templates/docs/planning/**/*.md`, `templates/docs/main-bundle/**/*.md`, `templates/PRD.template.md` | `03-logging.md` § Log altitudes (`_specs/<repo>/<DATE>-<handle>/`) · `04-docs.md` § Bundle lifecycle & the main bundle (a terminal bundle folds into the scope's main bundle, then is deleted) |
+| `lab-os` | `_specs/**/*.md`, `templates/docs/planning/**/*.md`, `templates/docs/main-bundle/**/*.md`, `templates/PRD.template.md` | `04-docs.md` § Bundle lifecycle & the main bundle (bundle path convention; a terminal bundle folds into the scope's main bundle, then is deleted) |
 
 `_specs/` carries no committed bundles in lab-os today — the glob is registered against the
 convention, and simply matches nothing until one lands. A repo whose bundles live elsewhere (a
@@ -238,9 +237,9 @@ that agent's findings at the named severity during the merge stage (a `Blocker` 
   The pass completes on the remaining findings; it never silently narrows.
 - **Cap skips are named the same way** (see Cap above).
 - **`spec-plan-analyzer` with no resolvable standard.** That agent reviews against the repo's own
-  `.claude/rules/04-docs.md` / `03-logging.md` rather than a restated checklist. If neither
-  resolves in the repo under review, it returns a named not-run dimension rather than reviewing
-  against invented criteria — the same loud path as an agent error, for the same reason.
+  `.claude/rules/04-docs.md` rather than a restated checklist. If it does not resolve in the repo
+  under review, it returns a named not-run dimension rather than reviewing against invented
+  criteria — the same loud path as an agent error, for the same reason.
 - **Missing this reference** (a `pr-round` run on a non-lab repo): degrade exactly like a missing
   rubric tier — the run proceeds specialist-less and the posted comment names the absent layer.
   One degradation pattern, not two.

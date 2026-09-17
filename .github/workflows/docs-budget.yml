@@ -1,9 +1,9 @@
 # Reusable docs-budget adherence action (spec §9).
 #
 # Checks the caller repo's always-loaded AI doc surfaces — CLAUDE.md /
-# .claude/CLAUDE.md, each .claude/rules/*.md, project_log.md, and the
-# always-loaded aggregate (CLAUDE.md + rules, excluding project_log.md) —
-# against the context budgets in .claude/rules/04-docs.md (section Tiers &
+# .claude/CLAUDE.md and each .claude/rules/*.md — and the always-loaded
+# aggregate (CLAUDE.md + rules) — against the context budgets in
+# .claude/rules/04-docs.md (section Tiers &
 # budgets). That section owns every byte figure; this file restates none of
 # them, so they cannot drift out of sync here.
 # Warn above 1.0x, fail above 1.5x — but only when `enforce: true`.

@@ -2,7 +2,7 @@
 
 **Scope:** lab-os · **Living** — execution map, not a task list.
 **PRD:** [prd.md](./prd.md) · **Spec:** [spec.md](./spec.md) ·
-**Design:** [design.md](./design.md) · **Log:** [log.md](./log.md)
+**Design:** [design.md](./design.md)
 
 ---
 

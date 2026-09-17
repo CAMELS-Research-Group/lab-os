@@ -9,7 +9,7 @@
 
 **Date:** YYYY-MM-DD · **Repo:** <repo>
 **PRD:** [prd.md](./prd.md) · **Spec:** [spec.md](./spec.md) ·
-**Plan:** [plan.md](./plan.md) · **Log:** [log.md](./log.md)
+**Plan:** [plan.md](./plan.md)
 
 ---
 
@@ -45,5 +45,5 @@
 <!-- Byte budgets, performance floors, platform limits, rule obligations this design is
      shaped around. "None beyond the rules" is a valid entry. -->
 
-<!-- Alternatives weighed and rejected go in log.md, not here — this file states the shape
-     that won. Open design questions go in prd.md §Open questions. -->
+<!-- Alternatives weighed and rejected go in this bundle's spec.md, not here — this file
+     states the shape that won. Open design questions go in prd.md §Open questions. -->

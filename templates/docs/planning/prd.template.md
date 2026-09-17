@@ -2,8 +2,9 @@
 
 <!-- This is a living document while the bundle is open; its Status: advances, and a
      terminal Status: ends the bundle rather than freezing it in place.
-     Decisions are never embedded here: resolved ones live once in this bundle's spec.md
-     (history in log.md); only decisions that outlive the slice route to project_log.md.
+     Decisions are never embedded here: resolved ones live once in this bundle's spec.md,
+     with their rationale and rejected alternatives; a decision that outlives the slice is
+     added directly to the scope's main-bundle spec.md as a new section.
      See the blockquote below and .claude/rules/04-docs.md §ENG document standards.
      Bundle lifecycle for individual slices: _specs/<repo>/YYYY-MM-DD-<slug>/, flipped to a
      terminal Status: then folded file-to-file into the scope's main bundle and deleted —
@@ -14,10 +15,10 @@
 **Date:** YYYY-MM-DD · **Repo:** <repo>
 
 > **The PRD stays decision-free.** No decision bodies here — the bundle's resolved decisions
-> live once in `spec.md` (current design authority; history in `log.md`; bundles that omit
-> `spec.md` record them in `log.md` alone); decisions that outlive the slice route to
-> `project_log.md` (see `.claude/rules/03-logging.md` entry triggers). Link from the relevant
-> Plan or Open Questions section if useful, never restate.
+> live once in `spec.md` (current design authority, with their rationale and rejected
+> alternatives); a decision that outlives the slice is added directly to the scope's
+> main-bundle `spec.md` as a new section. Link from the relevant Plan or Open Questions
+> section if useful, never restate.
 
 ---
 
@@ -74,7 +75,7 @@
 ## Plan (phased)
 
 <!-- High-level phases with their deliverables. Each non-trivial phase gets a planning bundle
-     (_specs/<repo>/YYYY-MM-DD-<slug>/) with its own prd.md + spec.md + plan.md + log.md
+     (_specs/<repo>/YYYY-MM-DD-<slug>/) with its own prd.md + spec.md + plan.md
      (chore/docs-only bundles omit spec.md). Link them here once created. This section updates
      by amendment as phases complete or scope shifts. -->
 
@@ -99,12 +100,12 @@
 <!-- What the requester decides before implementation begins, AND known gaps in the slice — this
      section is the known-gaps surface (the retired standalone Design doc no longer carries one).
      Each item should have an owner and a due date or trigger ("before Phase 2 kicks off").
-     Answered questions move to project_log.md as decisions; remove them from this list in the
-     same amendment.
+     Answered questions move to this bundle's spec.md as decisions (or the scope's main-bundle
+     spec.md, if they outlive the slice); remove them from this list in the same amendment.
      Routing reminder so no surface is silently dropped:
        - known gaps / open decisions a reader must answer → here.
-       - resolved decisions (current design authority) → this bundle's spec.md, stated once.
-       - rejected alternatives / decisions-with-rationale → this bundle's log.md (Decisions). -->
+       - resolved decisions, with their rationale and rejected alternatives → this bundle's
+         spec.md, stated once. -->
 
 - [ ] **<question or known gap>** — owner: <name> · due: <date or trigger>
 - [ ] **<question or known gap>** — owner: <name> · due: <date or trigger>

@@ -14,8 +14,8 @@ and the main [Closeout facilitator runbook](./facilitator-runbook.md). The parti
 The main closeout is **individual**: each participant builds a carry-forward artifact for *their* next
 project, and the collective dimension is the presentation round. The cohort retrospective adds the
 missing collective step — a single facilitated session that turns the group's shared two weeks into a
-few **named conventions the team adopts**, written into `.claude/rules/`, a `CLAUDE.md`, or
-`project_log.md`.
+few **named conventions the team adopts**, written into `.claude/rules/`, a `CLAUDE.md`, or a
+repo's decisions document (`spec.md`).
 
 Run it **after** the individual carry-forward and presentations (Movements 2–4 of the main runbook),
 while the experience is fresh. It is **optional** and **for live cohorts or teams** — skip it for
@@ -145,7 +145,8 @@ quiet — resist filling the silence.
   'verify-before-claim'."
 - *(one-line rule)* "Write it as a rule a new teammate could follow tomorrow — one sentence."
 - *(route — type)* "Is this a **rule for everyone** (`.claude/rules/`), a **fact about how we work**
-  (a `CLAUDE.md`), or a **one-time decision worth remembering** (a `project_log.md` entry)?"
+  (a `CLAUDE.md`), or a **one-time decision worth remembering** (a section in the repo's
+  `spec.md`)?"
 - *(route — scope)* "Is it for **every** project (a top-level rule) or just **this** repo (a per-repo
   rule / that repo's `CLAUDE.md`)?"
 - *(owner)* "Who owns turning this into a pull request?"
@@ -212,12 +213,12 @@ Out-of-scope or unresolved — <…>
 | A rule everyone should follow, every project | a top-level rule in `.claude/rules/` |
 | A rule for one project | that repo's `.claude/rules/` (per-repo rule) |
 | A fact about how the team or a repo works | the relevant `CLAUDE.md` |
-| A one-time decision worth remembering | a `project_log.md` entry |
+| A one-time decision worth remembering | a new section in the repo's `spec.md` |
 
 See [Rules, explained](../../../site/docs/rules-explained.md) for what belongs in a rule file vs a
-`CLAUDE.md`, and the [`project_log.md` template](../../../templates/docs/project_log.template.md) for the
-log-entry shape. A rule or `CLAUDE.md` change is a documentation change — open it as a normal pull
-request so it gets reviewed before it becomes "how we work."
+`CLAUDE.md`, and the [main-bundle spec template](../../../templates/docs/main-bundle/spec.template.md)
+for the decision-section shape. A rule or `CLAUDE.md` change is a documentation change — open it as a
+normal pull request so it gets reviewed before it becomes "how we work."
 
 ---
 
@@ -324,8 +325,8 @@ unless the group disagrees.
 - **Read-the-diff** — a human reads AI output before it merges.
 - **Right-sized delegation** — hand the AI tasks with a clear done-condition; keep judgment calls and
   ambiguous scope hands-on.
-- **One decision, one home** — write a durable decision down once (a rule, a `CLAUDE.md`, or
-  `project_log.md`) and link to it rather than restating it.
+- **One decision, one home** — write a durable decision down once (a rule, a `CLAUDE.md`, or the
+  repo's `spec.md`) and link to it rather than restating it.
 
 ---
 

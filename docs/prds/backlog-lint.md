@@ -3,8 +3,8 @@
 **Status:** active <!-- draft | active | paused | complete -->
 **Date:** 2026-07-22 · **Repo:** lab-os
 
-> **Decisions live in `project_log.md`, not here.** When a decision is reached while executing
-> this PRD, log it there (`.claude/rules/03-logging.md` entry triggers). This PRD stays decision-free.
+> **Decisions live in the scope's main-bundle `spec.md`, not here.** When a decision is reached
+> while executing this PRD, record it there. This PRD stays decision-free.
 
 ---
 
@@ -85,4 +85,4 @@ The lab already enforces its other text conventions by CI (`log-lint`, `docs-bud
 
 ## Open questions
 
-None open — initial scoping resolved 2026-07-22: schema parsed from `backlog-item.template.md`; `Done when` checked structurally with concreteness as a warning; behavior documented in `site/docs/tooling-tour.md`, not a `.claude/rules/` file; filed as its own backlog item **B5**. Decisions recorded in `project_log.md` with the B5 PR.
+None open — initial scoping resolved 2026-07-22: schema parsed from `backlog-item.template.md`; `Done when` checked structurally with concreteness as a warning; behavior documented in `site/docs/tooling-tour.md`, not a `.claude/rules/` file; filed as its own backlog item **B5**. Decisions recorded in `_specs/lab-os/main/spec.md` with the B5 PR.

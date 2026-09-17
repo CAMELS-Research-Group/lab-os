@@ -48,10 +48,8 @@ Before reviewing anything, read whichever of these the repo under review actuall
 
 1. `.claude/rules/04-docs.md` — § ENG document standards (which planning documents exist, what each
    must contain), § Tiers & budgets, § Single source, and § Bundle lifecycle & the main bundle where present.
-2. `.claude/rules/03-logging.md` — § Log altitudes (where a decision belongs: bundle, project, or
-   lab), § Entry triggers, § Entry format, and the bundle path convention it defines.
-3. Any per-repo rule numbered `10+` that amends the above for this repo.
-4. The bundle templates the rules name as normative (commonly under `templates/`) — these pin the
+2. Any per-repo rule numbered `10+` that amends the above for this repo.
+3. The bundle templates the rules name as normative (commonly under `templates/`) — these pin the
    required sections and the status vocabulary.
 
 Derive your checklist from what you actually read. Where those sources disagree with anything you
@@ -75,10 +73,10 @@ Each dimension is a *question you answer from the resolved standards*, not a fix
    (`<problem statement>`, `TBD`, an unmodified template comment) is a missing section, not a
    present one.
 3. **Decision placement and single source** — is each decision recorded in the file its rules
-   assign it, exactly once? Flag a decision restated across bundle files (rather than linked), a
-   decision recorded at the wrong altitude per `03-logging.md`, and a decision whose rationale or
-   rejected alternatives are absent where the rules require them. A decision that outlives the
-   slice belongs at the altitude the logging rules name — not buried in the bundle.
+   assign it, exactly once? Flag a decision restated across bundle files (rather than linked), and
+   a decision whose rationale or rejected alternatives are absent where the rules require them. A
+   decision that outlives the slice belongs in the scope's main-bundle `spec.md` — not buried in
+   the bundle.
 4. **Plan quality** — does each task carry the elements its rules require? Beyond presence:
    - **Acceptance** states an observable outcome, not an activity ("X returns Y for input Z", not
      "implement X"). An acceptance criterion nobody can evaluate is a Blocker.

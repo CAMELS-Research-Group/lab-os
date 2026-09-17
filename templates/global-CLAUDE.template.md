@@ -104,8 +104,13 @@ When reviewing — code, PRDs, designs, decisions — approach as an outsider, n
 - **Continuous capture.** Log context, decisions, and open threads as they happen — not just at the end.
   Load-bearing decisions get the *why*, not just the *what*.
 - **Where it goes:**
-  - Per-repo work → `<repo>/project_log.md`
-  - Workspace-level decisions (cross-repo tooling, infra, conventions) → `<DEV_ROOT>/project_log.md`
+  - A repo-scoped decision, with its rationale → that bundle's `spec.md` (or the scope's
+    main-bundle `spec.md`, once the slice is done)
+  - An expensive finding or gotcha → `TROUBLESHOOTING.md` or an issue
+  - Repo-scoped open work, follow-ups, review findings → GitHub issues
+  - Cross-repo / lab-level open work → upstream `BACKLOG.md`
+  - Bare status → PR comment
+  - Session narrative / what-I-did → PR body
   - Long-lived facts about you / work style / projects → auto-memory (see Memory system below)
   - Cost → `<DEV_ROOT>/cost-tracking.md`
 - **Checkpoint triggers:** before switching domains, before a long chat compacts, before a context-heavy

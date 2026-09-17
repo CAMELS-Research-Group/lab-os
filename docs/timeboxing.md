@@ -92,12 +92,11 @@ and — for the `agent-` types — the inline defaults in
 which are themselves mirrored into `SKILL.md` § 1. This file owns the values;
 the others are copies that state so. Update them together.
 
-Calibration rows deliberately do **not** go into `project_log.md`. The lab
-logging standard scopes tracked logs to three entry triggers (decisions,
-irreversible events, re-scopes) and rules out bare status — per-box telemetry
-is a changelog by that standard's own terms, in any repo's log. The dedicated
-file keeps the reference class queryable without fighting the log's cap or
-its lint.
+Calibration rows deliberately do **not** go into any repo's decisions document.
+A decision is a load-bearing choice, an irreversible event, or a re-scope —
+per-box telemetry is none of those; it is a changelog, and a changelog belongs
+beside the work it measures. The dedicated file keeps the reference class
+queryable on its own terms.
 
 ## When not to timebox
 
