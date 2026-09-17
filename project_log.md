@@ -2,34 +2,9 @@
 
 Format: lab standard, `lab-os/.claude/rules/03-logging.md`. Skeleton per
 `lab-os/templates/docs/project_log.template.md` (normative — `log-lint` parses this structure).
-The `## Standing Decisions` and `## Entries` headings are load-bearing lint anchors: exact
-text, one each, never renamed. Entry headers are the only other `##` headings allowed.
-
-## Standing Decisions
-
-- 2026-09-01 20:05 — Apache-2.0 bounded by author, not by a flat effective date · #115
-- 2026-09-01 19:48 — lab-os licensed Apache-2.0; vendored work carved out in NOTICE · #115
-- 2026-08-12 17:33 — Raise always-loaded doc budgets to 12/8 KB; add a 48 KB aggregate cap · #79
-- 2026-08-13 10:55 — Terminal bundles fold into the scope's main bundle, then delete · #81
-- 2026-08-13 16:39 — lab-os owns Claude Code plugins; they vendor under `.claude/skills/` · #78
-- 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
-- 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
-- 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
-- 2026-08-06 12:32 — Lab-wide backlog: cross-repo open work routes to BACKLOG.md · #55
-- 2026-07-31 14:03 — spec-plan-analyzer originates in lab-os and derives standards at read time · #61
-- 2026-07-31 13:22 — Adopt the workspace fork's rules at current HEAD; agent-runtime HARD RULE stands · #58
-- 2026-07-24 12:40 — Specialist panel ports to lab-os; taxonomy staged in the fork, not yet carried · #61 → project_log_archive.md
-- 2026-07-24 16:20 — lab-os owns shared Claude skills; deploy is user-scope symlinks · #59 → project_log_archive.md
-- 2026-07-23 11:13 — Backlog-lint enforces BACKLOG.md item hygiene via CI · #67
-- 2026-06-23 07:51 — Plans track at the fork level; only project code nests · #44 → project_log_archive.md
-- 2026-06-23 06:30 — Fork-of-lab-os is the default Claude-powered dev home · #43 → project_log_archive.md
-- 2026-06-23 03:05 — Building sample plan ships as a facilitator-only fallback · #42 → project_log_archive.md
-- 2026-06-19 05:58 — Workshop Program supersedes onboarding-project and one-day Building · #39 → project_log_archive.md
-- 2026-06-13 15:00 — Handbook content rework gates tester launch · #25 → project_log_archive.md
-- 2026-06-12 12:00 — Plan-execution logs close with their shipping PR · #18 → project_log_archive.md
-- 2026-06-11 19:45 — Site owns human-facing docs · #15 → project_log_archive.md
-- 2026-06-10 21:54 — Split the combined rule into 03-logging.md and 04-docs.md · #9 → project_log_archive.md
-- 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6 → project_log_archive.md
+The `## Entries` heading is a load-bearing lint anchor: exact text, never renamed. Entry headers
+are the only other `##` headings allowed. Every standing decision formerly indexed here converted
+in place into `_specs/lab-os/main/spec.md`.
 
 ## Entries
 
