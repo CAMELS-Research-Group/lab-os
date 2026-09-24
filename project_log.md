@@ -7,6 +7,7 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 
 ## Standing Decisions
 
+- 2026-09-24 15:03 — merge-bar-check's log rule is template-conditional · #122
 - 2026-08-07 13:08 — Adopt timeboxing v1.0: session standard + agent task boxes · #66
 - 2026-08-06 15:10 — PR #68 remediation: renderers fail closed, backlog-views enforced · #68
 - 2026-08-06 14:00 — Backlog-lint fails closed on structural defects · #67
@@ -27,6 +28,26 @@ text, one each, never renamed. Entry headers are the only other `##` headings al
 - 2026-06-10 17:45 — Adopt lab-wide logging & documentation standard · #6
 
 ## Entries
+
+---
+
+## 2026-09-24 15:03 — merge-bar-check's log rule is template-conditional
+
+**Decision:** `merge_bar_check.py` applies the log-checkbox rule only where the caller repo's
+`--template` carries at least one of the two log labels. The template is now authoritative for
+that rule, as it already was for required sections. Repos with no log checkbox are checked on
+sections alone; lab-os, the one repo with a log and the one running this in CI, is unchanged.
+
+**Why:** Caravan retired logging (`03-logging.md` deleted) and dropped both labels from its
+template; LSCA never had a log or the labels. In both, no author can tick either box, so the
+rule failed every code-path PR unsatisfiably — absorbed as a known-stale failure on seven LSCA
+PRs rather than fixed. `07-merge-bar.md` says CI enforces item 2 lab-wide via this script as a
+reusable workflow, so the first repo to wire it would have broken on its first code-path PR.
+
+**Alternatives:** Add the labels to both templates — re-imports a logging obligation Caravan
+deliberately retired. Leave it and keep recording — a check that always fails stops being read.
+
+**Refs:** #122; surfaced on CAMELS-Research-Group/LSCA#1050
 
 ---
 
