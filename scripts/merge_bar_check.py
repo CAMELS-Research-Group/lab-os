@@ -15,8 +15,9 @@ What it checks
    fallback list below is used; it mirrors the lab template in
    ``.github/pull_request_template.md`` and must be kept in sync with it.
 
-2. Log checkboxes (code-path PRs only): exactly one of the two log checkboxes
-   must be ticked (``- [x]``, upper- or lowercase x accepted)::
+2. Log checkboxes (code-path PRs only, and only where the template offers
+   them): exactly one of the two log checkboxes must be ticked (``- [x]``,
+   upper- or lowercase x accepted)::
 
        - [ ] Log entries finalized (verified against final diff, index updated)
        - [ ] No loggable events in this PR
@@ -24,6 +25,13 @@ What it checks
    Neither ticked, or both ticked -> fail, naming the rule. On PRs whose
    changed files all fall outside the code-path globs (docs-only PRs), the
    checkbox state is NOT enforced; section presence still is.
+
+   The template is authoritative here for the same reason it is for rule 1: a
+   caller repo whose ``--template`` carries neither checkbox has no logging
+   surface to finalize, so the rule cannot be satisfied by any PR there and is
+   skipped rather than failed. Enforcing it anyway produced an unsatisfiable
+   violation on every code-path PR in such a repo. A template carrying either
+   label keeps the rule, since one ticked box still satisfies "exactly one".
 
 Code-path / glob semantics
 --------------------------
@@ -173,6 +181,30 @@ def template_sections(template_path: Path | None) -> tuple[list[str], str]:
     return list(FALLBACK_SECTIONS), "built-in fallback list"
 
 
+def template_offers_log_checkboxes(template_path: Path | None) -> bool:
+    """Whether the caller repo's PR template carries a log checkbox at all.
+
+    Read from the template for the same reason ``template_sections`` is: the
+    template is what the PR author actually fills in. A repo with no logging
+    system has neither label, and enforcing the rule there fails every
+    code-path PR on a box no author can tick.
+
+    Defaults to True when no template resolves, which preserves the behaviour
+    of every caller that relies on ``FALLBACK_SECTIONS`` -- that fallback
+    mirrors the lab template, which does carry them.
+    """
+    if template_path is None or not template_path.is_file():
+        return True
+    labels = {_norm(CHECKBOX_LOG_DONE), _norm(CHECKBOX_LOG_NONE)}
+    for line in _unfenced_lines(_read_text(template_path)):
+        stripped = line.strip()
+        for prefix in ("- [ ]", "- [x]", "- [X]", "* [ ]", "* [x]", "* [X]"):
+            if stripped.startswith(prefix):
+                if _norm(stripped[len(prefix):]) in labels:
+                    return True
+    return False
+
+
 def normalize_path(path: str) -> str:
     p = path.strip().replace("\\", "/")
     while p.startswith("./"):
@@ -194,6 +226,7 @@ def run_checks(
     changed_files: list[str],
     sections: list[str],
     exclude_globs: list[str],
+    log_checkboxes_offered: bool = True,
 ) -> list[str]:
     """Return one human-readable violation line per broken rule."""
     violations: list[str] = []
@@ -211,7 +244,7 @@ def run_checks(
             )
 
     code_paths = [f for f in changed_files if is_code_path(f, exclude_globs)]
-    if code_paths:
+    if code_paths and log_checkboxes_offered:
         ticked = {
             _norm(m.group(1))
             for line in _unfenced_lines(body)
@@ -254,6 +287,11 @@ SELF_TEST_EXPECTATIONS = {
     # Fence handling: fenced content must not satisfy a rule either.
     "fail_fenced_content": (1, ("missing-section",
                                 "neither of the log checkboxes")),
+    # A caller repo whose template carries no log checkbox: the rule cannot be
+    # satisfied there, so a code-path PR must pass on sections alone.
+    "pass_template_without_log_checkboxes": (0, ()),
+    # ...and the rule still bites where the template does offer one.
+    "fail_template_with_log_checkboxes": (1, ("neither of the log checkboxes",)),
 }
 
 
@@ -292,7 +330,17 @@ def self_test() -> int:
     for case in case_dirs:
         body = _read_text(case / "body.md")
         changed = _read_changed_files(case / "changed_files.txt")
-        violations = run_checks(body, changed, sections, exclude_globs)
+        # A fixture may bring its own template, which is how a caller repo
+        # whose template differs from the lab's gets covered here at all.
+        case_template = case / "template.md"
+        if case_template.is_file():
+            case_sections, _ = template_sections(case_template)
+            case_offers_log = template_offers_log_checkboxes(case_template)
+        else:
+            case_sections, case_offers_log = sections, True
+        violations = run_checks(
+            body, changed, case_sections, exclude_globs, case_offers_log
+        )
         exit_code = 1 if violations else 0
 
         want_code, want_substrs = SELF_TEST_EXPECTATIONS[case.name]
@@ -353,18 +401,24 @@ def main(argv: list[str] | None = None) -> int:
             print(f"merge-bar-check: ERROR: file not found: {p}")
             return 2
 
-    sections, source = template_sections(
-        Path(args.template) if args.template else None
-    )
+    template_path = Path(args.template) if args.template else None
+    sections, source = template_sections(template_path)
     if args.template and source == "built-in fallback list":
         print(f"merge-bar-check: note: template {args.template!r} not found; "
               "using built-in fallback section list", file=sys.stderr)
+
+    offers_log = template_offers_log_checkboxes(template_path)
+    if not offers_log:
+        print(f"merge-bar-check: note: template {args.template!r} carries no log "
+              "checkbox; the log-checkbox rule does not apply to this repo",
+              file=sys.stderr)
 
     violations = run_checks(
         _read_text(body_path),
         _read_changed_files(changed_path),
         sections,
         parse_globs(args.exclude_globs),
+        offers_log,
     )
     for v in violations:
         print(v)
