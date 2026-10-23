@@ -10,7 +10,10 @@ exercising the warn (>1.0x) and fail (>1.5x) zones requires files of
 10–24 KB. Committing that much filler adds no review value, so:
 
 - **Committed here:** `under_budget_repo/` — a tiny static fixture repo
-  whose two surfaces both sit in the OK zone.
+  whose two surfaces both sit in the OK zone; and `path_scoped_repo/` — a
+  plain rule, a rule with well-formed `paths:` frontmatter, and one whose
+  `paths:` is a comma-separated string. Only the well-formed one is
+  path-scoped: measured, labelled, and left out of the aggregate.
 - **Generated at self-test runtime** (in a `tempfile.TemporaryDirectory`,
   exact byte sizes, deleted afterward):
   - warn-zone repo — `CLAUDE.md` 14,000 B, `.claude/CLAUDE.md` 14,000 B
@@ -42,6 +45,10 @@ exercising the warn (>1.0x) and fail (>1.5x) zones requires files of
     that resolves outside the root. Each is guarded — the checks print
     SKIP where the platform refuses symlinks, or where `chmod` does not
     restrict access
+  - scoped-aggregate repo — the 10 x 8,000 B fail-zone shape with every
+    rule path-scoped (one padded to 10,000 B): the aggregate is CLAUDE.md
+    alone and passes under `--enforce`, while the padded rule still gets
+    its per-file WARN
   - rules-scope repo — a `.txt` beside a rules file, neither budgeted nor
     counted (the `.md` suffix, not mere residence under `.claude/rules`,
     is what makes a surface always-loaded)
@@ -104,6 +111,12 @@ exercising the warn (>1.0x) and fail (>1.5x) zones requires files of
 - The empty aggregate: a scan that enumerates **no** always-loaded surface
   has measured nothing, so `--enforce` errors rather than passing — pinned
   on a wholly empty root, which still exits 0 in warn-only mode
+- Path-scoped rules: `scoped_paths()` accepts only a `paths:` block list
+  of glob strings between `---` fences at byte 0; a flow list, a
+  comma-separated string, another key, a BOM, an unclosed fence, uneven or
+  tab indentation, an unquoted `*` glob, a non-string item or undecodable
+  bytes all count as always-loaded, the fail-closed direction. A rules file
+  whose bytes were not read keeps the always-loaded answer
 - Exit codes through `main()`, not only `run()`: CI reads `main()`'s code,
   so the fail-closed assertions are pinned at the seam CI actually uses
 - Fail-closed guards that are invisible in a passing run: `escapes_root()`
