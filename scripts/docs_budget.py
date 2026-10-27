@@ -25,7 +25,7 @@ is listed as path-scoped, and stays out of the aggregate. Any other
 frontmatter counts as always-loaded, which fails closed. Until
 04-docs.md states this exclusion, its owner is the path-scoped tier
 decision in Caravan's workflow-economy epic (CAMELS-Research-Group/Caravan#711);
-the rule text lands with CAMELS-Research-Group/Caravan#713. The
+the rule text lands with CAMELS-Research-Group/Caravan#714. The
 rules scan is FLAT, matching the rule's own `*.md` glob:
 `.claude/rules/` is not searched recursively, and a subdirectory under it
 is recorded as an unmeasurable always-loaded surface rather than walked

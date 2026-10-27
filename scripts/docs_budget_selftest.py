@@ -170,7 +170,7 @@ def run_self_test() -> int:
     check("the scoped rule is measured and NOT always-loaded",
           ".claude/rules/02-scoped.md" in by_rel
           and not by_rel[".claude/rules/02-scoped.md"].always_loaded)
-    check("the plain and malformed rules stay always-loaded",
+    check("the plain and unsupported-form rules stay always-loaded",
           all(by_rel[r].always_loaded for r in
               ("CLAUDE.md", ".claude/rules/01-plain.md",
                ".claude/rules/03-unsupported-form.md") if r in by_rel)
