@@ -12,8 +12,10 @@ exercising the warn (>1.0x) and fail (>1.5x) zones requires files of
 - **Committed here:** `under_budget_repo/` — a tiny static fixture repo
   whose two surfaces both sit in the OK zone; and `path_scoped_repo/` — a
   plain rule, a rule with well-formed `paths:` frontmatter, and one whose
-  `paths:` is a comma-separated string. Only the well-formed one is
-  path-scoped: measured, labelled, and left out of the aggregate.
+  `paths:` is a comma-separated string, a form the scan does not
+  recognise. Only the well-formed one is path-scoped: measured, labelled,
+  and left out of the aggregate; the unsupported one is counted and warned
+  about.
 - **Generated at self-test runtime** (in a `tempfile.TemporaryDirectory`,
   exact byte sizes, deleted afterward):
   - warn-zone repo — `CLAUDE.md` 14,000 B, `.claude/CLAUDE.md` 14,000 B
@@ -115,8 +117,10 @@ exercising the warn (>1.0x) and fail (>1.5x) zones requires files of
   of glob strings between `---` fences at byte 0; a flow list, a
   comma-separated string, another key, a BOM, an unclosed fence, uneven or
   tab indentation, an unquoted `*` glob, a non-string item or undecodable
-  bytes all count as always-loaded, the fail-closed direction. A rules file
-  whose bytes were not read keeps the always-loaded answer
+  bytes all count as always-loaded, the fail-closed direction, and one
+  that names `paths:` in an unrecognised form is warned about. A rules
+  file measured but unreadable keeps the always-loaded answer, with a
+  warning (pinned under the chmod guard)
 - Exit codes through `main()`, not only `run()`: CI reads `main()`'s code,
   so the fail-closed assertions are pinned at the seam CI actually uses
 - Fail-closed guards that are invisible in a passing run: `escapes_root()`

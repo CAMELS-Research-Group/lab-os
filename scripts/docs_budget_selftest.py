@@ -119,8 +119,8 @@ def run_self_test() -> int:
     # rule whose frontmatter it cannot parse as unscoped, so over-accepting
     # here would drop always-loaded bytes from the aggregate.
     print("path-scoped membership:")
-    scoped = b'---\npaths:\n  - ".github/workflows/**"\n  - \'src/**\'\n---\n# R\n'
-    check("block list of quoted globs is path-scoped",
+    scoped = b'---\npaths:\n\n  - ".github/workflows/**"\n  - \'src/**\'\n---\n# R\n'
+    check("block list of quoted globs, blank line inside, is path-scoped",
           scoped_paths(scoped) == (".github/workflows/**", "src/**"))
     check("a plain glob item is path-scoped",
           scoped_paths(b"---\npaths:\n  - src/api/x.ts\n---\n") == ("src/api/x.ts",))
@@ -136,7 +136,7 @@ def run_self_test() -> int:
         "no frontmatter": b"# R\n",
         "empty paths list": b"---\npaths:\n---\n",
         "flow list": b'---\npaths: [".github/**"]\n---\n',
-        "comma-separated string": b'---\npaths: ".github/**, src/**"\n---\n',
+        "comma string (docs-accepted)": b'---\npaths: ".github/**, src/**"\n---\n',
         "unclosed fence": b'---\npaths:\n  - "a/**"\n',
         "fence not at byte 0": b'\n---\npaths:\n  - "a/**"\n---\n',
         "BOM before the fence": b'\xef\xbb\xbf---\npaths:\n  - "a/**"\n---\n',
@@ -146,6 +146,13 @@ def run_self_test() -> int:
         "uneven item indent": b'---\npaths:\n  - "a/**"\n    - "b/**"\n---\n',
         "tab-indented item": b'---\npaths:\n\t- "a/**"\n---\n',
         "undecodable bytes": b'---\npaths:\n  - "\xff"\n---\n',
+        "unquoted brace glob": b"---\npaths:\n  - {src,lib}/**\n---\n",
+        "unquoted class glob": b"---\npaths:\n  - [ab]/**\n---\n",
+        "anchor item": b"---\npaths:\n  - &a\n---\n",
+        "mapping item": b"---\npaths:\n  - a:\n---\n",
+        "escape in a double-quoted item": b'---\npaths:\n  - "a\\x"\n---\n',
+        "paths with a scalar value": b'---\npaths: x\n  - "a/**"\n---\n',
+        "numeric and null items": b"---\npaths:\n  - 42\n  - null\n---\n",
     }
     for label, raw in malformed.items():
         check(f"{label} is always-loaded",
@@ -154,8 +161,10 @@ def run_self_test() -> int:
 
     print("static path-scoped fixture:")
     scoped_repo = fixtures / "path_scoped_repo"
-    findings, _, _ = scan(scoped_repo)
+    findings, warns, _ = scan(scoped_repo)
     by_rel = {f.rel: f for f in findings}
+    check("only the unsupported form is warned about", len(warns) == 1
+          and "03-unsupported-form.md" in warns[0], f"got {warns}")
     check("scans CLAUDE.md and all three rules files", len(findings) == 4,
           f"got {sorted(by_rel)}")
     check("the scoped rule is measured and NOT always-loaded",
@@ -164,7 +173,7 @@ def run_self_test() -> int:
     check("the plain and malformed rules stay always-loaded",
           all(by_rel[r].always_loaded for r in
               ("CLAUDE.md", ".claude/rules/01-plain.md",
-               ".claude/rules/03-malformed.md") if r in by_rel)
+               ".claude/rules/03-unsupported-form.md") if r in by_rel)
           and len(by_rel) == 4)
     check("only the scoped rule is recorded as path-scoped",
           [r for r, f in sorted(by_rel.items()) if f.path_scoped]
@@ -172,7 +181,7 @@ def run_self_test() -> int:
           f"got {[r for r, f in sorted(by_rel.items()) if f.path_scoped]}")
     expected_total = sum(
         (scoped_repo / r).stat().st_size for r in
-        ("CLAUDE.md", ".claude/rules/01-plain.md", ".claude/rules/03-malformed.md")
+        ("CLAUDE.md", ".claude/rules/01-plain.md", ".claude/rules/03-unsupported-form.md")
     )
     _, out_scoped = run(scoped_repo, enforce=True)
     text_scoped = "\n".join(out_scoped)
@@ -322,7 +331,8 @@ def run_self_test() -> int:
         # The agg_fail_repo shape, with the same ten 8,000 B rules made
         # path-scoped: the aggregate they pushed past the fail line drops
         # out, while each file keeps its per-file check — one is padded
-        # into the WARN zone to prove a scoped rule is still budgeted.
+        # into the WARN zone to prove a scoped rule is still budgeted. The
+        # CLAUDE.md keeps the aggregate non-empty, which --enforce requires.
         print("path-scoped rules outside the aggregate:")
         header = b'---\npaths:\n  - ".github/workflows/**"\n---\n'
         scoped_agg_repo = tmp / "scoped_agg_repo"
@@ -662,6 +672,17 @@ def run_self_test() -> int:
                 partial_closed(perm_repo, "unreadable .claude parent")
             finally:
                 (perm_repo / ".claude").chmod(0o755)
+            one = perm_rules / "01-r.md"
+            one.write_bytes(header + b"x" * 100)
+            one.chmod(0o000)
+            try:
+                f_u, w_u, _ = scan(perm_repo)
+                check("an unreadable scoped rule stays always-loaded, warned",
+                      any(f.rel == ".claude/rules/01-r.md" and f.always_loaded
+                          and not f.path_scoped for f in f_u)
+                      and any("01-r.md was measured" in w for w in w_u), f"{w_u}")
+            finally:
+                one.chmod(0o644)
         else:
             skip("chmod does not restrict access here (running as root?)")
 

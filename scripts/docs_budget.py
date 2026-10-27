@@ -22,7 +22,10 @@ against 49,152 B. A rules file is path-scoped when its frontmatter holds
 only a `paths:` block list of globs (see scoped_paths()); it loads only
 when a session touches a matching path, so it keeps its per-file budget,
 is listed as path-scoped, and stays out of the aggregate. Any other
-frontmatter counts as always-loaded, which fails closed. The
+frontmatter counts as always-loaded, which fails closed. Until
+04-docs.md states this exclusion, its owner is the path-scoped tier
+decision in Caravan's workflow-economy epic (CAMELS-Research-Group/Caravan#711);
+the rule text lands with CAMELS-Research-Group/Caravan#713. The
 rules scan is FLAT, matching the rule's own `*.md` glob:
 `.claude/rules/` is not searched recursively, and a subdirectory under it
 is recorded as an unmeasurable always-loaded surface rather than walked
@@ -183,24 +186,34 @@ def classify(size: int, budget: int) -> str:
 _PATHS_ITEM = re.compile(
     r"( +)- +(?:\"([^\"\\]+)\"|'([^']+)'|([^\s'\"\[\]{}&*!|>%@`#,?:-][^\s#:]*)) *"
 )
-# Plain scalars YAML's core schema resolves to something other than a
-# string; a glob list holding one is not the form Claude Code was observed
-# loading.
+# Common plain scalars that YAML 1.1 or 1.2 resolves to something other
+# than a string (a conservative union, not an exhaustive list); a glob list
+# holding one is not a list of glob strings.
 _NON_STRING_PLAIN = re.compile(
     r"[-+]?(\.[0-9]+|[0-9][0-9_]*(\.[0-9_]*)?)([eE][-+]?[0-9]+)?"
     r"|0x[0-9a-fA-F_]+|0o[0-7_]+|~|null|true|false|yes|no|on|off|\.inf|\.nan",
     re.IGNORECASE,
 )
 
+# Frontmatter that opens with a fence and names `paths:`, whatever its form:
+# when scoped_paths() rejects it, the author meant to scope the rule, so the
+# fail-closed count is reported rather than left silent.
+_LOOKS_SCOPED = re.compile(
+    rb"(?:\xef\xbb\xbf)?\s*---\r?\n(?:(?!---\s*\n)[^\n]*\n)*?\s*paths\s*:"
+)
+
 
 def scoped_paths(raw: bytes) -> tuple[str, ...] | None:
     """The globs a rules file is scoped to, or None when it is not scoped.
 
-    Accepts exactly one form, the one Claude Code was observed loading
-    (Caravan's workflow-economy bundle, Task 1): YAML between `---` fences
-    at byte 0 whose only key is `paths:`, holding a non-empty block list of
-    glob strings. Blank lines inside the fences are allowed; nothing else
-    is. A flow list, a comma-separated string, another key, a BOM, an
+    Accepts one form: YAML between `---` fences at byte 0 whose only key is
+    `paths:`, holding a non-empty block list of glob strings, each item
+    indented by the same one or more spaces and written double-quoted,
+    single-quoted or plain. A block list was observed loading as path-scoped
+    on Claude Code 2.1.308 (probe record: CAMELS-Research-Group/Caravan#858);
+    the three quoting styles are treated as equivalent YAML strings. Blank
+    lines inside the fences are allowed; nothing else is (a zero-indent list
+    included). A flow list, a comma-separated string, another key, a BOM, an
     unclosed fence or undecodable bytes all return None, so the file counts
     as always-loaded. That direction is deliberate: Claude Code loads a
     rule whose frontmatter it cannot parse as if it had no `paths`, so a
@@ -259,7 +272,10 @@ def is_always_loaded(rel: str, raw: bytes | None = None) -> bool:
     case-sensitive suffix test dropped `01-R.MD` on the case-insensitive
     filesystems where `main`'s glob() had matched it. The predicate and
     the enumerator have to agree, or the aggregate reports a number for a
-    set it did not measure.
+    set it did not measure. That agreement is the slot answer, without
+    `raw`. Path scoping is the one deliberate exception, and it comes after
+    enumeration: a path-scoped rule is still listed, measured and labelled,
+    and only its bytes take it out of the total.
     """
     if rel in ALWAYS_LOADED_FILES:
         return True
@@ -511,8 +527,8 @@ def scan(root: Path) -> tuple[list[Finding], list[str], list[Skip]]:
 
     Returns (findings, warnings, skips): findings are `Finding` records
     per readable surface, each carrying whether it is always-loaded and
-    whether it is path-scoped — scan() reads a rules file's bytes, so
-    path scoping is decided here, once; warnings
+    whether it is path-scoped — scan() reads each rules file's bytes once,
+    so path scoping is decided here; warnings
     are ready-to-print annotation lines; skips are `Skip`
     (rel, kind, detail, always_loaded) records for
     present-but-unmeasurable surfaces, carried so the aggregate can declare itself incomplete
@@ -554,12 +570,23 @@ def scan(root: Path) -> tuple[list[Finding], list[str], list[Skip]]:
         if rel.startswith(ALWAYS_LOADED_RULES_PREFIX):
             try:
                 raw = path.read_bytes()
-            except OSError:
+            except OSError as exc:
                 # Measured but unreadable: its scope is unknown, so it keeps
                 # the slot's always-loaded answer and stays in the total.
                 raw = None
+                warnings.append(
+                    f"::warning file={rel}::{rel} was measured but its bytes "
+                    f"could not be read ({exc.__class__.__name__}: {exc}); "
+                    f"its scope is unknown, so it counts as always-loaded."
+                )
         always_loaded = is_always_loaded(rel, raw)
         path_scoped = is_always_loaded(rel) and not always_loaded
+        if raw is not None and always_loaded and _LOOKS_SCOPED.match(raw):
+            warnings.append(
+                f"::warning file={rel}::{rel} has `paths:` frontmatter in a "
+                f"form the scan does not recognise (see scoped_paths()); it "
+                f"counts as always-loaded."
+            )
         findings.append(Finding(
             rel, size, budget, classify(size, budget), always_loaded,
             path_scoped,
@@ -751,7 +778,9 @@ def main(argv: list[str] | None = None) -> int:
             "budgets (.claude/rules/04-docs.md): CLAUDE.md and "
             ".claude/CLAUDE.md 12,288 B; each .claude/rules/*.md 8,192 B; "
             "and the always-loaded surfaces in aggregate (CLAUDE.md + "
-            "rules not path-scoped by `paths:` frontmatter) 49,152 B. Zones: size <= budget -> OK; budget < size <= "
+            "rules not path-scoped by `paths:` frontmatter; that exclusion is "
+            "owned by CAMELS-Research-Group/Caravan#711 until 04-docs.md "
+            "states it) 49,152 B. Zones: size <= budget -> OK; budget < size <= "
             "1.5x budget -> WARN (annotation, exit 0); size > 1.5x budget "
             "-> FAIL (exit 1 only with --enforce). An absent surface is "
             "skipped silently; an always-loaded surface that is present but "
