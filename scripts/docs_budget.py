@@ -130,16 +130,20 @@ class Skip(NamedTuple):
     detail: str
     always_loaded: bool
 
+
 class Finding(NamedTuple):
-    """A measured surface. `always_loaded` is decided in scan(), where the
-    file's bytes are read, and carried here so run() never re-derives it
-    from the rel string alone (the same doctrine as `Skip.always_loaded`)."""
+    """A measured surface. `always_loaded` and `path_scoped` are decided in
+    scan(), where the file's bytes are read, and carried here so run() never
+    re-derives either from the rel string alone (the same doctrine as
+    `Skip.always_loaded`). `path_scoped` is True only for a rules file the
+    slot would load whose own frontmatter takes it out of the total."""
 
     rel: str
     size: int
     budget: int
     zone: str
     always_loaded: bool
+    path_scoped: bool
 
 
 ZONE_OK = "OK"
@@ -506,9 +510,9 @@ def scan(root: Path) -> tuple[list[Finding], list[str], list[Skip]]:
     """Scan surfaces under root.
 
     Returns (findings, warnings, skips): findings are `Finding` records
-    per readable surface, each carrying whether it is always-loaded — for
-    a rules file that reads its bytes, so path scoping is decided here,
-    once, where the file is measured; warnings
+    per readable surface, each carrying whether it is always-loaded and
+    whether it is path-scoped — scan() reads a rules file's bytes, so
+    path scoping is decided here, once; warnings
     are ready-to-print annotation lines; skips are `Skip`
     (rel, kind, detail, always_loaded) records for
     present-but-unmeasurable surfaces, carried so the aggregate can declare itself incomplete
@@ -546,18 +550,20 @@ def scan(root: Path) -> tuple[list[Finding], list[str], list[Skip]]:
             )
             skips.append(Skip(rel, SKIP_ERROR, detail, is_always_loaded(rel)))
             continue
-        always_loaded = is_always_loaded(rel)
-        if always_loaded and rel.startswith(ALWAYS_LOADED_RULES_PREFIX):
+        raw = None
+        if rel.startswith(ALWAYS_LOADED_RULES_PREFIX):
             try:
                 raw = path.read_bytes()
             except OSError:
                 # Measured but unreadable: its scope is unknown, so it keeps
                 # the slot's always-loaded answer and stays in the total.
                 raw = None
-            always_loaded = is_always_loaded(rel, raw)
-        findings.append(
-            Finding(rel, size, budget, classify(size, budget), always_loaded)
-        )
+        always_loaded = is_always_loaded(rel, raw)
+        path_scoped = is_always_loaded(rel) and not always_loaded
+        findings.append(Finding(
+            rel, size, budget, classify(size, budget), always_loaded,
+            path_scoped,
+        ))
     return findings, warnings, skips
 
 
@@ -568,11 +574,12 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     lines.extend(unreadable)
     failed = False
 
-    for rel, size, budget, zone, always_loaded in findings:
+    for f in findings:
+        rel, size, budget, zone = f.rel, f.size, f.budget, f.zone
         ratio = size / budget
         scope = (
-            "" if always_loaded or not rel.startswith(ALWAYS_LOADED_RULES_PREFIX)
-            else " — path-scoped, outside the always-loaded total"
+            " — path-scoped, outside the always-loaded total"
+            if f.path_scoped else ""
         )
         lines.append(
             f"[{zone:<4}] {rel} — {size:,} B / {budget:,} B budget "
@@ -624,7 +631,7 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     missed = [sk for sk in skips if sk.always_loaded]
     aggregate_zone = None
     if missed:
-        measured = sum(f[1] for f in always_loaded)
+        measured = sum(f.size for f in always_loaded)
         cap = BUDGET_ALWAYS_LOADED_TOTAL
         aggregate_zone = AGGREGATE_INCOMPLETE
         named = ", ".join(sk.rel for sk in missed)
@@ -648,7 +655,7 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
                 f"enforcement is on."
             )
     elif always_loaded:
-        total = sum(f[1] for f in always_loaded)
+        total = sum(f.size for f in always_loaded)
         cap = BUDGET_ALWAYS_LOADED_TOTAL
         aggregate_zone = classify(total, cap)
         ratio = total / cap
@@ -715,16 +722,13 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     # tested `findings`, `skips` and `failed`, none of which is set on that
     # path. The counted summary is true of the empty case too: it reads
     # "0 surface(s) checked ... always-loaded total n/a".
-    n_warn = sum(1 for f in findings if f[3] == ZONE_WARN)
-    n_fail = sum(1 for f in findings if f[3] == ZONE_FAIL)
+    n_warn = sum(1 for f in findings if f.zone == ZONE_WARN)
+    n_fail = sum(1 for f in findings if f.zone == ZONE_FAIL)
     mode = "enforce" if enforce else "warn-only"
     # Only stated when there is something to state, so a clean run's
     # output is unchanged.
     unmeasurable = f", {len(skips)} unmeasurable" if skips else ""
-    n_scoped = sum(
-        1 for f in findings
-        if not f.always_loaded and f.rel.startswith(ALWAYS_LOADED_RULES_PREFIX)
-    )
+    n_scoped = sum(1 for f in findings if f.path_scoped)
     scoped = f", {n_scoped} path-scoped" if n_scoped else ""
     lines.append(
         f"docs-budget: {len(findings)} surface(s) checked, "

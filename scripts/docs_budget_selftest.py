@@ -105,9 +105,9 @@ def run_self_test() -> int:
     check(
         "scans 2 surfaces (CLAUDE.md, one rules file)",
         len(findings) == 2,
-        f"got {len(findings)}: {[f[0] for f in findings]}",
+        f"got {len(findings)}: {[f.rel for f in findings]}",
     )
-    check("all surfaces in OK zone", all(f[3] == ZONE_OK for f in findings))
+    check("all surfaces in OK zone", all(f.zone == ZONE_OK for f in findings))
     code_warn, _ = run(under, enforce=False)
     code_enf, _ = run(under, enforce=True)
     check("exit 0 in warn-only mode", code_warn == 0)
@@ -166,6 +166,10 @@ def run_self_test() -> int:
               ("CLAUDE.md", ".claude/rules/01-plain.md",
                ".claude/rules/03-malformed.md") if r in by_rel)
           and len(by_rel) == 4)
+    check("only the scoped rule is recorded as path-scoped",
+          [r for r, f in sorted(by_rel.items()) if f.path_scoped]
+          == [".claude/rules/02-scoped.md"],
+          f"got {[r for r, f in sorted(by_rel.items()) if f.path_scoped]}")
     expected_total = sum(
         (scoped_repo / r).stat().st_size for r in
         ("CLAUDE.md", ".claude/rules/01-plain.md", ".claude/rules/03-malformed.md")
@@ -201,8 +205,8 @@ def run_self_test() -> int:
         )
         findings, _, _ = scan(warn_repo)
         check("scans 3 surfaces incl. .claude/CLAUDE.md", len(findings) == 3,
-              f"got {[f[0] for f in findings]}")
-        check("all surfaces in WARN zone", all(f[3] == ZONE_WARN for f in findings))
+              f"got {[f.rel for f in findings]}")
+        check("all surfaces in WARN zone", all(f.zone == ZONE_WARN for f in findings))
         code_w, lines_w = run(warn_repo, enforce=False)
         code_e, lines_e = run(warn_repo, enforce=True)
         check("warn zone exits 0 in warn-only mode", code_w == 0)
@@ -235,7 +239,7 @@ def run_self_test() -> int:
         )
         findings, _, _ = scan(fail_repo)
         check("all surfaces in FAIL zone",
-              len(findings) == 2 and all(f[3] == ZONE_FAIL for f in findings))
+              len(findings) == 2 and all(f.zone == ZONE_FAIL for f in findings))
         code_w, lines_w = run(fail_repo, enforce=False)
         code_e, lines_e = run(fail_repo, enforce=True)
         check("fail zone exits 0 in warn-only mode", code_w == 0)
@@ -264,7 +268,7 @@ def run_self_test() -> int:
             {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 8)},
         )
         findings, _, _ = scan(agg_warn_repo)
-        check("every per-file zone is OK", all(f[3] == ZONE_OK for f in findings))
+        check("every per-file zone is OK", all(f.zone == ZONE_OK for f in findings))
         code_w, lines_w = run(agg_warn_repo, enforce=False)
         code_e, lines_e = run(agg_warn_repo, enforce=True)
         check("aggregate reported in the WARN zone",
@@ -283,7 +287,7 @@ def run_self_test() -> int:
         )
         findings, _, _ = scan(agg_fail_repo)
         check("every per-file zone is still OK",
-              all(f[3] == ZONE_OK for f in findings))
+              all(f.zone == ZONE_OK for f in findings))
         code_w, lines_w = run(agg_fail_repo, enforce=False)
         code_e, lines_e = run(agg_fail_repo, enforce=True)
         check("aggregate fail exits 1 in enforce mode", code_e == 1)
@@ -455,8 +459,8 @@ def run_self_test() -> int:
         if link_made:
             findings, _, skips = scan(repo)
             check("rules dir resolving outside repo is skipped",
-                  [f[0] for f in findings] == ["CLAUDE.md"],
-                  f"got {[f[0] for f in findings]}")
+                  [f.rel for f in findings] == ["CLAUDE.md"],
+                  f"got {[f.rel for f in findings]}")
             check("escaped rules dir is recorded as a skip, not dropped",
                   any(sk[1] == "escaped" for sk in skips),
                   f"got {skips}")
@@ -669,8 +673,8 @@ def run_self_test() -> int:
         )
         findings_t, _, _ = scan(txt_repo)
         check("a non-.md file under .claude/rules is not budgeted",
-              [f[0] for f in findings_t] == [".claude/rules/01-r.md"],
-              f"got {[f[0] for f in findings_t]}")
+              [f.rel for f in findings_t] == [".claude/rules/01-r.md"],
+              f"got {[f.rel for f in findings_t]}")
         _, lines_t = run(txt_repo, enforce=True)
         check("a non-.md file under .claude/rules is not counted in the aggregate",
               any("always-loaded total (1 surface(s)) — 1,000 B" in l for l in lines_t),
@@ -680,8 +684,8 @@ def run_self_test() -> int:
         (dir_md_repo / ".claude" / "rules" / "01-r.md").mkdir(parents=True)
         findings_d, _, skips_d = scan(dir_md_repo)
         check("a directory named *.md is not budgeted on its inode size",
-              [f[0] for f in findings_d] == ["CLAUDE.md"],
-              f"got {[f[0] for f in findings_d]}")
+              [f.rel for f in findings_d] == ["CLAUDE.md"],
+              f"got {[f.rel for f in findings_d]}")
         # It is an unmeasurable skip, not an absence. consider() used to
         # return silently for every non-file shape, which granted an
         # exemption by surface shape that the aggregate's doctrine denies:
@@ -739,9 +743,9 @@ def run_self_test() -> int:
               "the predicate must match the enumerator")
         findings_n, _, skips_n = scan(nested_repo)
         check("a nested rules file is not budgeted by the flat scan",
-              sorted(f[0] for f in findings_n)
+              sorted(f.rel for f in findings_n)
               == [".claude/rules/01-a.md", "CLAUDE.md"],
-              f"got {[f[0] for f in findings_n]}")
+              f"got {[f.rel for f in findings_n]}")
         check("a subdirectory under .claude/rules is a recorded skip",
               [(sk.rel, sk.kind, sk.always_loaded) for sk in skips_n]
               == [(".claude/rules/nested/", "error", True)],
@@ -781,9 +785,9 @@ def run_self_test() -> int:
         )
         findings_c, _, skips_c = scan(case_repo)
         check("an uppercase .MD rules file is budgeted, not dropped",
-              sorted(f[0] for f in findings_c)
+              sorted(f.rel for f in findings_c)
               == [".claude/rules/01-R.MD", "CLAUDE.md"],
-              f"got {[f[0] for f in findings_c]}")
+              f"got {[f.rel for f in findings_c]}")
         check("is_always_loaded matches the enumerator on case",
               is_always_loaded(".claude/rules/01-R.MD") and not skips_c,
               f"got skips {skips_c}")
