@@ -27,6 +27,7 @@ from docs_budget import (
     ZONE_FAIL,
     ZONE_OK,
     ZONE_WARN,
+    _LOOKS_SCOPED,
     classify,
     escapes_root,
     is_always_loaded,
@@ -34,6 +35,7 @@ from docs_budget import (
     probe,
     run,
     scan,
+    scoped_paths,
 )
 
 
@@ -104,13 +106,97 @@ def run_self_test() -> int:
     check(
         "scans 2 surfaces (CLAUDE.md, one rules file)",
         len(findings) == 2,
-        f"got {len(findings)}: {[f[0] for f in findings]}",
+        f"got {len(findings)}: {[f.rel for f in findings]}",
     )
-    check("all surfaces in OK zone", all(f[3] == ZONE_OK for f in findings))
+    check("all surfaces in OK zone", all(f.zone == ZONE_OK for f in findings))
     code_warn, _ = run(under, enforce=False)
     code_enf, _ = run(under, enforce=True)
     check("exit 0 in warn-only mode", code_warn == 0)
     check("exit 0 in enforce mode", code_enf == 0)
+
+    # --- 2b. path-scoped rules ------------------------------------------
+    # The one accepted form is a `paths:` block list between fences at byte
+    # 0. Every other shape must read as always-loaded: Claude Code loads a
+    # rule whose frontmatter it cannot parse as unscoped, so over-accepting
+    # here would drop always-loaded bytes from the aggregate.
+    print("path-scoped membership:")
+    scoped = b'---\npaths:\n\n  - ".github/workflows/**"\n  - \'src/**\'\n---\n# R\n'
+    check("block list of quoted globs, blank line inside, is path-scoped",
+          scoped_paths(scoped) == (".github/workflows/**", "src/**"))
+    check("a plain glob item is path-scoped",
+          scoped_paths(b"---\npaths:\n  - src/api/x.ts\n---\n") == ("src/api/x.ts",))
+    check("CRLF line endings are path-scoped",
+          scoped_paths(scoped.replace(b"\n", b"\r\n")) is not None)
+    check("a path-scoped rules file is NOT always-loaded",
+          not is_always_loaded(".claude/rules/15-ci.md", scoped))
+    check("a rules file without its bytes stays always-loaded (fail closed)",
+          is_always_loaded(".claude/rules/15-ci.md"))
+    check("CLAUDE.md is always-loaded whatever its frontmatter",
+          is_always_loaded("CLAUDE.md", scoped))
+    malformed = {
+        "no frontmatter": b"# R\n",
+        "empty paths list": b"---\npaths:\n---\n",
+        "flow list": b'---\npaths: [".github/**"]\n---\n',
+        "comma string (docs-accepted)": b'---\npaths: ".github/**, src/**"\n---\n',
+        "unclosed fence": b'---\npaths:\n  - "a/**"\n',
+        "fence not at byte 0": b'\n---\npaths:\n  - "a/**"\n---\n',
+        "BOM before the fence": b'\xef\xbb\xbf---\npaths:\n  - "a/**"\n---\n',
+        "another key beside paths": b'---\npaths:\n  - "a/**"\ndescription: x\n---\n',
+        "unquoted alias-like glob": b"---\npaths:\n  - **/*.ts\n---\n",
+        "non-string plain item": b"---\npaths:\n  - true\n---\n",
+        "uneven item indent": b'---\npaths:\n  - "a/**"\n    - "b/**"\n---\n',
+        "tab-indented item": b'---\npaths:\n\t- "a/**"\n---\n',
+        "undecodable bytes": b'---\npaths:\n  - "\xff"\n---\n',
+        "unquoted brace glob": b"---\npaths:\n  - {src,lib}/**\n---\n",
+        "unquoted class glob": b"---\npaths:\n  - [ab]/**\n---\n",
+        "anchor item": b"---\npaths:\n  - &a\n---\n",
+        "mapping item": b"---\npaths:\n  - a:\n---\n",
+        "escape in a double-quoted item": b'---\npaths:\n  - "a\\x"\n---\n',
+        "paths with a scalar value": b'---\npaths: x\n  - "a/**"\n---\n',
+        "numeric item": b"---\npaths:\n  - 42\n---\n",
+        "null item": b"---\npaths:\n  - null\n---\n",
+        "markdown rule, then prose": b"---\n\nIntro.\n\npaths: the dirs\n",
+    }
+    for label, raw in malformed.items():
+        check(f"{label} is always-loaded",
+              scoped_paths(raw) is None
+              and is_always_loaded(".claude/rules/15-ci.md", raw))
+    unmatched = sorted(k for k, v in malformed.items() if not _LOOKS_SCOPED.match(v))
+    check("every closed, fenced paths: form is detected for the warning", unmatched
+          == ["markdown rule, then prose", "no frontmatter", "unclosed fence"], f"{unmatched}")
+
+    print("static path-scoped fixture:")
+    scoped_repo = fixtures / "path_scoped_repo"
+    findings, warns, _ = scan(scoped_repo)
+    by_rel = {f.rel: f for f in findings}
+    check("only the unsupported form is warned about", len(warns) == 1
+          and "03-unsupported-form.md" in warns[0], f"got {warns}")
+    check("scans CLAUDE.md and all three rules files", len(findings) == 4,
+          f"got {sorted(by_rel)}")
+    check("the scoped rule is measured and NOT always-loaded",
+          not getattr(by_rel.get(".claude/rules/02-scoped.md"), "always_loaded", True))
+    always = ("CLAUDE.md", ".claude/rules/01-plain.md", ".claude/rules/03-unsupported-form.md")
+    check("the plain and unsupported-form rules stay always-loaded",
+          all(r in by_rel and by_rel[r].always_loaded for r in always))
+    scoped_rels = [r for r, f in sorted(by_rel.items()) if f.path_scoped]
+    check("only the scoped rule is recorded as path-scoped",
+          scoped_rels == [".claude/rules/02-scoped.md"], f"got {scoped_rels}")
+    expected_total = sum((scoped_repo / r).stat().st_size for r in always)
+    _, out_scoped = run(scoped_repo, enforce=True)
+    text_scoped = "\n".join(out_scoped)
+    check("aggregate sums only the always-loaded surfaces",
+          f"always-loaded total (3 surface(s)) — {expected_total:,} B" in text_scoped,
+          text_scoped)
+    check("the report labels the scoped rule as path-scoped",
+          any(".claude/rules/02-scoped.md" in ln and "path-scoped" in ln
+              for ln in out_scoped), text_scoped)
+    check("no other line is labelled path-scoped",
+          sum("path-scoped, outside" in ln for ln in out_scoped) == 1, text_scoped)
+    check("summary counts the path-scoped rule",
+          ", 1 path-scoped;" in out_scoped[-1], out_scoped[-1])
+    _, out_under = run(under, enforce=False)
+    check("a repo with no scoped rule prints no path-scoped count",
+          "path-scoped" not in "\n".join(out_under))
 
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
@@ -127,8 +213,8 @@ def run_self_test() -> int:
         )
         findings, _, _ = scan(warn_repo)
         check("scans 3 surfaces incl. .claude/CLAUDE.md", len(findings) == 3,
-              f"got {[f[0] for f in findings]}")
-        check("all surfaces in WARN zone", all(f[3] == ZONE_WARN for f in findings))
+              f"got {[f.rel for f in findings]}")
+        check("all surfaces in WARN zone", all(f.zone == ZONE_WARN for f in findings))
         code_w, lines_w = run(warn_repo, enforce=False)
         code_e, lines_e = run(warn_repo, enforce=True)
         check("warn zone exits 0 in warn-only mode", code_w == 0)
@@ -161,7 +247,7 @@ def run_self_test() -> int:
         )
         findings, _, _ = scan(fail_repo)
         check("all surfaces in FAIL zone",
-              len(findings) == 2 and all(f[3] == ZONE_FAIL for f in findings))
+              len(findings) == 2 and all(f.zone == ZONE_FAIL for f in findings))
         code_w, lines_w = run(fail_repo, enforce=False)
         code_e, lines_e = run(fail_repo, enforce=True)
         check("fail zone exits 0 in warn-only mode", code_w == 0)
@@ -190,7 +276,7 @@ def run_self_test() -> int:
             {f".claude/rules/{i:02d}-r.md": 8_000 for i in range(1, 8)},
         )
         findings, _, _ = scan(agg_warn_repo)
-        check("every per-file zone is OK", all(f[3] == ZONE_OK for f in findings))
+        check("every per-file zone is OK", all(f.zone == ZONE_OK for f in findings))
         code_w, lines_w = run(agg_warn_repo, enforce=False)
         code_e, lines_e = run(agg_warn_repo, enforce=True)
         check("aggregate reported in the WARN zone",
@@ -209,7 +295,7 @@ def run_self_test() -> int:
         )
         findings, _, _ = scan(agg_fail_repo)
         check("every per-file zone is still OK",
-              all(f[3] == ZONE_OK for f in findings))
+              all(f.zone == ZONE_OK for f in findings))
         code_w, lines_w = run(agg_fail_repo, enforce=False)
         code_e, lines_e = run(agg_fail_repo, enforce=True)
         check("aggregate fail exits 1 in enforce mode", code_e == 1)
@@ -239,6 +325,34 @@ def run_self_test() -> int:
               any("always-loaded total (2 surface(s)) — 3,000 B" in l
                   for l in lines_b),
               f"got {[l for l in lines_b if 'always-loaded' in l]}")
+
+        # --- 4b. path-scoped rules outside the aggregate -----------------
+        # The agg_fail_repo shape, with the same ten 8,000 B rules made
+        # path-scoped: the aggregate they pushed past the fail line drops
+        # out, while each file keeps its per-file check — one is padded
+        # into the WARN zone to prove a scoped rule is still budgeted. The
+        # CLAUDE.md keeps the aggregate non-empty, which --enforce requires.
+        print("path-scoped rules outside the aggregate:")
+        header = b'---\npaths:\n  - ".github/workflows/**"\n---\n'
+        scoped_agg_repo = tmp / "scoped_agg_repo"
+        for i in range(1, 11):
+            size = 10_000 if i == 1 else 8_000
+            path = scoped_agg_repo / ".claude" / "rules" / f"{i:02d}-r.md"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(header + b"x" * (size - len(header)))
+        _write_sized(scoped_agg_repo / "CLAUDE.md", 1_000)
+        code_e, lines_e = run(scoped_agg_repo, enforce=True)
+        text_e = "\n".join(lines_e)
+        check("scoped rules leave the aggregate: total is CLAUDE.md alone",
+              "[OK  ] always-loaded total (1 surface(s)) — 1,000 B" in text_e,
+              text_e)
+        check("aggregate that would FAIL unscoped exits 0 when scoped",
+              code_e == 0, text_e)
+        check("an over-budget scoped rule still gets its per-file WARN",
+              "::warning file=.claude/rules/01-r.md::" in text_e, text_e)
+        check("summary counts all ten path-scoped rules",
+              ", 1 warn-zone, 0 fail-zone, 10 path-scoped;" in lines_e[-1],
+              lines_e[-1])
 
         # --- 5. missing surfaces skipped silently -------------------------
         print("missing surfaces:")
@@ -354,8 +468,8 @@ def run_self_test() -> int:
         if link_made:
             findings, _, skips = scan(repo)
             check("rules dir resolving outside repo is skipped",
-                  [f[0] for f in findings] == ["CLAUDE.md"],
-                  f"got {[f[0] for f in findings]}")
+                  [f.rel for f in findings] == ["CLAUDE.md"],
+                  f"got {[f.rel for f in findings]}")
             check("escaped rules dir is recorded as a skip, not dropped",
                   any(sk[1] == "escaped" for sk in skips),
                   f"got {skips}")
@@ -557,6 +671,17 @@ def run_self_test() -> int:
                 partial_closed(perm_repo, "unreadable .claude parent")
             finally:
                 (perm_repo / ".claude").chmod(0o755)
+            one = perm_rules / "01-r.md"
+            one.write_bytes(header + b"x" * 100)
+            one.chmod(0o000)
+            try:
+                f_u, w_u, _ = scan(perm_repo)
+                check("an unreadable scoped rule stays always-loaded, warned",
+                      any(f.rel == ".claude/rules/01-r.md" and f.always_loaded
+                          and not f.path_scoped for f in f_u)
+                      and any("01-r.md was measured" in w for w in w_u), f"{w_u}")
+            finally:
+                one.chmod(0o644)
         else:
             skip("chmod does not restrict access here (running as root?)")
 
@@ -568,8 +693,8 @@ def run_self_test() -> int:
         )
         findings_t, _, _ = scan(txt_repo)
         check("a non-.md file under .claude/rules is not budgeted",
-              [f[0] for f in findings_t] == [".claude/rules/01-r.md"],
-              f"got {[f[0] for f in findings_t]}")
+              [f.rel for f in findings_t] == [".claude/rules/01-r.md"],
+              f"got {[f.rel for f in findings_t]}")
         _, lines_t = run(txt_repo, enforce=True)
         check("a non-.md file under .claude/rules is not counted in the aggregate",
               any("always-loaded total (1 surface(s)) — 1,000 B" in l for l in lines_t),
@@ -579,8 +704,8 @@ def run_self_test() -> int:
         (dir_md_repo / ".claude" / "rules" / "01-r.md").mkdir(parents=True)
         findings_d, _, skips_d = scan(dir_md_repo)
         check("a directory named *.md is not budgeted on its inode size",
-              [f[0] for f in findings_d] == ["CLAUDE.md"],
-              f"got {[f[0] for f in findings_d]}")
+              [f.rel for f in findings_d] == ["CLAUDE.md"],
+              f"got {[f.rel for f in findings_d]}")
         # It is an unmeasurable skip, not an absence. consider() used to
         # return silently for every non-file shape, which granted an
         # exemption by surface shape that the aggregate's doctrine denies:
@@ -638,9 +763,9 @@ def run_self_test() -> int:
               "the predicate must match the enumerator")
         findings_n, _, skips_n = scan(nested_repo)
         check("a nested rules file is not budgeted by the flat scan",
-              sorted(f[0] for f in findings_n)
+              sorted(f.rel for f in findings_n)
               == [".claude/rules/01-a.md", "CLAUDE.md"],
-              f"got {[f[0] for f in findings_n]}")
+              f"got {[f.rel for f in findings_n]}")
         check("a subdirectory under .claude/rules is a recorded skip",
               [(sk.rel, sk.kind, sk.always_loaded) for sk in skips_n]
               == [(".claude/rules/nested/", "error", True)],
@@ -680,9 +805,9 @@ def run_self_test() -> int:
         )
         findings_c, _, skips_c = scan(case_repo)
         check("an uppercase .MD rules file is budgeted, not dropped",
-              sorted(f[0] for f in findings_c)
+              sorted(f.rel for f in findings_c)
               == [".claude/rules/01-R.MD", "CLAUDE.md"],
-              f"got {[f[0] for f in findings_c]}")
+              f"got {[f.rel for f in findings_c]}")
         check("is_always_loaded matches the enumerator on case",
               is_always_loaded(".claude/rules/01-R.MD") and not skips_c,
               f"got skips {skips_c}")

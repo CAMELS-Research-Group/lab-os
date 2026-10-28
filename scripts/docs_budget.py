@@ -17,7 +17,15 @@ Scanned paths (relative to --root; each skipped silently when absent):
 
 Beyond the per-file budgets, the always-loaded surfaces — every
 CLAUDE.md the scan finds (both locations sum when both exist) plus every
-.claude/rules/*.md — are checked in aggregate against 49,152 B. The
+.claude/rules/*.md that is not path-scoped — are checked in aggregate
+against 49,152 B. A rules file is path-scoped when its frontmatter holds
+only a `paths:` block list of globs (see scoped_paths()); it loads only
+when a session touches a matching path, so it keeps its per-file budget,
+is listed as path-scoped, and stays out of the aggregate. Any other
+frontmatter counts as always-loaded, which fails closed. Until
+04-docs.md states this exclusion, its owner is the path-scoped tier
+decision in Caravan's workflow-economy epic (CAMELS-Research-Group/Caravan#711);
+the rule text lands with CAMELS-Research-Group/Caravan#714. The
 rules scan is FLAT, matching the rule's own `*.md` glob:
 `.claude/rules/` is not searched recursively, and a subdirectory under it
 is recorded as an unmeasurable always-loaded surface rather than walked
@@ -80,6 +88,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import stat
 import sys
 from pathlib import Path
@@ -124,6 +133,22 @@ class Skip(NamedTuple):
     detail: str
     always_loaded: bool
 
+
+class Finding(NamedTuple):
+    """A measured surface. `always_loaded` and `path_scoped` are decided in
+    scan(), where the file's bytes are read, and carried here so run() never
+    re-derives either from the rel string alone (the same doctrine as
+    `Skip.always_loaded`). `path_scoped` is True only for a rules file the
+    slot would load whose own frontmatter takes it out of the total."""
+
+    rel: str
+    size: int
+    budget: int
+    zone: str
+    always_loaded: bool
+    path_scoped: bool
+
+
 ZONE_OK = "OK"
 ZONE_WARN = "WARN"
 ZONE_FAIL = "FAIL"
@@ -153,13 +178,94 @@ def classify(size: int, budget: int) -> str:
     return ZONE_FAIL
 
 
-def is_always_loaded(rel: str) -> bool:
+# One `paths:` list item: a double- or single-quoted glob with no escapes,
+# or a plain glob that cannot start a YAML indicator (`*` would be an
+# alias, `[`/`{` a flow collection, `-`/`?`/`:` a nested node) and holds no
+# whitespace, `#` or `:`. Anything else is not a form the scan can vouch
+# for, so it never counts as path-scoped.
+_PATHS_ITEM = re.compile(
+    r"( +)- +(?:\"([^\"\\]+)\"|'([^']+)'|([^\s'\"\[\]{}&*!|>%@`#,?:-][^\s#:]*)) *"
+)
+# Common plain scalars that YAML 1.1 or 1.2 resolves to something other
+# than a string (a conservative union, not an exhaustive list); a glob list
+# holding one is not a list of glob strings.
+_NON_STRING_PLAIN = re.compile(
+    r"[-+]?(\.[0-9]+|[0-9][0-9_]*(\.[0-9_]*)?)([eE][-+]?[0-9]+)?"
+    r"|0x[0-9a-fA-F_]+|0o[0-7_]+|~|null|true|false|yes|no|on|off|\.inf|\.nan",
+    re.IGNORECASE,
+)
+
+# Frontmatter that opens with a fence, names `paths:` and closes, whatever
+# its form: when scoped_paths() rejects it, the author meant to scope the
+# rule, so the fail-closed count is reported rather than left silent. The
+# closing fence keeps a markdown `---` rule followed by prose from matching;
+# in-line `[ \t]*` rather than `\s*` keeps blank-line runs from backtracking.
+_LOOKS_SCOPED = re.compile(
+    rb"(?:\xef\xbb\xbf)?\s*---[ \t]*\r?\n"
+    rb"(?:(?!---[ \t]*\r?\n)[^\n]*\n)*?[ \t]*paths[ \t]*:"
+    rb"(?:[^\n]*\n)*?---[ \t]*\r?(?:\n|\Z)"
+)
+
+
+def scoped_paths(raw: bytes) -> tuple[str, ...] | None:
+    """The globs a rules file is scoped to, or None when it is not scoped.
+
+    Accepts one form: YAML between `---` fences at byte 0 whose only key is
+    `paths:`, holding a non-empty block list of glob strings, each item
+    indented by the same one or more spaces and written double-quoted,
+    single-quoted or plain. A block list was observed loading as path-scoped
+    on Claude Code 2.1.308 (probe record: CAMELS-Research-Group/Caravan#858);
+    the three quoting styles are treated as equivalent YAML strings. Blank
+    lines inside the fences are allowed; nothing else is (a zero-indent list
+    included). A flow list, a comma-separated string, another key, a BOM, an
+    unclosed fence or undecodable bytes all return None, so the file counts
+    as always-loaded. That direction is deliberate: Claude Code loads a
+    rule whose frontmatter it cannot parse as if it had no `paths`, so a
+    form this parser over-accepted would leave always-loaded bytes out of
+    the aggregate, while one it under-accepts only overstates the total.
+    """
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    lines = text.replace("\r\n", "\n").split("\n")
+    if lines[0] != "---":
+        return None
+    try:
+        end = lines.index("---", 1)
+    except ValueError:
+        return None
+    body = [line for line in lines[1:end] if line.strip()]
+    if not body or body[0].rstrip(" ") != "paths:":
+        return None
+    globs: list[str] = []
+    indent = None
+    for line in body[1:]:
+        match = _PATHS_ITEM.fullmatch(line)
+        if match is None:
+            return None
+        if indent is None:
+            indent = match.group(1)
+        elif match.group(1) != indent:
+            return None
+        quoted = match.group(2) or match.group(3)
+        plain = match.group(4)
+        if plain is not None and _NON_STRING_PLAIN.fullmatch(plain):
+            return None
+        globs.append(quoted if quoted is not None else plain)
+    return tuple(globs) or None
+
+
+def is_always_loaded(rel: str, raw: bytes | None = None) -> bool:
     """True when a scanned surface loads into every session's context.
 
     CLAUDE.md — BOTH locations, cumulatively, when a repo carries both —
     and every .claude/rules/*.md file load unconditionally, because a
     session loads the directory (04-docs.md, section Tiers & budgets, owns
-    the scope).
+    the scope) — except a rules file whose bytes `raw` are path-scoped
+    (scoped_paths()). Without `raw` the answer is the slot's: a rules file
+    counts as always-loaded, which is the fail-closed reading for a surface
+    whose bytes could not be read.
 
     Membership is FLAT and case-insensitive, matching the enumerator in
     collect_surfaces() byte for byte. Both halves of that sentence were
@@ -170,14 +276,19 @@ def is_always_loaded(rel: str) -> bool:
     case-sensitive suffix test dropped `01-R.MD` on the case-insensitive
     filesystems where `main`'s glob() had matched it. The predicate and
     the enumerator have to agree, or the aggregate reports a number for a
-    set it did not measure.
+    set it did not measure. That agreement is the slot answer, without
+    `raw`. Path scoping is the one deliberate exception, and it comes after
+    enumeration: a path-scoped rule is still listed, measured and labelled,
+    and only its bytes take it out of the total.
     """
     if rel in ALWAYS_LOADED_FILES:
         return True
     if not rel.startswith(ALWAYS_LOADED_RULES_PREFIX):
         return False
     tail = rel[len(ALWAYS_LOADED_RULES_PREFIX):]
-    return "/" not in tail and tail.lower().endswith(".md")
+    if "/" in tail or not tail.lower().endswith(".md"):
+        return False
+    return raw is None or scoped_paths(raw) is None
 
 
 def escapes_root(path: Path, root: Path) -> bool:
@@ -415,19 +526,19 @@ def collect_surfaces(root: Path) -> tuple[
     return surfaces, skips
 
 
-def scan(root: Path) -> tuple[
-    list[tuple[str, int, int, str]], list[str], list[Skip]
-]:
+def scan(root: Path) -> tuple[list[Finding], list[str], list[Skip]]:
     """Scan surfaces under root.
 
-    Returns (findings, warnings, skips): findings are (relative posix
-    path, size bytes, budget bytes, zone) per readable surface; warnings
+    Returns (findings, warnings, skips): findings are `Finding` records
+    per readable surface, each carrying whether it is always-loaded and
+    whether it is path-scoped — scan() reads each rules file's bytes once,
+    so path scoping is decided here; warnings
     are ready-to-print annotation lines; skips are `Skip`
     (rel, kind, detail, always_loaded) records for
     present-but-unmeasurable surfaces, carried so the aggregate can declare itself incomplete
     rather than report a short total as complete.
     """
-    findings: list[tuple[str, int, int, str]] = []
+    findings: list[Finding] = []
     warnings: list[str] = []
     surfaces, skips = collect_surfaces(root)
     for rel, kind, detail, _always_loaded in skips:
@@ -459,7 +570,31 @@ def scan(root: Path) -> tuple[
             )
             skips.append(Skip(rel, SKIP_ERROR, detail, is_always_loaded(rel)))
             continue
-        findings.append((rel, size, budget, classify(size, budget)))
+        raw = None
+        if rel.startswith(ALWAYS_LOADED_RULES_PREFIX):
+            try:
+                raw = path.read_bytes()
+            except OSError as exc:
+                # Measured but unreadable: its scope is unknown, so it keeps
+                # the slot's always-loaded answer and stays in the total.
+                raw = None
+                warnings.append(
+                    f"::warning file={rel}::{rel} was measured but its bytes "
+                    f"could not be read ({exc.__class__.__name__}: {exc}); "
+                    f"its scope is unknown, so it counts as always-loaded."
+                )
+        always_loaded = is_always_loaded(rel, raw)
+        path_scoped = is_always_loaded(rel) and not always_loaded
+        if raw is not None and always_loaded and _LOOKS_SCOPED.match(raw):
+            warnings.append(
+                f"::warning file={rel}::{rel} has `paths:` frontmatter in a "
+                f"form the scan does not recognise (see scoped_paths()); it "
+                f"counts as always-loaded."
+            )
+        findings.append(Finding(
+            rel, size, budget, classify(size, budget), always_loaded,
+            path_scoped,
+        ))
     return findings, warnings, skips
 
 
@@ -470,10 +605,16 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     lines.extend(unreadable)
     failed = False
 
-    for rel, size, budget, zone in findings:
+    for f in findings:
+        rel, size, budget, zone = f.rel, f.size, f.budget, f.zone
         ratio = size / budget
+        scope = (
+            " — path-scoped, outside the always-loaded total"
+            if f.path_scoped else ""
+        )
         lines.append(
-            f"[{zone:<4}] {rel} — {size:,} B / {budget:,} B budget ({ratio:.2f}x)"
+            f"[{zone:<4}] {rel} — {size:,} B / {budget:,} B budget "
+            f"({ratio:.2f}x){scope}"
         )
         if zone == ZONE_WARN:
             lines.append(
@@ -503,7 +644,7 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     # green WARN. So an incomplete always-loaded scan makes the aggregate
     # PARTIAL, and under --enforce it fails closed: better a red run naming
     # the unmeasurable file than a green one computed from a short sum.
-    always_loaded = [f for f in findings if is_always_loaded(f[0])]
+    always_loaded = [f for f in findings if f.always_loaded]
     # Doctrine, stated once here because this is where it bites: EVERY
     # unmeasurable always-loaded surface fails closed, with no exemption by
     # skip kind and none by surface shape. An "escaped" skip (resolves
@@ -521,7 +662,7 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     missed = [sk for sk in skips if sk.always_loaded]
     aggregate_zone = None
     if missed:
-        measured = sum(f[1] for f in always_loaded)
+        measured = sum(f.size for f in always_loaded)
         cap = BUDGET_ALWAYS_LOADED_TOTAL
         aggregate_zone = AGGREGATE_INCOMPLETE
         named = ", ".join(sk.rel for sk in missed)
@@ -545,7 +686,7 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
                 f"enforcement is on."
             )
     elif always_loaded:
-        total = sum(f[1] for f in always_loaded)
+        total = sum(f.size for f in always_loaded)
         cap = BUDGET_ALWAYS_LOADED_TOTAL
         aggregate_zone = classify(total, cap)
         ratio = total / cap
@@ -612,15 +753,17 @@ def run(root: Path, enforce: bool) -> tuple[int, list[str]]:
     # tested `findings`, `skips` and `failed`, none of which is set on that
     # path. The counted summary is true of the empty case too: it reads
     # "0 surface(s) checked ... always-loaded total n/a".
-    n_warn = sum(1 for f in findings if f[3] == ZONE_WARN)
-    n_fail = sum(1 for f in findings if f[3] == ZONE_FAIL)
+    n_warn = sum(1 for f in findings if f.zone == ZONE_WARN)
+    n_fail = sum(1 for f in findings if f.zone == ZONE_FAIL)
     mode = "enforce" if enforce else "warn-only"
     # Only stated when there is something to state, so a clean run's
     # output is unchanged.
     unmeasurable = f", {len(skips)} unmeasurable" if skips else ""
+    n_scoped = sum(1 for f in findings if f.path_scoped)
+    scoped = f", {n_scoped} path-scoped" if n_scoped else ""
     lines.append(
         f"docs-budget: {len(findings)} surface(s) checked, "
-        f"{n_warn} warn-zone, {n_fail} fail-zone{unmeasurable}; "
+        f"{n_warn} warn-zone, {n_fail} fail-zone{unmeasurable}{scoped}; "
         f"always-loaded total {aggregate_zone or 'n/a'} (mode: {mode})."
     )
 
@@ -639,7 +782,9 @@ def main(argv: list[str] | None = None) -> int:
             "budgets (.claude/rules/04-docs.md): CLAUDE.md and "
             ".claude/CLAUDE.md 12,288 B; each .claude/rules/*.md 8,192 B; "
             "and the always-loaded surfaces in aggregate (CLAUDE.md + "
-            "rules) 49,152 B. Zones: size <= budget -> OK; budget < size <= "
+            "rules not path-scoped by `paths:` frontmatter; that exclusion is "
+            "owned by CAMELS-Research-Group/Caravan#711 until 04-docs.md "
+            "states it) 49,152 B. Zones: size <= budget -> OK; budget < size <= "
             "1.5x budget -> WARN (annotation, exit 0); size > 1.5x budget "
             "-> FAIL (exit 1 only with --enforce). An absent surface is "
             "skipped silently; an always-loaded surface that is present but "
