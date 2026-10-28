@@ -27,6 +27,7 @@ from docs_budget import (
     ZONE_FAIL,
     ZONE_OK,
     ZONE_WARN,
+    _LOOKS_SCOPED,
     classify,
     escapes_root,
     is_always_loaded,
@@ -152,12 +153,17 @@ def run_self_test() -> int:
         "mapping item": b"---\npaths:\n  - a:\n---\n",
         "escape in a double-quoted item": b'---\npaths:\n  - "a\\x"\n---\n',
         "paths with a scalar value": b'---\npaths: x\n  - "a/**"\n---\n',
-        "numeric and null items": b"---\npaths:\n  - 42\n  - null\n---\n",
+        "numeric item": b"---\npaths:\n  - 42\n---\n",
+        "null item": b"---\npaths:\n  - null\n---\n",
+        "markdown rule, then prose": b"---\n\nIntro.\n\npaths: the dirs\n",
     }
     for label, raw in malformed.items():
         check(f"{label} is always-loaded",
               scoped_paths(raw) is None
               and is_always_loaded(".claude/rules/15-ci.md", raw))
+    unmatched = sorted(k for k, v in malformed.items() if not _LOOKS_SCOPED.match(v))
+    check("every closed, fenced paths: form is detected for the warning", unmatched
+          == ["markdown rule, then prose", "no frontmatter", "unclosed fence"], f"{unmatched}")
 
     print("static path-scoped fixture:")
     scoped_repo = fixtures / "path_scoped_repo"
@@ -168,21 +174,14 @@ def run_self_test() -> int:
     check("scans CLAUDE.md and all three rules files", len(findings) == 4,
           f"got {sorted(by_rel)}")
     check("the scoped rule is measured and NOT always-loaded",
-          ".claude/rules/02-scoped.md" in by_rel
-          and not by_rel[".claude/rules/02-scoped.md"].always_loaded)
+          not getattr(by_rel.get(".claude/rules/02-scoped.md"), "always_loaded", True))
+    always = ("CLAUDE.md", ".claude/rules/01-plain.md", ".claude/rules/03-unsupported-form.md")
     check("the plain and unsupported-form rules stay always-loaded",
-          all(by_rel[r].always_loaded for r in
-              ("CLAUDE.md", ".claude/rules/01-plain.md",
-               ".claude/rules/03-unsupported-form.md") if r in by_rel)
-          and len(by_rel) == 4)
+          all(r in by_rel and by_rel[r].always_loaded for r in always))
+    scoped_rels = [r for r, f in sorted(by_rel.items()) if f.path_scoped]
     check("only the scoped rule is recorded as path-scoped",
-          [r for r, f in sorted(by_rel.items()) if f.path_scoped]
-          == [".claude/rules/02-scoped.md"],
-          f"got {[r for r, f in sorted(by_rel.items()) if f.path_scoped]}")
-    expected_total = sum(
-        (scoped_repo / r).stat().st_size for r in
-        ("CLAUDE.md", ".claude/rules/01-plain.md", ".claude/rules/03-unsupported-form.md")
-    )
+          scoped_rels == [".claude/rules/02-scoped.md"], f"got {scoped_rels}")
+    expected_total = sum((scoped_repo / r).stat().st_size for r in always)
     _, out_scoped = run(scoped_repo, enforce=True)
     text_scoped = "\n".join(out_scoped)
     check("aggregate sums only the always-loaded surfaces",

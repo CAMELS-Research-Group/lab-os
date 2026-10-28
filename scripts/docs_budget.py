@@ -195,11 +195,15 @@ _NON_STRING_PLAIN = re.compile(
     re.IGNORECASE,
 )
 
-# Frontmatter that opens with a fence and names `paths:`, whatever its form:
-# when scoped_paths() rejects it, the author meant to scope the rule, so the
-# fail-closed count is reported rather than left silent.
+# Frontmatter that opens with a fence, names `paths:` and closes, whatever
+# its form: when scoped_paths() rejects it, the author meant to scope the
+# rule, so the fail-closed count is reported rather than left silent. The
+# closing fence keeps a markdown `---` rule followed by prose from matching;
+# in-line `[ \t]*` rather than `\s*` keeps blank-line runs from backtracking.
 _LOOKS_SCOPED = re.compile(
-    rb"(?:\xef\xbb\xbf)?\s*---\r?\n(?:(?!---\s*\n)[^\n]*\n)*?\s*paths\s*:"
+    rb"(?:\xef\xbb\xbf)?\s*---[ \t]*\r?\n"
+    rb"(?:(?!---[ \t]*\r?\n)[^\n]*\n)*?[ \t]*paths[ \t]*:"
+    rb"(?:[^\n]*\n)*?---[ \t]*\r?(?:\n|\Z)"
 )
 
 
