@@ -16,6 +16,8 @@
 # Dependency-free by design: the PR body is passed via env (no shell
 # interpolation of untrusted input), and the check itself is a stdlib-only
 # Python script from the lab-os checkout.
+#
+# Reusable only: it runs when a caller's PR workflow calls it, never on its own trigger.
 
 name: merge-bar-check
 

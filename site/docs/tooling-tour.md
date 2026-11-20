@@ -65,26 +65,6 @@ and discussed in [Rules, Explained](/docs/rules-explained).
 checkboxes unticked (or both ticked) on a PR that changes code. Edit the PR description; no code
 change needed. Docs-only PRs skip the checkbox rule (sections are still required).
 
-### backlog-lint
-
-Source of truth:
-[`backlog-lint.yml`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/.github/workflows/backlog-lint.yml)
-(behavior is spelled out in its header comment).
-
-Checks [`BACKLOG.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/BACKLOG.md) — the
-lab-wide backlog — against its item convention
-([`templates/backlog-item.template.md`](https://github.com/CAMELS-Research-Group/lab-os/blob/main/templates/backlog-item.template.md)):
-required fields per item, a single-condition non-placeholder `Done when`, the status ladder, size
-discipline (`L` is never `ready`), the Index as a generated projection of the Item blocks,
-`Depends on` integrity, and a public-tier leak tripwire over item text.
-
-**A red check means** a tooling defect — a broken schema template or a failed self-test; those
-always fail. Item findings are currently **warn-only**: they surface as `::error` / `::warning`
-annotations on the PR while the job stays green, until the enforcement flip planned as Phase 2 of
-its [PRD](https://github.com/CAMELS-Research-Group/lab-os/blob/main/docs/prds/backlog-lint.md). Fix
-the item — for a stale Index, edit the Item blocks and run
-`python3 scripts/backlog_lint.py --write-index` — and push. Repos without a `BACKLOG.md` no-op green.
-
 ## The `templates/` directory
 
 [`templates/`](https://github.com/CAMELS-Research-Group/lab-os/tree/main/templates) holds the seed files

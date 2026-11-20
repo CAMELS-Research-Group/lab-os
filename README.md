@@ -33,8 +33,7 @@ by agents and CI.
 - `.github/workflows/` — adherence Actions (consume via a thin caller; see [`standards.yml`](.github/workflows/standards.yml) as the copyable example):
   - [`docs-budget.yml`](.github/workflows/docs-budget.yml) — warns when CLAUDE.md or rules files exceed byte budgets
   - [`merge-bar-check.yml`](.github/workflows/merge-bar-check.yml) — PR-template section completeness
-  - [`backlog-lint.yml`](.github/workflows/backlog-lint.yml) — lab-os-only: BACKLOG.md item hygiene and derived-Index integrity
-- `site/` — the Docusaurus handbook, built and deployed to GitHub Pages by [`deploy-site.yml`](.github/workflows/deploy-site.yml).
+- `site/` — the Docusaurus handbook source. It is not deployed: GitHub Pages is off for the org, so its deploy workflow was removed.
 - `BOOTSTRAP.md`, `WORKING-WITH-CLAUDE.md` — pointer stubs; their content moved to the handbook site.
 
 ## How repos consume it
@@ -64,7 +63,7 @@ ln -s <DEV_ROOT>/lab-os/.claude/rules <DEV_ROOT>/.claude/rules
 
 The reviewer then concatenates `lab-os/.claude/rules/*.md` + `pr-repo/.claude/rules/*.md` into its prompt context.
 
-**Adherence Actions**: repos also consume the shared enforcement workflows (`docs-budget`, `merge-bar-check`) by adding a thin caller that references them from this repo; `backlog-lint` is lab-os-only (downstream repos use their own issues). [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
+**Adherence Actions**: repos also consume the shared enforcement workflows (`docs-budget`, `merge-bar-check`) by adding a thin caller that references them from this repo. [`standards.yml`](.github/workflows/standards.yml) is the copyable example.
 
 ## Override semantics
 
