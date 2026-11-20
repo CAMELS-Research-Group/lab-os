@@ -21,4 +21,4 @@ npm run build
 
 The production build enforces a link-rot gate — broken internal links cause the build to fail by design.
 
-Deployment is handled by the `deploy-site.yml` GitHub Action, which pushes the built site to GitHub Pages.
+The site is not deployed: GitHub Pages is off for the org, so its deploy workflow was removed.

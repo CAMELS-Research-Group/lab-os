@@ -21,6 +21,8 @@
 #       uses: CAMELS-Research-Group/lab-os/.github/workflows/docs-budget.yml@main
 #       with:
 #         enforce: false   # flip to true after this repo's first green run
+#
+# Reusable only: it runs when a caller's PR workflow calls it, never on its own trigger.
 
 name: docs-budget
 
@@ -60,7 +62,7 @@ jobs:
           # the annotation paths. Every caller checks out lab-os' default
           # branch, so a self-test regression landing on main reds this job in
           # every caller at once, warn-only posture included. That is
-          # deliberate — backlog-lint.yml sets the same precedent.
+          # deliberate.
           SCRIPT=".lab-os/scripts/docs_budget.py"
           if [ "$GITHUB_REPOSITORY" = "CAMELS-Research-Group/lab-os" ]; then
             SCRIPT="scripts/docs_budget.py"
@@ -73,8 +75,7 @@ jobs:
         run: |
           # Fail closed on an unrecognized enforce value: anything that is not
           # literally "true"/"false" (an empty caller expression, "True",
-          # "yes") must not silently degrade the job to warn-only. Same
-          # handling as backlog-lint.yml.
+          # "yes") must not silently degrade the job to warn-only.
           ARGS=""
           if [ "$ENFORCE" = "true" ]; then
             ARGS="--enforce"
